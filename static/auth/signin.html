@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Firebase authentication</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-auth-compat.js"></script>
+    <script src="config.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/6.1.0/firebase-ui-auth.css" />
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .cmc-logo {
+            display: block;
+            margin: 0 auto;
+            height: 140px;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript">
+        /**
+         * @param {string} queryString The full query string.
+         * @return {!Object<string, string>} The parsed query parameters.
+         */
+        function parseQueryString(queryString) {
+            // Remove first character if it is ? or #.
+            if (queryString.length && (queryString.charAt(0) === '#' || queryString.charAt(0) === '?')) {
+                queryString = queryString.substring(1);
+            }
+
+            const config = {};
+            const pairs = queryString.split('&');
+
+            for (let i = 0; i < pairs.length; i++) {
+                const pair = pairs[i].split('=');
+                if (pair.length === 2) {
+                    config[pair[0]] = pair[1];
+                }
+            }
+            return config;
+        }
+
+        function redirect(tokenResult) {
+            const searchParams = new URLSearchParams(window.location.search);
+
+            let state;
+
+            // old code will not replace {state} and will fail witgh JSON error if we try to parse
+            if (searchParams.get('state') && !searchParams.get('state').includes('{state}')) {
+                state = JSON.parse(decodeURIComponent(searchParams.get('state')));
+            }
+
+            if (!state) {
+                // we fall back to using hash params till we migrate everything to the new UI
+                const hashParams = parseQueryString(window.location.hash);
+
+                // construct state from the available hash params
+                state = {
+                    room: hashParams.room,
+                    tenant: hashParams.subdir,
+                    android: hashParams.android,
+                    electron: hashParams.electron,
+                    ios: hashParams.ios
+                };
+
+                if (hashParams.skipPrejoin) {
+                    state['config.prejoinConfig.enabled'] = false;
+                }
+            }
+
+            let redirectUrl = `${DOMAIN}/${state.tenant ? state.tenant + '/' : ''}${state.room}?jwt=${tokenResult.token}`;
+
+            let params = '';
+            for (const [key, value] of Object.entries(state)) {
+                if (key !== 'room' && key !== 'roomSafe' && key !== 'tenant'
+                    && key !== 'android' && key !== 'electron' && key !== 'ios') {
+                    params = `${params}${key}=${encodeURIComponent(JSON.stringify(value))}&`;
+                }
+            }
+            if (params.length > 0) {
+                redirectUrl = `${redirectUrl}#${params.substring(0, params.length - 1)}`;
+            }
+
+            if (state.ios) {
+                redirectUrl = `${DEEP_LINKING.ios.scheme}://${redirectUrl}`;
+            } else if (state.android) {
+                redirectUrl = `intent://${redirectUrl}#Intent;scheme=${DEEP_LINKING.android.scheme};package=${DEEP_LINKING.android.package};end`;
+            } else if (state.electron) {
+                redirectUrl = `${DEEP_LINKING.electron.scheme}://${redirectUrl}`;
+            } else {
+                redirectUrl = `https://${redirectUrl}`;
+            }
+
+            window.location.replace(redirectUrl);
+        }
+
+        function initApp() {
+            firebase.auth().onAuthStateChanged(function (user) {
+                if (!user) {
+                    // FirebaseUI config.
+                    var uiConfig = {
+                        callbacks: {
+                            signInFailure: console.error,
+                            signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+                                firebase.auth().currentUser.getIdTokenResult(true)
+                                    .then(idTokenResult => redirect(idTokenResult));
+                                // Do not redirect
+                                return false;
+                            }
+                        },
+                        signInFlow: 'popup',
+                        signInOptions: [
+                            firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                            firebase.auth.EmailAuthProvider.PROVIDER_ID,
+                        ],
+                        // Terms of service url/callback.
+                        tosUrl: function () {
+                        },
+                        // Privacy policy url/callback.
+                        privacyPolicyUrl: function () {
+                        }
+                    };
+
+                    // Initialize the FirebaseUI Widget using Firebase.
+                    var ui = new firebaseui.auth.AuthUI(firebase.auth());
+                    // The start method will wait until the DOM is loaded to include the FirebaseUI sign-in widget
+                    // within the element corresponding to the selector specified.
+                    ui.start('#firebaseui-auth-container', uiConfig);
+                } else {
+                    user.getIdTokenResult(true).then(idTokenResult => redirect(idTokenResult));
+                }
+            });
+        };
+        window.addEventListener('load', function () {
+            initApp()
+        });
+    </script>
+</head>
+
+<body>
+    <img src="/images/cmc-images/CMC ATI.png" class="cmc-logo">
+    <div id="firebaseui-auth-container"></div>
+</body>
+
+</html>

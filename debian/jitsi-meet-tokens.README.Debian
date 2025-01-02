@@ -1,0 +1,7 @@
+Token authentication plugin for C-Meet
+----------------------------
+
+C-Meet is a WebRTC video conferencing application. This package contains
+Prosody plugin which enables token authentication in C-Meet installation.
+
+ -- Pawel Domas <pawel.domas@jitsi.org>  Mon, 2 Nov 2015 14:45:00 -0600
