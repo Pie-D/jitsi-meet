@@ -18,7 +18,7 @@ import DialInSummary from '../../invite/components/dial-in-summary/web/DialInSum
 import { openWebApp } from '../actions';
 import { _TNS } from '../constants';
 import { generateDeepLinkingURL } from '../functions';
-
+import { env } from '../../../../ENV';
 
 const PADDINGS = {
     topBottom: 24,
@@ -106,6 +106,7 @@ const DeepLinkingMobilePage: React.FC<WithTranslation> = ({ t }) => {
     const { classes: styles } = useStyles();
 
     const generateDownloadURL = useCallback(() => {
+        return (Platform.OS == 'ios') ? env.IOS_LINK : env.ANDROID_LINK;
         const { downloadLink, dynamicLink, appScheme }
             = (deeplinkingCfg?.[Platform.OS as keyof typeof deeplinkingCfg] || {}) as IDeeplinkingMobileConfig;
 

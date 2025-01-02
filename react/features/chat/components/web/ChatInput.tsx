@@ -1,7 +1,9 @@
 import React, { Component, RefObject } from 'react';
 import { WithTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
-
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import { v4 as uuidV4 } from 'uuid';
 import { IReduxState, IStore } from '../../../app/types';
 import { isMobileBrowser } from '../../../base/environment/utils';
 import { translate } from '../../../base/i18n/functions';
@@ -9,7 +11,10 @@ import { IconFaceSmile, IconSend } from '../../../base/icons/svg';
 import Button from '../../../base/ui/components/web/Button';
 import Input from '../../../base/ui/components/web/Input';
 import { areSmileysDisabled } from '../../functions';
-
+import { CMEET_ENV } from "../../ENV";
+import { LocalStorageHandle } from '../../LocalStorageHandler';
+// import { addMessage } from '../../actions.web';
+import { MESSAGE_TYPE_REMOTE } from '../../constants';
 import SmileysPanel from './SmileysPanel';
 
 /**
@@ -60,13 +65,19 @@ interface IState {
  * @augments Component
  */
 class ChatInput extends Component<IProps, IState> {
+    // componentWillUnmount(): void {
+    //     this.stompClient.deactivate();
+    // }
     _textArea?: RefObject<HTMLTextAreaElement>;
 
     state = {
         message: '',
         showSmileysPanel: false
     };
-
+    stompClient: any;
+    meetingId: any;
+    user: any;
+    // dispatchU: IStore['dispatch'];
     /**
      * Initializes a new {@code ChatInput} instance.
      *
@@ -84,6 +95,75 @@ class ChatInput extends Component<IProps, IState> {
         this._onSmileySelect = this._onSmileySelect.bind(this);
         this._onSubmitMessage = this._onSubmitMessage.bind(this);
         this._toggleSmileysPanel = this._toggleSmileysPanel.bind(this);
+        this._oninit()
+        this.stompClient = new Client();
+        this.stompClient.webSocketFactory = () => {
+            return new SockJS(CMEET_ENV.urlWS);
+        };
+        this._onConnectWS();
+    }
+    // Update WS
+    _oninit() {
+        this.user = new LocalStorageHandle("features/base/settings").getByKey()
+        if(this.user.hasOwnProperty("id") || !this.user.id){
+            this.user.id = uuidV4();
+        }
+        this.meetingId = window.location.href.split('/').at(-1)
+    }
+    async _onConnectWS() {
+        this.stompClient.onConnect = (frame: any) => {
+            console.log("Connected to WebSocket");
+            this._onHandleMessage()
+        };
+        this.stompClient.activate();
+    }
+    _onSendChatCMeet(content: String) {
+        if (this._isValidUUID(this.meetingId)) {
+            this._publicStomp(CMEET_ENV.public, {
+                content: content,
+                sender: this.user.displayName,
+                meetingId: this.meetingId,
+                timeSheetId: null,
+                userId: this.user.id,
+                avatar: CMEET_ENV.avatar,
+                fileExtension: null,
+                filePath: null,
+            })
+        }
+    }
+    _isValidUUID(arg: any) {
+        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+        if (arg instanceof Array) {
+            return arg.every(x => uuidRegex.test(x))
+        }
+        return uuidRegex.test(arg)
+    }
+    _publicStomp(destination: String, body: any) {
+        this.stompClient.publish({
+            destination: destination,
+            body: JSON.stringify(body),
+        });
+    }
+    _onHandleMessage() {
+        this.stompClient.subscribe(CMEET_ENV.subrice, ({ body }: any) => {
+            const data = JSON.parse(body);
+            const { userId, meetingId } = data;
+            console.log("userId, meetingId", userId, meetingId)
+            if (userId && meetingId && data.meetingId == meetingId && this.user.id != userId) {
+                this.props.onSend({
+                    displayName: data.sender,
+                    hasRead: false,
+                    id: data.id,
+                    messageType: MESSAGE_TYPE_REMOTE,
+                    message: data.content,
+                    privateMessage: false,
+                    lobbyChat: false,
+                    recipient: '', //
+                    timestamp: Date.now(),
+                    isReaction: false
+                });
+            }
+        });
     }
 
     /**
@@ -174,7 +254,7 @@ class ChatInput extends Component<IProps, IState> {
 
         if (trimmed) {
             this.props.onSend(trimmed);
-
+            this._onSendChatCMeet(trimmed)
             this.setState({ message: '' });
 
             // Keep the textarea in focus when sending messages via submit button.

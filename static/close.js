@@ -1,5 +1,6 @@
 /* global interfaceConfig */
 // list of tips
+import { env } from "../ENV";
 const hints = [
     'You can pin participants by clicking on their thumbnails.',
     'You can tell others you have something to say by using the "Raise Hand" '
@@ -44,7 +45,7 @@ function onLoad() {
     // Intentionally use string concatenation as this file does not go through
     // babel but IE11 is still supported.
     // eslint-disable-next-line prefer-template
-    const thankYouMessage = 'Thank you for using ' + interfaceConfig.APP_NAME;
+    const thankYouMessage = 'Thank you for using ' + env.APP_NAME;
 
     // Works only for close2.html because close.html doesn't have this element.
     insertTextMsg('thanksMessage', thankYouMessage);

@@ -62,6 +62,8 @@ public class JitsiMeetOngoingConferenceService extends Service implements Ongoin
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver();
 
+    private static final int POST_NOTIFICATIONS_PERMISSION_REQUEST_CODE = (int) (Math.random() * Short.MAX_VALUE);
+    
     private boolean isAudioMuted;
     private Class tapBackActivity;
 

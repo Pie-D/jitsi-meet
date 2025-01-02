@@ -42,7 +42,7 @@ import type { AbstractProps } from '../AbstractConference';
 
 import ConferenceInfo from './ConferenceInfo';
 import { default as Notice } from './Notice';
-
+import { env } from '../../../../../ENV';
 /**
  * DOM events for when full screen mode has changed. Different browsers need
  * different vendor prefixes.
@@ -173,7 +173,7 @@ class Conference extends AbstractConference<IProps, any> {
      * @inheritdoc
      */
     componentDidMount() {
-        document.title = `${this.props._roomName} | ${interfaceConfig.APP_NAME}`;
+        document.title = `${this.props._roomName} | ${env.APP_NAME}`;
         this._start();
     }
 

@@ -22,7 +22,7 @@
         "noResults": "Không tìm được kết quả khớp",
         "outlookEmail": "Email Outlook",
         "phoneNumbers": "số điện thoại",
-        "searching": "Đang tìm kiếm…",
+        "searching": "Đang tìm kiếm...",
         "shareInvite": "Chia sẻ lời mời tham dự cuộc họp",
         "shareLink": "Chia sẻ đường dẫn để mời người khác tham dự cuộc họp",
         "shareStream": "Chia sẻ liên kết phát trực tiếp",
@@ -37,10 +37,10 @@
         "headphones": "Tai nghe",
         "none": "Không có thiết bị âm thanh nào",
         "phone": "Điện thoại",
-        "speaker": "Diễn giả"
+        "speaker": "Loa"
     },
     "audioOnly": {
-        "audioOnly": "Chỉ nghe âm thanh"
+        "audioOnly": "Băng thông thấp"
     },
     "bandwidthSettings": {
         "assumedBandwidthBps": "ví dụ. 10000000 cho 10 Mb/giây",
@@ -81,20 +81,20 @@
         "title": "Phòng Nhỏ"
     },
     "calendarSync": {
-        "addMeetingURL": "Thêm một liên kết họp",
-        "confirmAddLink": "Bạn có muốn thêm một liên kiết tới sự kiện này?",
+        "addMeetingURL": "Thêm liên kết cuộc họp",
+        "confirmAddLink": "Bạn có muốn thêm một liên kết C-meet vào sự kiện này không?",
         "error": {
-            "appConfiguration": "Tích hợp lịch chưa được cấu hình đúng.",
-            "generic": "Có lỗi xảy ra. Vui lòng kiểm tra cấu hình lịch hoặc thử làm mới lịch.",
-            "notSignedIn": "Một lỗi xảy ra khi xác thực để xem lịch sự kiện. Vui lòng kiểm tra cấu hình lịch và thử đăng nhập lại."
+            "appConfiguration": "Tích hợp lịch không được cấu hình đúng cách.",
+            "generic": "Đã xảy ra lỗi. Vui lòng kiểm tra cài đặt lịch của bạn hoặc thử làm mới lịch.",
+            "notSignedIn": "Đã xảy ra lỗi khi xác thực để xem sự kiện trong lịch. Vui lòng kiểm tra cài đặt lịch của bạn và thử đăng nhập lại."
         },
         "join": "Tham gia",
         "joinTooltip": "Tham gia cuộc họp",
         "nextMeeting": "Cuộc họp tiếp theo",
-        "noEvents": "Không có sự kiện được lên lịch nào tiếp theo.",
+        "noEvents": "Không có sự kiện sắp diễn ra.",
         "ongoingMeeting": "Cuộc họp đang diễn ra",
-        "permissionButton": "Mở cấu hình",
-        "permissionMessage": "Yêu cầu quyền truy cập lịch để thấy cuộc họp của bạn trên ứng dụng.",
+        "permissionButton": "Mở cài đặt",
+        "permissionMessage": "Quyền Lịch cần thiết để xem các cuộc họp của bạn trong ứng dụng.",
         "refresh": "Làm mới lịch",
         "today": "Hôm nay"
     },
@@ -120,14 +120,15 @@
         "messagebox": "Nhập nội dung tin nhắn",
         "newMessages": "Tin nhắn mới",
         "nickname": {
-            "popover": "Chọn tên",
-            "title": "Nhập tên của bạn để gửi tin nhắn",
-            "titleWithPolls": "Nhập tên của bạn để gửi tin nhắn"
+            "popover": "Chọn một biệt danh",
+            "title": "Nhập biệt danh để sử dụng chat",
+            "titleWithPolls": "Nhập biệt danh để sử dụng chat và cuộc thăm dò"
         },
         "noMessagesMessage": "Chưa có tin nhắn nào trong cuộc họp. Bắt đầu một cuộc trò chuyện ở đây!",
         "privateNotice": "Tin nhắn riêng tới {{recipient}}",
         "sendButton": "Gửi",
         "smileysPanel": "Bảng biểu tượng cảm xúc",
+        "systemDisplayName": "Hệ thống",
         "tabs": {
             "chat": "Chat",
             "polls": "Thăm dò ý kiến"
@@ -144,10 +145,10 @@
         "installExtensionText": "Cài đặt tiện ích mở rộng để tích hợp Lịch Google và Office 365"
     },
     "connectingOverlay": {
-        "joiningRoom": "Đang kết nối tới cuộc họp của bạn…"
+        "joiningRoom": "Đang kết nối bạn vào cuộc họp của bạn..."
     },
     "connection": {
-        "ATTACHED": "Đã đính kèm",
+        "ATTACHED": "Đã kết nối",
         "AUTHENTICATING": "Đang xác thực",
         "AUTHFAIL": "Xác thực thất bại",
         "CONNECTED": "Đã kết nối",
@@ -156,9 +157,9 @@
         "DISCONNECTED": "Đã ngắt kết nối",
         "DISCONNECTING": "Đang ngắt kết nối",
         "ERROR": "Lỗi",
-        "FETCH_SESSION_ID": "Đang lấy id phiên…",
+        "FETCH_SESSION_ID": "Đang lấy id phiên...",
         "GET_SESSION_ID_ERROR": "Nhận lỗi id phiên: {{code}}",
-        "GOT_SESSION_ID": "Lấy id phiên… Xong",
+        "GOT_SESSION_ID": "Lấy id phiên... Xong",
         "LOW_BANDWIDTH": "Video của {{displayName}} đã bị tắt để tiết kiệm băng thông"
     },
     "connectionindicator": {
@@ -183,10 +184,10 @@
         "participant_id": "ID người tham dự:",
         "quality": {
             "good": "Tốt",
-            "inactive": "Đang treo máy",
-            "lost": "Mất kết nối",
+            "inactive": "Không hoạt động",
+            "lost": "Mất",
             "nonoptimal": "Không tối ưu",
-            "poor": "Kém chất lượng"
+            "poor": "Kém"
         },
         "remoteaddress": "Địa chỉ remote:",
         "remoteaddress_plural": "Địa chỉ remote:",
@@ -224,17 +225,17 @@
         "or": "VÀ",
         "termsAndConditions": "Bằng việc tiếp tục, bạn đồng ý với <a href='{{termsAndConditionsLink}}' rel='noopener noreferrer' target='_blank'>điều khoản và điều kiện của chúng tôi.</a>",
         "title": "Thực hiện cuộc họp trên {{app}}…",
-        "titleNew": "Đang khởi động cuộc họp của bạn…",
+        "titleNew": "Đang khởi động cuộc họp của bạn...",
         "tryAgainButton": "Thử lại",
         "unsupportedBrowser": "Có vẻ như bạn đang sử dụng trình duyệt mà chúng tôi không hỗ trợ."
     },
     "defaultLink": "Ví dụ: {{url}}",
     "defaultNickname": "Ví dụ. Jane Pink",
     "deviceError": {
-        "cameraError": "Truy cập camera thất bại",
-        "cameraPermission": "Lỗi cấp quyền camera",
-        "microphoneError": "Truy cập micro thất bại",
-        "microphonePermission": "Lỗi cấp quyền micro"
+        "cameraError": "Không thể truy cập camera của bạn",
+        "cameraPermission": "Lỗi xin quyền truy cập camera",
+        "microphoneError": "Không thể truy cập micro của bạn",
+        "microphonePermission": "Lỗi xin quyền truy cập micro"
     },
     "deviceSelection": {
         "hid": {
@@ -246,7 +247,7 @@
         "noPermission": "Không được cấp quyền",
         "previewUnavailable": "Xem trước không khả dụng",
         "selectADevice": "Chọn một thiết bị",
-        "testAudio": "Phát thử âm thanh"
+        "testAudio": "Kiểm tra"
     },
     "dialIn": {
         "screenTitle": "Tóm tắt"
@@ -257,15 +258,15 @@
     "dialog": {
         "Back": "Quay lại",
         "Cancel": "Hủy",
-        "IamHost": "Mình là quản trị viên",
-        "Ok": "Đồng ý",
+        "IamHost": "Đăng nhập",
+        "Ok": "OK",
         "Remove": "Xóa",
         "Share": "Chia sẻ",
         "Submit": "Đăng ký",
-        "WaitForHostMsg": "Cuộc họp chưa được bắt đầu. Nếu bạn là quản trị viên vui lòng xác thực. Nếu không, vui lòng đợi quản trị viên.",
-        "WaitingForHost": "Đang đợi quản trị viên…",
+        "WaitForHostMsg": "Cuộc họp chưa được bắt đầu vì chưa có người điều hành. Nếu bạn là quản trị viên vui lòng xác thực. Nếu không, vui lòng đợi quản trị viên.",
+        "WaitForHostNoAuthMsg": "Hội nghị vẫn chưa bắt đầu vì chưa có người điều hành nào đến. Vui lòng chờ.",
         "WaitingForHostButton": "Chờ người điều hành",
-        "WaitingForHostTitle": "Chờ người điều hành…",
+        "WaitingForHostTitle": "Chờ người điều hành ...",
         "Yes": "Có",
         "accessibilityLabel": {
             "Cancel": "Hủy (rời khỏi hộp thoại)",
@@ -293,15 +294,15 @@
         "cameraUnknownError": "Không thể sử dụng camera vì một lý do không xác định.",
         "cameraUnsupportedResolutionError": "Camera của bạn không hỗ trợ độ phân giải video yêu cầu.",
         "close": "Đóng",
-        "conferenceDisconnectMsg": "Bạn có thể cần kiểm tra kết nối mạng của mình. Đang kết nối lại trong {{seconds}} giây…",
+        "conferenceDisconnectMsg": "Bạn có thể muốn kiểm tra kết nối mạng của mình. Đang kết nối lại trong {{seconds}} giây...",
         "conferenceDisconnectTitle": "Bạn đã bị ngắt kết nối.",
-        "conferenceReloadMsg": "Chúng tôi đang cố gắng sửa lỗi này. Đang kết nối lại trong {{seconds}} giây…",
-        "conferenceReloadTitle": "Thật không may, đã có lỗi xảy ra.",
+        "conferenceReloadMsg": "Chúng tôi đang cố gắng khắc phục sự cố này. Đang kết nối lại trong {{seconds}} giây...",
+        "conferenceReloadTitle": "Rất tiếc, đã xảy ra sự cố.",
         "confirm": "Xác nhận",
         "confirmNo": "Không",
         "confirmYes": "Có",
-        "connectError": "Rất tiếc! Đã xảy ra sự cố và chúng tôi không thể kết nối với cuộc họp.",
-        "connectErrorWithMsg": "Rất tiếc! Đã xảy ra sự cố và chúng tôi không thể kết nối với cuộc họp. Nguyên nhân: {{msg}}",
+        "connectError": "Rất tiếc! Đã xảy ra sự cố và chúng tôi không thể kết nối vào hội nghị.",
+        "connectErrorWithMsg": "Rất tiếc! Đã xảy ra sự cố và chúng tôi không thể kết nối vào hội nghị: {{msg}}",
         "connecting": "Đang kết nối",
         "contactSupport": "Liên hệ hỗ trợ kỹ thuật",
         "copied": "Đã sao chép",
@@ -319,6 +320,7 @@
         "embedMeeting": "Nhúng cuộc họp",
         "enterDisplayName": "Nhập tên của bạn",
         "error": "Lỗi",
+        "errorRoomCreationRestriction": "Bạn đã cố gắng tham gia quá nhanh, vui lòng quay lại sau một lát.",
         "gracefulShutdown": "Dịch vụ của chúng tôi hiện đang bảo trì. Vui lòng thử lại sau.",
         "grantModeratorDialog": "Bạn có thực sự muốn cấp quyền quản trị cho người này?",
         "grantModeratorTitle": "Cấp quyền điều hành",
@@ -394,8 +396,8 @@
         "remoteControlAllowedMessage": "{{user}} đã chấp nhận yêu cầu điều khiển từ xa của bạn!",
         "remoteControlDeniedMessage": "{{user}} đã từ chối yêu cầu điều khiển từ xa của bạn!",
         "remoteControlErrorMessage": "Đã xảy ra lỗi khi cố gắng yêu cầu quyền điều khiển từ xa từ {{user}}!",
-        "remoteControlRequestMessage": "Bạn có cho phép {{user}} điều khiển từ xa màn hình của bạn không?",
-        "remoteControlShareScreenWarning": "Lưu ý rằng nếu bạn ấn \"Cho phép\" bạn sẽ chia sẻ màn hình của mình!",
+        "remoteControlRequestMessage": "Bạn có chấp nhận {{user}} điều khiển máy tính của bạn từ xa không?",
+        "remoteControlShareScreenWarning": "Lưu ý rằng nếu bạn nhấn \"Cho phép\" bạn sẽ chia sẻ màn hình của mình!",
         "remoteControlStopMessage": "Phiên điều khiển từ xa đã kết thúc!",
         "remoteControlTitle": "Điều khiển màn hình từ xa",
         "remoteUserControls": "Điều khiển người dùng từ xa của {{username}}",
@@ -501,7 +503,7 @@
         "labelToolTip": "Giao tiếp âm thanh và video trong cuộc gọi này được mã hóa hai đầu"
     },
     "embedMeeting": {
-        "title": "Nhúng cuộc họp"
+        "title": "Nhúng cuộc họp này"
     },
     "feedback": {
         "accessibilityLabel": {
@@ -509,7 +511,7 @@
         },
         "average": "Trung bình",
         "bad": "Kém",
-        "detailsLabel": "Nói với chúng tôi về nó.",
+        "detailsLabel": "Hãy cho chúng tôi biết thêm thông tin về điều đó.",
         "good": "Tốt",
         "rateExperience": "Vui lòng đánh giá trải nghiệm cuộc họp của bạn.",
         "star": "Sao",
@@ -528,9 +530,9 @@
     "incomingCall": {
         "answer": "Trả lời",
         "audioCallTitle": "Cuộc gọi đến",
-        "decline": "Hủy",
-        "productLabel": "từ DINTE",
-        "videoCallTitle": "Cuộc gọi hình"
+        "decline": "Từ chối",
+        "productLabel": "từ C-Meet",
+        "videoCallTitle": "Cuộc gọi video đến"
     },
     "info": {
         "accessibilityLabel": "Hiện thông tin",
@@ -539,11 +541,11 @@
         "conferenceURL": "Liên kết:",
         "copyNumber": "Copy số",
         "country": "Quốc gia",
-        "dialANumber": "Để tham gia cuộc họp của bạn, gọi một trong các số sau và nhập mã.",
-        "dialInConferenceID": "Mã:",
-        "dialInNotSupported": "Xin lỗi, quay số không được hỗ trợ.",
-        "dialInNumber": "Quay số:",
-        "dialInSummaryError": "Lỗi nạp thông tin quay số. Vui lòng thử lại.",
+        "dialANumber": "Để tham gia cuộc họp của bạn, gọi một trong các số này và sau đó nhập mã pin.",
+        "dialInConferenceID": "Mã PIN:",
+        "dialInNotSupported": "Xin lỗi, hiện tại không hỗ trợ gọi vào.",
+        "dialInNumber": "Gọi vào:",
+        "dialInSummaryError": "Lỗi khi lấy thông tin gọi vào bây giờ. Vui lòng thử lại sau.",
         "dialInTollFree": "Miễn phí",
         "genericError": "Lỗi, có gì đó không ổn.",
         "inviteLiveStream": "Để xem phát trực tuyến cuộc họp này, chọn liên kết: {{url}}",
@@ -575,17 +577,17 @@
         "whiteboardError": "Lỗi tải bảng trắng. Vui lòng thử lại sau."
     },
     "inlineDialogFailure": {
-        "msg": "Chúng tôi đang xảy ra chút lỗi.",
+        "msg": "Chúng tôi đã gặp một chút vấn đề.",
         "retry": "Thử lại",
         "support": "Hỗ trợ",
-        "supportMsg": "Nếu vẫn xảy ra, hãy liên hệ với "
+        "supportMsg": "Nếu việc này vẫn tiếp tục xảy ra, hãy liên hệ với"
     },
     "inviteDialog": {
-        "alertText": "Không thể mời một vài người.",
+        "alertText": "Không thể mời một số người tham gia.",
         "header": "Mời",
         "searchCallOnlyPlaceholder": "Nhập số điện thoại",
         "searchPeopleOnlyPlaceholder": "Tìm kiếm người tham gia",
-        "searchPlaceholder": "Người tham gia hoặc số",
+        "searchPlaceholder": "Người tham gia hoặc số điện thoại",
         "send": "Gửi"
     },
     "jitsiHome": "{{logo}} Logo, liên kết tới Trang chủ",
@@ -623,7 +625,7 @@
         "errorLiveStreamNotEnabled": "Phát trực tuyến không được bật với email {{email}}. Vui lòng bật phát trực tuyến hoặc truy cập một tài khoản đã bật phát trực tuyến.",
         "expandedOff": "Phát trực tuyến đã dừng",
         "expandedOn": "Cuộc họp đang được phát trên Youtube.",
-        "expandedPending": "Phát trực tuyến đang bắt đầu…",
+        "expandedPending": "Phát trực tuyến đang bắt đầu...",
         "failedToStart": "Không thể bắt đầu phát trực tuyến",
         "getStreamKeyManually": "Không thể thu nhận phát trực tuyến nào. Thử lấy mã phát trực tuyến từ Youtube.",
         "googlePrivacyPolicy": "Chính sách bảo mật của Google",
@@ -635,11 +637,11 @@
         "offBy": "{{name}} đã dừng ghi",
         "on": "Phát trực tuyến",
         "onBy": "{{name}} đã dừng ghi",
-        "pending": "Đang bắt đầu phát trực tuyến…",
+        "pending": "Đang bắt đầu phát trực tuyến...",
         "serviceName": "Dịch vụ Phát trực tuyến",
         "sessionAlreadyActive": "Phiên này đã được ghi lại hoặc phát trực tiếp.",
         "signIn": "Đăng nhập với Google",
-        "signInCTA": "Đăng nhập hoặc nhập key phát trực tuyến từ Youtube.",
+        "signInCTA": "Đăng nhập hoặc nhập khóa phát trực tiếp từ YouTube của bạn.",
         "signOut": "Đăng xuất",
         "signedInAs": "Bạn đang đăng nhập theo:",
         "start": "Bắt đầu phát trực tuyến",
@@ -665,10 +667,10 @@
         "joinRejectedMessage": "Yêu cầu tham gia của bạn đã bị từ chối bởi một người điều hành.",
         "joinRejectedTitle": "Yêu cầu tham gia bị từ chối.",
         "joinTitle": "Tham gia cuộc họp",
-        "joinWithPasswordMessage": "Đang cố gắng tham gia với mật khẩu, vui lòng đợi…",
+        "joinWithPasswordMessage": "Đang cố gắng tham gia với mật khẩu, vui lòng đợi...",
         "joiningMessage": "Bạn sẽ tham gia cuộc họp ngay khi có ai đó chấp nhận yêu cầu của bạn",
-        "joiningTitle": "Yêu cầu tham gia cuộc họp…",
-        "joiningWithPasswordTitle": "Đang tham gia với mật khẩu…",
+        "joiningTitle": "Yêu cầu tham gia cuộc họp...",
+        "joiningWithPasswordTitle": "Đang tham gia với mật khẩu...",
         "knockButton": "Yêu cầu tham gia",
         "knockTitle": "Một ai đó muốn tham gia cuộc họp",
         "knockingParticipantList": "Danh sách người yêu cầu tham gia",
@@ -689,23 +691,23 @@
         "clientState": {
             "off": "Tắt",
             "on": "Bật",
-            "unknown": "Không rõ"
+            "unknown": "Không xác định"
         },
-        "dialogTitle": "Kiểm soát ghi hình cục bộ",
+        "dialogTitle": "Điều khiển Ghi âm Cục bộ",
         "duration": "Thời lượng",
-        "durationNA": "Không",
+        "durationNA": "N/A",
         "encoding": "Mã hóa",
-        "label": "Ghi hình",
-        "labelToolTip": "Ghi hình cục bộ đang bận",
-        "localRecording": "Ghi hình cục bộ",
+        "label": "Ghi âm Cục bộ",
+        "labelToolTip": "Ghi âm cục bộ được kích hoạt",
+        "localRecording": "Ghi âm Cục bộ",
         "me": "Tôi",
         "messages": {
-            "engaged": "Ghi hình cục bộ đã bận.",
-            "finished": "Phiên ghi hình {{token}} đã kết thúc. Vui lòng gửi tệp ghi hình cho người điều hành.",
-            "finishedModerator": "Phiên ghi hình {{token}} đã kết thúc. Ghi hình cục bộ đã được lưu. Vui lòng hỏi những người tham gia khác để cung cấp ghi hình của họ.",
-            "notModerator": "Bạn không phải người điều hành. Bạn không thể khởi tạo hoặc dừng ghi hình."
+            "engaged": "Ghi âm cục bộ được kích hoạt.",
+            "finished": "Phiên ghi {{token}} đã kết thúc. Vui lòng gửi tệp được ghi lại cho người quản trị.",
+            "finishedModerator": "Phiên ghi {{token}} đã kết thúc. Việc ghi lại của đoạn văn bản cục bộ đã được lưu. Vui lòng yêu cầu các người tham gia khác gửi tệp ghi lại của họ.",
+            "notModerator": "Bạn không phải là người quản trị. Bạn không thể bắt đầu hoặc dừng ghi âm cục bộ."
         },
-        "moderator": "Quản trị viên",
+        "moderator": "Người quản trị",
         "no": "Không",
         "participant": "Người tham dự",
         "participantStats": "Thống kê người tham dự",
@@ -717,7 +719,7 @@
         "wait": "Vui lòng đợi trong khi chúng tôi lưu bản ghi của bạn",
         "yes": "Có"
     },
-    "lockRoomPassword": "Mật khẩu",
+    "lockRoomPassword": "mật khẩu",
     "lockRoomPasswordUppercase": "Mật khẩu",
     "lonelyMeetingExperience": {
         "button": "Mời người khác",
@@ -732,10 +734,12 @@
         "audioUnmuteBlockedTitle": "Chặn việc bật âm thanh!",
         "chatMessages": "Thông điệp trò chuyện",
         "connectedOneMember": "{{name}} đã tham gia cuộc họp",
-        "connectedThreePlusMembers": "{{name}} và {{count}} người khác đã tham gia cuộc họp",
+        "connectedThreePlusMembers": "{{name}} và nhiều người khác đã tham gia cuộc họp",
         "connectedTwoMembers": "{{first}} và {{second}} đã tham gia cuộc họp",
         "dataChannelClosed": "Chất lượng video bị suy giảm",
         "dataChannelClosedDescription": "Kênh cầu nối đã bị ngắt kết nối và do đó chất lượng video bị giới hạn ở cài đặt thấp nhất.",
+        "dataChannelClosedDescriptionWithAudio": "Kênh cầu nối không hoạt động và do đó âm thanh và video có thể bị gián đoạn.",
+        "dataChannelClosedWithAudio": "Audio and video quality may be impaired",
         "disabledIframe": "Nhúng chỉ dành cho mục đích thử nghiệm, cuộc gọi này sẽ ngắt kết nối sau {{timeout}} phút.",
         "disabledIframeSecondary": "Nhúng {{domain}} chỉ dành cho mục đích thử nghiệm, cuộc gọi này sẽ ngắt kết nối sau {{timeout}} phút. Vui lòng sử dụng <a href='{{jaasDomain}}' rel='noopener noreferrer' target='_blank'>Jitsi as a Service</a> cho việc nhúng vào sản xuất!",
         "disconnected": "đã ngắt kết nối",
@@ -758,7 +762,7 @@
         "linkToSalesforceDescription": "Bạn có thể liên kết tóm tắt cuộc họp với một đối tượng Salesforce.",
         "linkToSalesforceError": "Không thể liên kết cuộc họp với Salesforce",
         "linkToSalesforceKey": "Liên kết cuộc họp này",
-        "linkToSalesforceProgress": "Đang liên kết cuộc họp với Salesforce…",
+        "linkToSalesforceProgress": "Đang liên kết cuộc họp với Salesforce...",
         "linkToSalesforceSuccess": "Cuộc họp đã được liên kết với Salesforce",
         "localRecordingStarted": "{{name}} đã bắt đầu ghi âm cục bộ.",
         "localRecordingStopped": "{{name}} đã dừng ghi âm cục bộ.",
@@ -782,6 +786,7 @@
         "newDeviceAction": "Sử dụng",
         "newDeviceAudioTitle": "Thiết bị âm thanh mới được phát hiện",
         "newDeviceCameraTitle": "Thiết bị camera mới được phát hiện",
+        "nextToSpeak": "Bạn là người tiếp theo phát biểu",
         "noiseSuppressionDesktopAudioDescription": "Không thể kích hoạt chế độ chống ồn khi chia sẻ âm thanh máy tính, vui lòng tắt chế độ này và thử lại.",
         "noiseSuppressionFailedTitle": "Không thể bắt đầu chế độ chống ồn",
         "noiseSuppressionStereoDescription": "Hiện không hỗ trợ chế độ chống ồn âm thanh stereo.",
@@ -816,8 +821,11 @@
         "videoUnmuteBlockedDescription": "Hoạt động bật camera và chia sẻ màn hình máy tính đã bị tạm thời chặn do giới hạn hệ thống.",
         "videoUnmuteBlockedTitle": "Chặn hoạt động bật camera và chia sẻ màn hình!",
         "viewLobby": "Xem phòng chờ",
+        "viewParticipants": "Xem người tham gia",
         "viewVisitors": "Xem khách thăm",
         "waitingParticipants": "{{waitingParticipants}} người",
+        "waitingVisitors": "Khách đang trong hàng đợi: {{waitingVisitors}}",
+        "waitingVisitorsTitle": "Cuộc họp vẫn chưa diễn ra!",
         "whiteboardLimitDescription": "Vui lòng lưu tiến độ của bạn, vì giới hạn người dùng sẽ sớm được đạt và bảng trắng sẽ đóng.",
         "whiteboardLimitTitle": "Sử dụng bảng trắng"
     },
@@ -831,7 +839,10 @@
             "audioModeration": "Tự mở micro",
             "blockEveryoneMicCamera": "Chặn mic và camera của tất cả mọi người",
             "breakoutRooms": "Phòng riêng",
+            "goLive": "Phát trực tiếp",
             "invite": "Mời người tham dự",
+            "lowerHand": "Hạ tay xuống",
+            "lowerAllHands": "Hạ tất cả tay xuống",
             "moreModerationActions": "Các tùy chọn kiểm duyệt khác",
             "moreModerationControls": "Các điều khiển kiểm duyệt khác",
             "moreParticipantOptions": "Các tùy chọn tham gia khác",
@@ -848,6 +859,7 @@
         "headings": {
             "lobby": "Phòng chờ ({{count}})",
             "participantsList": "Những người tham dự ({{count}})",
+            "visitorInQueue": " (đang chờ {{count}})",
             "visitorRequests": "(yêu cầu {{count}})",
             "visitors": "Số lượt truy cập {{count}}",
             "waitingLobby": "Đang đợi ở phòng chờ ({{count}})"
@@ -861,10 +873,13 @@
     "pinnedParticipant": "Người tham gia đã được ghim",
     "polls": {
         "answer": {
+            "edit": "Chỉnh sửa",
+            "send": "Gửi",
             "skip": "Bỏ qua",
             "submit": "Gửi"
         },
         "by": "Bởi {{ name }}",
+        "closeButton": "Đóng bình chọn",
         "create": {
             "addOption": "Thêm tùy chọn",
             "answerPlaceholder": "Tùy chọn {{index}}",
@@ -874,6 +889,7 @@
             "pollQuestion": "Câu hỏi bình chọn",
             "questionPlaceholder": "Hỏi một câu hỏi",
             "removeOption": "Xóa tùy chọn",
+            "save": "Lưu",
             "send": "Gửi"
         },
         "errors": {
@@ -900,7 +916,7 @@
         "callMe": "Gọi cho tôi",
         "callMeAtNumber": "Gọi cho tôi ở số này:",
         "calling": "Đang gọi",
-        "configuringDevices": "Đang cấu hình thiết bị…",
+        "configuringDevices": "Đang cấu hình thiết bị...",
         "connectedWithAudioQ": "Bạn đã kết nối với âm thanh?",
         "connection": {
             "good": "Kết nối internet của bạn trông rất tốt!",
@@ -957,17 +973,17 @@
     },
     "presenceStatus": {
         "busy": "Bận",
-        "calling": "Đang gọi…",
+        "calling": "Đang gọi...",
         "connected": "Đã kết nối",
-        "connecting": "Đang kết nối…",
-        "connecting2": "Đang kết nối*…",
-        "disconnected": "Đã ngắt kết nối",
+        "connecting": "Đang kết nối...",
+        "connecting2": "Đang kết nối*...",
+        "disconnected": "Mất kết nối",
         "expired": "Hết hạn",
-        "ignored": "Đã bỏ qua",
-        "initializingCall": "Đang tạo cuộc gọi…",
+        "ignored": "Bị bỏ qua",
+        "initializingCall": "Khởi tạo cuộc gọi...",
         "invited": "Đã mời",
-        "rejected": "Đã từ chối",
-        "ringing": "Đang đổ chuông…"
+        "rejected": "Bị từ chối",
+        "ringing": "Đang chuông..."
     },
     "profile": {
         "avatar": "Ảnh đại diện",
@@ -1001,7 +1017,7 @@
         "errorFetchingLink": "Lỗi khi tìm nạp liên kết ghi âm.",
         "expandedOff": "Ghi hình đã dừng",
         "expandedOn": "Cuộc họp đang được ghi hình.",
-        "expandedPending": "Ghi hình đang khởi động…",
+        "expandedPending": "Ghi hình đang khởi động...",
         "failedToStart": "Khởi động ghi hình thất bại",
         "fileSharingdescription": "Chia sẻ ghi hình với người tham gia họp",
         "highlight": "Đánh dấu",
@@ -1028,11 +1044,11 @@
         "on": "Đang ghi hình",
         "onBy": "{{name}} đã bắt đầu ghi hình",
         "onlyRecordSelf": "Chỉ ghi lại luồng âm thanh và video của tôi",
-        "pending": "Đang chuẩn bị để ghi hình cuộc họp…",
+        "pending": "Đang chuẩn bị để ghi hình cuộc họp...",
         "recordAudioAndVideo": "Ghi âm và video",
         "recordTranscription": "Ghi chú giọng nói",
-        "saveLocalRecording": "Lưu tệp ghi âm cục bộ (Beta)",
-        "serviceDescription": "Ghi hình của bạn sẽ được lưu bởi dịch vụ ghi hình",
+        "saveLocalRecording": "Lưu hình tại máy cục bộ",
+        "serviceDescription": "Lưu hình trên máy chủ C-MEET",
         "serviceDescriptionCloud": "Ghi âm trên đám mây",
         "serviceDescriptionCloudInfo": "Cuộc họp được ghi lại sẽ tự động xóa sau 24 giờ kể từ thời gian ghi âm.",
         "serviceName": "Dịch vụ ghi hình",
@@ -1066,10 +1082,10 @@
         "audio": "Âm thanh",
         "buttonLabel": "Cài đặt",
         "calendar": {
-            "about": "{{appName}} tích hợp lịch được sử dụng để truy cập bảo mật lịch để lấy thông tin sự kiện sắp tới.",
+            "about": "Tích hợp lịch {{appName}} được sử dụng để truy cập lịch của bạn một cách an toàn để đọc các sự kiện sắp tới.",
             "disconnect": "Ngắt kết nối",
             "microsoftSignIn": "Đăng nhập với Microsoft",
-            "signedIn": "Đang truy cập lịch sự kiện của {{email}}. Chọn Ngắt kết nối để dừng truy cập lịch sự kiện.",
+            "signedIn": "Đang truy cập các sự kiện lịch cho {{email}}. Nhấn vào nút Ngắt kết nối bên dưới để dừng truy cập các sự kiện lịch.",
             "title": "Lịch"
         },
         "desktopShareFramerate": "Tốc độ khung hình chia sẻ màn hình",
@@ -1145,7 +1161,7 @@
         "dialInfoText": "\n\n=====\n\nChỉ muốn gọi vào bằng điện thoại của bạn?\n\n{{defaultDialInNumber}}Nhấp vào liên kết này để xem số điện thoại gọi vào cho cuộc họp này\n{{dialInfoPageUrl}}",
         "mainText": "Chọn liên kết dưới để tham gia họp:\n{{roomUrl}}"
     },
-    "speaker": "Diễn giả",
+    "speaker": "Người nói",
     "speakerStats": {
         "angry": "Tức giận",
         "disgusted": "Kinh tởm",
@@ -1167,12 +1183,12 @@
     "startupoverlay": {
         "genericTitle": "Cuộc họp cần sử dụng microphone và camera của bạn.",
         "policyText": " ",
-        "title": "{{app}} cần sử dụng micro và camera của bạn."
+        "title": "{{app}} cần sử dụng microphone và camera của bạn."
     },
     "suspendedoverlay": {
         "rejoinKeyTitle": "Tham gia lại",
-        "text": "Bấm nút <i> Tham gia lại </i> để kết nối lại.",
-        "title": "Cuộc họp của bạn bị gián đoạn vì máy tính này chuyển sang trạng thái ngủ."
+        "text": "Nhấn nút <i>Tham gia lại</i> để kết nối lại.",
+        "title": "Cuộc gọi video của bạn đã bị gián đoạn vì máy tính này đã vào chế độ ngủ."
     },
     "termsView": {
         "title": "Điều kiện"
@@ -1181,8 +1197,8 @@
     "toolbar": {
         "Settings": "Cài đặt",
         "accessibilityLabel": {
-            "Settings": "Mở/Đóng Cấu hình",
-            "audioOnly": "Chuyển sang chỉ nghe âm thanh",
+            "Settings": "Mở cài đặt",
+            "audioOnly": "Chuyển đổi chế độ chỉ âm thanh",
             "audioRoute": "Chọn thiết bị âm thanh",
             "boo": "Boo",
             "breakoutRooms": "Phòng nhóm",
@@ -1269,9 +1285,9 @@
             "videomuteGUMPending": "Đang kết nối camera của bạn",
             "videounmute": "Bật camera"
         },
-        "addPeople": "Thêm người vào cuộc họp",
-        "audioOnlyOff": "Tắt chế độ chỉ nghe âm thanh",
-        "audioOnlyOn": "Bật chế độ chỉ nghe âm thanh",
+        "addPeople": "Thêm người vào cuộc gọi của bạn",
+        "audioOnlyOff": "Tắt chế độ băng thông thấp",
+        "audioOnlyOn": "Bật chế độ băng thông thấp",
         "audioRoute": "Chọn thiết bị âm thanh",
         "audioSettings": "Cài đặt âm thanh",
         "authenticate": "Xác thực",
@@ -1292,9 +1308,9 @@
         "enableNoiseSuppression": "Bật chế độ khử tiếng ồn",
         "endConference": "Kết thúc cuộc họp cho tất cả",
         "enterFullScreen": "Xem toàn màn hình",
-        "enterTileView": "Xem chế độ lưới",
-        "exitFullScreen": "Thoát toàn màn hình",
-        "exitTileView": "Thoát xem dạng lưới",
+        "enterTileView": "Chuyển sang chế độ xem lưới",
+        "exitFullScreen": "Thoát khỏi chế độ toàn màn hình",
+        "exitTileView": "Thoát khỏi chế độ xem lưới",
         "feedback": "Để lại phản hồi",
         "giphy": "GIPHY menu",
         "hangup": "Rời cuộc họp",
@@ -1354,7 +1370,7 @@
         "startSubtitles": "Bắt đầu phụ đề",
         "stopAudioSharing": "Dừng chia sẻ âm thanh",
         "stopScreenSharing": "Dừng chia sẻ màn hình",
-        "stopSharedVideo": "Dừng video",
+        "stopSharedVideo": "Dừng chia sẻ video",
         "stopSubtitles": "Dừng phụ đề",
         "surprised": "Ngạc nhiên",
         "talkWhileMutedPopup": "Đang nói chuyện? Bạn đang tắt tiếng.",
@@ -1381,16 +1397,25 @@
     },
     "unpinParticipant": "{{participantName}} - Bỏ ghim",
     "userMedia": {
-        "grantPermissions": "Vui lòng cấp quyền sử dụng camera và micro của bạn."
+        "androidGrantPermissions": "Chọn <b><i>Cho phép</i></b> khi trình duyệt của bạn yêu cầu quyền truy cập.",
+        "chromeGrantPermissions": "Chọn <b><i>Cho phép</i></b> khi trình duyệt của bạn yêu cầu quyền truy cập.",
+        "edgeGrantPermissions": "Chọn <b><i>Có</i></b> khi trình duyệt của bạn yêu cầu quyền truy cập.",
+        "electronGrantPermissions": "Đang cố gắng truy cập vào camera và micro của bạn",
+        "firefoxGrantPermissions": "Chọn <b><i>Chia sẻ Thiết bị Được Chọn</i></b> khi trình duyệt của bạn yêu cầu quyền truy cập.",
+        "iexplorerGrantPermissions": "Chọn <b><i>OK</i></b> khi trình duyệt của bạn yêu cầu quyền truy cập.",
+        "nwjsGrantPermissions": "Vui lòng cấp quyền để sử dụng camera và micro của bạn",
+        "operaGrantPermissions": "Chọn <b><i>Cho phép</i></b> khi trình duyệt của bạn yêu cầu quyền truy cập.",
+        "react-nativeGrantPermissions": "Chọn <b><i>Cho phép</i></b> khi trình duyệt của bạn yêu cầu quyền truy cập.",
+        "safariGrantPermissions": "Chọn <b><i>OK</i></b> khi trình duyệt của bạn yêu cầu quyền truy cập."
     },
     "videoSIPGW": {
-        "busy": "Chúng tôi đang giải phóng tài nguyên. Vui lòng thử lại sau vài phút.",
-        "busyTitle": "Dịch vụ phòng họp đang bận",
+        "busy": "Chúng tôi đang làm việc để giải phóng tài nguyên. Vui lòng thử lại sau vài phút.",
+        "busyTitle": "Dịch vụ Phòng hiện đang bận",
         "errorAlreadyInvited": "{{displayName}} đã được mời",
-        "errorInvite": "Cuộc họp chưa được khởi tạo. Vui lòng thử lại.",
-        "errorInviteFailed": "Chúng tôi đang xử lý vấn đề. Vui lòng thử lại sau.",
-        "errorInviteFailedTitle": "Mời {{displayName}} thất bại",
-        "errorInviteTitle": "Lỗi mời họp",
+        "errorInvite": "Cuộc họp chưa được thiết lập. Vui lòng thử lại sau.",
+        "errorInviteFailed": "Chúng tôi đang làm việc để khắc phục sự cố. Vui lòng thử lại sau.",
+        "errorInviteFailedTitle": "Không thể mời {{displayName}}",
+        "errorInviteTitle": "Lỗi khi mời vào phòng",
         "pending": "{{displayName}} đã được mời"
     },
     "videoStatus": {
@@ -1428,7 +1453,7 @@
         "kick": "Đẩy ra",
         "mirrorVideo": "Phản chiếu video của tôi",
         "moderator": "Quản trị viên",
-        "mute": "Người tham gia bị tắt tiếng",
+        "mute": "Người tham dự đã bị tắt tiếng",
         "muted": "Đã tắt tiếng",
         "pinToStage": "Ghim vào sân khấu",
         "remoteControl": "Điều khiển từ xa",
@@ -1447,20 +1472,20 @@
         },
         "addBackground": "Thêm hình nền",
         "apply": "Áp dụng",
-        "backgroundEffectError": "Không thể áp dụng hiệu ứng hình nền.",
+        "backgroundEffectError": "Không thể áp dụng hiệu ứng nền.",
         "blur": "Làm mờ",
         "deleteImage": "Xóa ảnh",
         "desktopShare": "Chia sẻ màn hình",
-        "desktopShareError": "Không thể chia sẻ màn hình",
+        "desktopShareError": "Không thể tạo chia sẻ màn hình",
         "image1": "Bãi biển",
-        "image2": "Tường trắng trung tính",
-        "image3": "Phòng trống màu trắng",
-        "image4": "Đèn sàn màu đen",
+        "image2": "Tường trắng",
+        "image3": "Phòng trống trắng",
+        "image4": "Đèn đứng màu đen",
         "image5": "Núi",
         "image6": "Rừng",
-        "image7": "Mặt trời mọc",
+        "image7": "Bình minh",
         "none": "Không có",
-        "pleaseWait": "Vui lòng đợi…",
+        "pleaseWait": "Vui lòng đợi...",
         "removeBackground": "Xóa hình nền",
         "slightBlur": "Làm mờ nhẹ",
         "title": "Hình nền ảo",
@@ -1470,12 +1495,22 @@
     },
     "visitors": {
         "chatIndicator": "(khách)",
+        "joinMeeting": {
+            "description": "Bạn hiện là quan sát viên của hội nghị này.",
+            "raiseHand": "Hãy giơ tay lên",
+            "title": "Tham gia cuộc họp",
+            "wishToSpeak": "Nếu bạn muốn phát biểu, vui lòng giơ tay bên dưới và chờ sự chấp thuận của người điều hành."
+        },
         "labelTooltip": "Số lượt truy cập: {{count}}",
         "notification": {
-            "demoteDescription": "Được gửi đến đây bởi {{actor}}, giơ tay để tham gia",
-            "description": "Để tham gia, hãy giơ tay",
-            "title": "Bạn là một khách trong cuộc họp"
-        }
+            "demoteDescription": "Được gửi đến đây bởi {{actor}}, hãy giơ tay để tham gia",
+            "noMainParticipantsDescription": "Một người tham gia cần bắt đầu cuộc họp. Vui lòng thử lại sau một lát.",
+            "noMainParticipantsTitle": "Cuộc họp này vẫn chưa bắt đầu.",
+            "noVisitorLobby": "Bạn không thể tham gia khi có sảnh đợi được bật cho cuộc họp.",
+            "notAllowedPromotion": "Người tham gia cần cho phép yêu cầu của bạn trước.",
+            "title": "Bạn là khách truy cập trong cuộc họp"
+        },
+        "waitingMessage": "Bạn sẽ tham gia cuộc họp ngay khi cuộc họp diễn ra!"
     },
     "volumeSlider": "Thanh điều chỉnh âm lượng",
     "welcomepage": {
@@ -1486,12 +1521,12 @@
         "addMeetingName": "Thêm tên phòng họp",
         "appDescription": "{{app}} được mã hóa, 100% giải pháp cuộc họp trực tuyến mã nguồn mở mà bạn có thể sử dụng hàng ngày, miễn phí.",
         "audioVideoSwitch": {
-            "audio": "Tiếng",
-            "video": "Hình ảnh"
+            "audio": "Âm thanh",
+            "video": "Video"
         },
         "calendar": "Lịch",
         "connectCalendarButton": "Kết nối lịch của bạn",
-        "connectCalendarText": "Kết nối lịch của bạn để xem tất cả các cuộc họp {{app}}. Thêm, thêm cuộc họp {{provider}} vào lịch của bạn và bắt đầu.",
+        "connectCalendarText": "Kết nối lịch của bạn để xem tất cả các cuộc họp của bạn trong {{app}}. Ngoài ra, thêm các cuộc họp {{provider}} vào lịch của bạn và bắt đầu chúng chỉ với một cú nhấp chuột.",
         "enterRoomTitle": "Bắt đầu cuộc họp mới",
         "getHelp": "Nhận hỗ trợ",
         "go": "Đi",

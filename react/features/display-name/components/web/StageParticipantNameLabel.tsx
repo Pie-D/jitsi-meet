@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
+import Typed from 'typed.js';
+import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
 
 import { IReduxState } from '../../../app/types';
 import { getParticipantDisplayName, isScreenShareParticipant } from '../../../base/participants/functions';
@@ -14,7 +17,7 @@ import {
 } from '../../../toolbox/functions.web';
 import { isLayoutTileView } from '../../../video-layout/functions.any';
 import { shouldDisplayStageParticipantBadge } from '../../functions';
-
+import { CMEET_ENV } from '../../../chat/ENV';
 import DisplayNameBadge from './DisplayNameBadge';
 import {
     getStageParticipantFontSizeRange,
@@ -96,7 +99,60 @@ const StageParticipantNameLabel = () => {
     const visible = useSelector(shouldDisplayStageParticipantBadge);
     const isTileView = useSelector(isLayoutTileView);
     const _isScreenShareParticipant = isScreenShareParticipant(largeVideoParticipant);
+    const typedElementRef = useRef(null);
+    const [stompClient, setStompClient] = useState<Client | null>(null);
+    const [meetingId, setMeetingId] = useState('');
+    const [typedStrings, setTypedStrings] = useState([""]);
+    const [username, setUsername] = useState("");
+    useEffect(() => {
+        const currentMeetingId = window.location.href.split('/').at(-1) || '';
+        setMeetingId(currentMeetingId);
+        const client = new Client({
+            webSocketFactory: () => new SockJS(CMEET_ENV.urlWS)
+        });
+        client.onConnect = () => {
+            client.subscribe(CMEET_ENV.subriceCaption + '/' + currentMeetingId, ({ body }) => {
+                const data = JSON.parse(body);
+                const { caption, username } = data;
+                if (username) setUsername("Đại biểu : " + username)
+                if (caption) {
+                    setTypedStrings(prevStrings => [...prevStrings, caption]);
+                    console.log("setTypedStrings", typedStrings)
+                }
+            });
+        };
+        client.activate();
+        setStompClient(client);
+        return () => {
+            client.deactivate();
+        };
+    }, []);
+    useEffect(() => {
+        if (typedElementRef.current) {
+            const typed = new Typed(typedElementRef.current, {
+                strings: typedStrings,
+                typeSpeed: 30,
+            });
+            return () => {
+                typed.destroy();
+            };
+        }
+    }, [typedStrings]);
 
+    if (typedStrings) {
+        return (
+            <div
+                className={cx(
+                    'stage-participant-label',
+                    classes.badgeContainer,
+                    toolboxVisible && classes.containerElevated
+                )}
+            >
+                <DisplayNameBadge name={username} />
+                <div ref={typedElementRef} />
+            </div>
+        );
+    }
     if (visible || (_isScreenShareParticipant && !isTileView)) {
         // For stage participant visibility is true only when the toolbar is visible but we need to keep the element
         // in the DOM in order to make it disappear with an animation.
