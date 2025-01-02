@@ -1,18 +1,18 @@
-import React, { Component } from 'react';
-import { WithTranslation } from 'react-i18next';
-import { connect } from 'react-redux';
+import React, { Component } from "react";
+import { WithTranslation } from "react-i18next";
+import { connect } from "react-redux";
 
-import { IReduxState } from '../../../../app/types';
-import { isVpaasMeeting } from '../../../../jaas/functions';
-import { translate } from '../../../i18n/functions';
-import { env } from '../../../../../../ENV';
+import { IReduxState } from "../../../../app/types";
+import { isVpaasMeeting } from "../../../../jaas/functions";
+import { translate } from "../../../i18n/functions";
+import { env } from "../../../../../../ENV";
 /**
  * The CSS style of the element with CSS class {@code rightwatermark}.
  *
  * @private
  */
 const _RIGHT_WATERMARK_STYLE = {
-    backgroundImage: 'url(images/rightwatermark.png)'
+    backgroundImage: "url(images/rightwatermark.png)"
 };
 
 /**
@@ -85,7 +85,7 @@ class Watermarks extends Component<IProps, State> {
 
         this.state = {
             brandWatermarkLink:
-                showBrandWatermark ? interfaceConfig.BRAND_WATERMARK_LINK : '',
+                showBrandWatermark ? interfaceConfig.BRAND_WATERMARK_LINK : "",
             showBrandWatermark,
             showPoweredBy: interfaceConfig.SHOW_POWERED_BY
         };
@@ -125,7 +125,7 @@ class Watermarks extends Component<IProps, State> {
         if (this.state.showBrandWatermark) {
             reactElement = (
                 <div
-                    className = 'watermark rightwatermark'
+                    className = "watermark rightwatermark"
                     style = { _RIGHT_WATERMARK_STYLE } />
             );
 
@@ -135,7 +135,7 @@ class Watermarks extends Component<IProps, State> {
                 reactElement = (
                     <a
                         href = { brandWatermarkLink }
-                        target = '_new'>
+                        target = "_new">
                         { reactElement }
                     </a>
                 );
@@ -158,14 +158,14 @@ class Watermarks extends Component<IProps, State> {
             _showJitsiWatermark
         } = this.props;
         const { noMargins, t } = this.props;
-        const className = `watermark leftwatermark ${noMargins ? 'no-margin' : ''}`;
+        const className = `watermark leftwatermark ${noMargins ? "no-margin" : ""}`;
 
         let reactElement = null;
 
         if (_showJitsiWatermark) {
             const style = {
                 backgroundImage: `url(${_logoUrl})`,
-                position: _logoLink ? 'static' : 'absolute'
+                position: _logoLink ? "static" : "absolute"
             } as const;
 
             reactElement = (<div
@@ -175,10 +175,10 @@ class Watermarks extends Component<IProps, State> {
             if (_logoLink) {
                 reactElement = (
                     <a
-                        aria-label = { t('jitsiHome', { logo: env.APP_NAME }) }
+                        aria-label = { t("jitsiHome", { logo: env.APP_NAME }) }
                         className = { className }
-                        href = { _logoLink }
-                        target = '_new'>
+                        href = { env.LOGO_LINK}
+                        target = "_new">
                         { reactElement }
                     </a>
                 );
@@ -200,10 +200,10 @@ class Watermarks extends Component<IProps, State> {
 
             return (
                 <a
-                    className = 'poweredby'
-                    href = 'http://jitsi.org'
-                    target = '_new'>
-                    <span>{ t('poweredby') } jitsi.org</span>
+                    className = "poweredby"
+                    href = "http://jitsi.org"
+                    target = "_new">
+                    <span>{ t("poweredby") } jitsi.org</span>
                 </a>
             );
         }
@@ -216,7 +216,7 @@ class Watermarks extends Component<IProps, State> {
  * Maps parts of Redux store to component prop types.
  *
  * @param {Object} state - Snapshot of Redux store.
- * @param {Object} ownProps - Component's own props.
+ * @param {Object} ownProps - Component"s own props.
  * @returns {IProps}
  */
 function _mapStateToProps(state: IReduxState, ownProps: any) {
@@ -227,9 +227,9 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         useDynamicBrandingData,
         logoClickUrl,
         logoImageUrl
-    } = state['features/dynamic-branding'];
-    const isValidRoom = state['features/base/conference'].room;
-    const { defaultLogoUrl } = state['features/base/config'];
+    } = state["features/dynamic-branding"];
+    const isValidRoom = state["features/base/conference"].room;
+    const { defaultLogoUrl } = state["features/base/config"];
     const {
         JITSI_WATERMARK_LINK,
         SHOW_JITSI_WATERMARK
@@ -258,7 +258,7 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
     return {
         _logoLink,
         _logoUrl,
-        _showJitsiWatermark
+        _showJitsiWatermark,
     };
 }
 
