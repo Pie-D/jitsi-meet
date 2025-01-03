@@ -36,15 +36,10 @@ unlimited_jids = {
 }
 
 VirtualHost "jitmeet.example.com"
-    authentication = "jitsi-anonymous" -- do not delete me
-    -- Properties below are modified by jitsi-meet-tokens package config
-    -- and authentication above is switched to "token"
-    --app_id="example_app_id"
-    --app_secret="example_app_secret"
-    -- Assign this host a certificate for TLS, otherwise it would use the one
-    -- set in the global section (if any).
-    -- Note that old-style SSL on port 5223 only supports one certificate, and will always
-    -- use the global one.
+    authentication = "token";
+    app_id="app_id"
+    app_secret="app_secret"
+
     ssl = {
         key = "/etc/prosody/certs/jitmeet.example.com.key";
         certificate = "/etc/prosody/certs/jitmeet.example.com.crt";
@@ -64,6 +59,7 @@ VirtualHost "jitmeet.example.com"
         "muc_breakout_rooms";
         "av_moderation";
         "room_metadata";
+        "persistent_lobby";
     }
     c2s_require_encryption = false
     lobby_muc = "lobby.jitmeet.example.com"
@@ -71,6 +67,10 @@ VirtualHost "jitmeet.example.com"
     room_metadata_component = "metadata.jitmeet.example.com"
     main_muc = "conference.jitmeet.example.com"
     -- muc_lobby_whitelist = { "recorder.jitmeet.example.com" } -- Here we can whitelist jibri to enter lobby enabled rooms
+
+VirtualHost "guest.jitmeet.example.com"
+    authentication = "anonymous"
+    c2s_require_encryption = false
 
 Component "conference.jitmeet.example.com" "muc"
     restrict_room_creation = true
@@ -83,6 +83,7 @@ Component "conference.jitmeet.example.com" "muc"
         --"token_verification";
         "muc_rate_limit";
         "muc_password_whitelist";
+        "muc_wait_for_host";
     }
     admins = { "focusUser@auth.jitmeet.example.com" }
     muc_password_whitelist = {
@@ -119,10 +120,8 @@ Component "internal.auth.jitmeet.example.com" "muc"
 VirtualHost "auth.jitmeet.example.com"
     modules_enabled = {
         "limits_exception";
-        "smacks";
     }
     authentication = "internal_hashed"
-    smacks_hibernation_time = 15;
 
 -- Proxy to jicofo's user JID, so that it doesn't have to register as a component.
 Component "focus.jitmeet.example.com" "client_proxy"

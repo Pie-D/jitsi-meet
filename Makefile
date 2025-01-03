@@ -120,7 +120,7 @@ deploy-local:
 
 .NOTPARALLEL:
 dev: deploy-init deploy-css deploy-rnnoise-binary deploy-tflite deploy-meet-models deploy-lib-jitsi-meet deploy-olm deploy-tf-wasm deploy-excalidraw-dev deploy-face-landmarks
-	$(WEBPACK_DEV_SERVER)
+	$(WEBPACK_DEV_SERVER) --host 0.0.0.0 --port 8085
 
 source-package: compile deploy
 	mkdir -p source_package/jitsi-meet/css && \

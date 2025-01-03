@@ -11,19 +11,15 @@ import CalendarList from "../../calendar-sync/components/CalendarList.web";
 import RecentList from "../../recent-list/components/RecentList.web";
 import SettingsButton from "../../settings/components/web/SettingsButton";
 import { SETTINGS_TABS } from "../../settings/constants";
-import {
-    AbstractWelcomePage,
-    IProps,
-    _mapStateToProps,
-} from "./AbstractWelcomePage";
+import { AbstractWelcomePage, IProps, _mapStateToProps } from "./AbstractWelcomePage";
 import Tabs from "./Tabs";
+
 /**
  * The pattern used to validate room name.
  *
  * @type {string}
  */
 export const ROOM_NAME_VALIDATE_PATTERN_STR = "^[^?&:\u0022\u0027%#]+$";
-
 
 /**
  * The Web container rendering the welcome page.
@@ -61,16 +57,15 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         this.state = {
             ...this.state,
 
-            generateRoomNames:
-                interfaceConfig.GENERATE_ROOMNAMES_ON_WELCOME_PAGE,
+            generateRoomNames: interfaceConfig.GENERATE_ROOMNAMES_ON_WELCOME_PAGE,
         };
 
         /**
-      * Used To display a warning massage if the title input has no allow character.
-      *
-      * @private
-      * @type {boolean}
-      */
+         * Used To display a warning massage if the title input has no allow character.
+         *
+         * @private
+         * @type {boolean}
+         */
         this._titleHasNotAllowCharacter = false;
 
         /**
@@ -104,7 +99,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         this._additionalCardTemplate = document.getElementById(
             "welcome-page-additional-card-template"
         ) as HTMLTemplateElement;
-        
+
         /**
          * The template to use as the main content for the welcome page. If
          * not found then only the welcome page head will display.
@@ -131,11 +126,9 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         this._onFormSubmit = this._onFormSubmit.bind(this);
         this._onRoomChange = this._onRoomChange.bind(this);
         this._setAdditionalCardRef = this._setAdditionalCardRef.bind(this);
-        this._setAdditionalContentRef
-            = this._setAdditionalContentRef.bind(this);
+        this._setAdditionalContentRef = this._setAdditionalContentRef.bind(this);
         this._setRoomInputRef = this._setRoomInputRef.bind(this);
-        this._setAdditionalToolbarContentRef
-            = this._setAdditionalToolbarContentRef.bind(this);
+        this._setAdditionalToolbarContentRef = this._setAdditionalToolbarContentRef.bind(this);
         this._renderFooter = this._renderFooter.bind(this);
     }
 
@@ -157,8 +150,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         }
 
         if (this._shouldShowAdditionalContent()) {
-            this._additionalContentRef?.appendChild(
-                this._additionalContentTemplate?.content.cloneNode(true) as Node);
+            this._additionalContentRef?.appendChild(this._additionalContentTemplate?.content.cloneNode(true) as Node);
         }
 
         if (this._shouldShowAdditionalToolbarContent()) {
@@ -168,9 +160,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         }
 
         if (this._shouldShowAdditionalCard()) {
-            this._additionalCardRef?.appendChild(
-                this._additionalCardTemplate?.content.cloneNode(true) as Node
-            );
+            this._additionalCardRef?.appendChild(this._additionalCardTemplate?.content.cloneNode(true) as Node);
         }
     }
 
@@ -198,87 +188,65 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
         const showAdditionalCard = this._shouldShowAdditionalCard();
         const showAdditionalContent = this._shouldShowAdditionalContent();
         const showAdditionalToolbarContent = this._shouldShowAdditionalToolbarContent();
-        const contentClassName = showAdditionalContent
-        ? "with-content"
-        : "without-content";
-        const footerClassName = DISPLAY_WELCOME_FOOTER
-        ? "with-footer"
-        : "without-footer";
+        const contentClassName = showAdditionalContent ? "with-content" : "without-content";
+        const footerClassName = DISPLAY_WELCOME_FOOTER ? "with-footer" : "without-footer";
 
         return (
-            <div
-                className = { `welcome ${contentClassName} ${footerClassName}` }
-                id = 'welcome_page'>
-                <div className = 'header'>
-                    <div className = 'header-image' />
-                    <div className = 'header-container'>
-                        <div className = 'header-watermark-container'>
-                            <div className = 'welcome-watermark'>
-                                <Watermarks
-                                    defaultJitsiLogoURL = { DEFAULT_WELCOME_PAGE_LOGO_URL }
-                                    noMargins = { true } />
+            <div className={`welcome ${contentClassName} ${footerClassName}`} id="welcome_page">
+                <div className="header">
+                    <div className="header-image" />
+                    <div className="header-container">
+                        <div className="header-watermark-container">
+                            <div className="welcome-watermark">
+                                <Watermarks defaultJitsiLogoURL={DEFAULT_WELCOME_PAGE_LOGO_URL} noMargins={true} />
                             </div>
                         </div>
                         <div className="welcome-page-settings">
-                            <SettingsButton
-                                defaultTab={SETTINGS_TABS.CALENDAR}
-                                isDisplayedOnWelcomePage={true}
-                            />
+                            <SettingsButton defaultTab={SETTINGS_TABS.CALENDAR} isDisplayedOnWelcomePage={true} />
                             {showAdditionalToolbarContent ? (
-                                <div
-                                    className="settings-toolbar-content"
-                                    ref={this._setAdditionalToolbarContentRef}
-                                />
+                                <div className="settings-toolbar-content" ref={this._setAdditionalToolbarContentRef} />
                             ) : null}
                         </div>
-                        <h1 className="header-text-title">
-                            {t("welcomepage.headerTitle")}
-                        </h1>
-                        <span className="header-text-subtitle">
-                            {t("welcomepage.headerSubtitle")}
-                        </span>
-                        <div id="enter_room">
-                            <div className="join-meeting-container">
-                                <div className="enter-room-input-container">
-                                    <form onSubmit={this._onFormSubmit}>
-                                        <input
-                                            aria-disabled="false"
-                                            aria-label="Meeting name input"
-                                            autoFocus={true}
-                                            className="enter-room-input"
-                                            id="enter_room_field"
-                                            onChange={this._onRoomChange}
-                                            pattern={
-                                                ROOM_NAME_VALIDATE_PATTERN_STR
-                                            }
-                                            placeholder={
-                                                this.state.roomPlaceholder
-                                            }
-                                            ref={this._setRoomInputRef}
-                                            type="text"
-                                            value={this.state.room}
-                                        />
-                                    </form>
-                                </div>
+                        <div className="header-text">
+                            <h1 className="header-text-title">{env.APP_NAME}</h1>
+                            <span className="header-text-subtitle">{t("welcomepage.headerSubtitle")}</span>
+                            <div id="enter_room">
+                                <div className="join-meeting-container">
+                                    <div className="enter-room-input-container">
+                                        <form onSubmit={this._onFormSubmit}>
+                                            <input
+                                                aria-disabled="false"
+                                                aria-label="Meeting name input"
+                                                autoFocus={true}
+                                                className="enter-room-input"
+                                                id="enter_room_field"
+                                                onChange={this._onRoomChange}
+                                                pattern={ROOM_NAME_VALIDATE_PATTERN_STR}
+                                                placeholder={this.state.roomPlaceholder}
+                                                ref={this._setRoomInputRef}
+                                                type="text"
+                                                value={this.state.room}
+                                            />
+                                        </form>
+                                    </div>
 
-                                <button
-                                    aria-disabled="false"
-                                    aria-label="Start meeting"
-                                    className="welcome-page-button"
-                                    id="enter_room_button"
-                                    onClick={this._onFormSubmit}
-                                    tabIndex={0}
-                                    type="button"
-                                >
-                                    {t("welcomepage.startMeeting")}
-                                </button>
+                                    <button
+                                        aria-disabled="false"
+                                        aria-label="Start meeting"
+                                        className="welcome-page-button"
+                                        id="enter_room_button"
+                                        onClick={this._onFormSubmit}
+                                        tabIndex={0}
+                                        type="button"
+                                    >
+                                        {t("welcomepage.startMeeting")}
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
                         {this._titleHasNotAllowCharacter && (
-                            <div
-                                className="not-allow-title-character-div"
-                                role="alert"
-                            >
+                            <div className="not-allow-title-character-div" role="alert">
                                 <Icon src={IconWarning} />
                                 <span className="not-allow-title-character-text">
                                     {t("welcomepage.roomNameAllowedChars")}
@@ -289,42 +257,28 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
 
                         {_moderatedRoomServiceUrl && (
                             <div id="moderated-meetings">
-                                {translateToHTML(
-                                    t,
-                                    "welcomepage.moderatedMessage",
-                                    { url: _moderatedRoomServiceUrl }
-                                )}
+                                {translateToHTML(t, "welcomepage.moderatedMessage", { url: _moderatedRoomServiceUrl })}
                             </div>
                         )}
                     </div>
                 </div>
 
-                <div className="welcome-cards-container">
+                {/* <div className="welcome-cards-container">
                     <div className="welcome-card-column">
-                        <div className="welcome-tabs welcome-card welcome-card--blue">
-                            {this._renderTabs()}
-                        </div>
+                        <div className="welcome-tabs welcome-card welcome-card--blue">{this._renderTabs()}</div>
                         {showAdditionalCard ? (
-                            <div
-                                className="welcome-card welcome-card--dark"
-                                ref={this._setAdditionalCardRef}
-                            />
+                            <div className="welcome-card welcome-card--dark" ref={this._setAdditionalCardRef} />
                         ) : null}
                     </div>
 
-                    {showAdditionalContent ? (
-                        <div
-                            className="welcome-page-content"
-                            ref={this._setAdditionalContentRef}
-                        />
+                    {showAdditionalContent ? ( 
+                        <div className="welcome-page-content" ref={this._setAdditionalContentRef} />
                     ) : null}
-                </div>
+                </div> */}
                 {DISPLAY_WELCOME_FOOTER && this._renderFooter()}
             </div>
         );
     }
-
-    
 
     /**
      * Renders the insecure room name warning.
@@ -334,9 +288,8 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
     _doRenderInsecureRoomNameWarning() {
         return (
             <div className="insecure-room-name-warning">
-            <Icon src={IconWarning} />
-            <span>{getUnsafeRoomText(this.props.t, "welcome")}</span>
-
+                <Icon src={IconWarning} />
+                <span>{getUnsafeRoomText(this.props.t, "welcome")}</span>
             </div>
         );
     }
@@ -371,9 +324,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
     _onRoomChange(event: React.ChangeEvent<HTMLInputElement>) {
         const specialCharacters = ["?", "&", ":", "'", '"', "%", "#", "."];
 
-        this._titleHasNotAllowCharacter = specialCharacters.some((char) =>
-            event.target.value.includes(char)
-        );
+        this._titleHasNotAllowCharacter = specialCharacters.some((char) => event.target.value.includes(char));
         super._onRoomChange(event.target.value);
     }
 
@@ -404,29 +355,21 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
                     <div className="welcome-footer-padded">
                         <div className="welcome-footer-row-block welcome-footer--row-1">
                             <div className="welcome-footer-row-1-text">
-                                Copyright © {new Date().getFullYear()}, Bản
-                                quyền thuộc Viện nghiên cứu ứng dụng công nghệ
-                                CMC - ATI
+                                Copyright © {new Date().getFullYear()}, Bản quyền thuộc Viện nghiên cứu ứng dụng công
+                                nghệ CMC ATI
                             </div>
                             <a
                                 target="_blank"
                                 className="welcome-badge"
-                                href="https://apps.apple.com/th/app/c-meet/id6462052924"
-                            >
-                                <img
-                                    alt={t("welcomepage.mobileDownLoadLinkIos")}
-                                    src="./images/app-store-badge.png"
-                                />
+                                href={iosDownloadLink}>
+                                <img alt={t("welcomepage.mobileDownLoadLinkIos")} src="./images/app-store-badge.png" />
                             </a>
                             <a
-                                className="welcome-badge"
-                                href="https://play.google.com/store/apps/details?id=com.cmcati.ecabinetmobile&pcampaignid=web_share"
                                 target="_blank"
-                            >
+                                className="welcome-badge"
+                                href={androidDownloadLink}>
                                 <img
-                                    alt={t(
-                                        "welcomepage.mobileDownLoadLinkAndroid"
-                                    )}
+                                    alt={t("welcomepage.mobileDownLoadLinkAndroid")}
                                     src="./images/google-play-badge.png"
                                 />
                             </a>
@@ -472,12 +415,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
             return null;
         }
 
-        return (
-            <Tabs
-            accessibilityLabel={t("welcomepage.meetingsAccessibilityLabel")}
-            tabs={tabs}
-        />
-        );
+        return <Tabs accessibilityLabel={t("welcomepage.meetingsAccessibilityLabel")} tabs={tabs} />;
     }
 
     /**

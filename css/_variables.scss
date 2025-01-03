@@ -60,8 +60,8 @@ $unsupportedDesktopBrowserTextFontSize: 21px;
 $watermarkWidth: 71px;
 $watermarkHeight: 32px;
 
-$welcomePageWatermarkWidth: 71px;
-$welcomePageWatermarkHeight: 32px;
+$welcomePageWatermarkWidth: 140px;
+$welcomePageWatermarkHeight: 70px;
 
 /**
  * Welcome page variables.
@@ -75,7 +75,8 @@ $welcomePageHeaderBackground: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 
 $welcomePageHeaderBackgroundPosition: center;
 $welcomePageHeaderBackgroundRepeat: none;
 $welcomePageHeaderBackgroundSize: cover;
-$welcomePageHeaderPaddingBottom: 15px;
+// $welcomePageHeaderPaddingBottom: 15px;
+$welcomePageHeaderPaddingBottom: 0;
 $welcomePageHeaderTitleMaxWidth: initial;
 $welcomePageHeaderTextAlign: center;
 

@@ -48,7 +48,7 @@ const getMimeType = (): string => {
 };
 
 const VIDEO_BIT_RATE = 2500000; // 2.5Mbps in bits
-const MAX_SIZE = 1073741824; // 1GB in bytes
+const MAX_SIZE = 3221225472; // 1GB in bytes
 
 // Lazily initialize.
 let preferredMediaType: string;

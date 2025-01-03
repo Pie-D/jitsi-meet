@@ -1587,6 +1587,7 @@ var config = {
     // You can use external service for authentication that will redirect back passing a jwt token
     // You can use tokenAuthUrl config to point to a URL of such service.
     // The URL for the service supports few params which will be filled in by the code.
+    tokenAuthUrl: 'https://jitsi-meet.example.com/static/oidc-pre-auth.html?path={room}&room={room}&state={state}',
     // tokenAuthUrl:
     //      'https://myservice.com/auth/{room}?code_challenge_method=S256&code_challenge={code_challenge}&state={state}'
     // Supported parameters in tokenAuthUrl:
@@ -1605,6 +1606,8 @@ var config = {
     //          - electron=true (when web is loaded in electron app)
     // If there is a logout service you can specify its URL with:
     // tokenLogoutUrl: 'https://myservice.com/logout'
+    tokenLogoutUrl: 'https://iam.cmcati.vn/realms/CIST_1/protocol/openid-connect/logout?client_id=c-meet-online&post_logout_redirect_uri=https://m.example.com',
+
     // You can enable tokenAuthUrlAutoRedirect which will detect that you have logged in successfully before
     // and will automatically redirect to the token service to get the token for the meeting.
     // tokenAuthUrlAutoRedirect: false
@@ -1834,18 +1837,18 @@ var config = {
     // defaultLogoUrl: 'images/watermark.svg',
 
     // Settings for the Excalidraw whiteboard integration.
-    // whiteboard: {
+    whiteboard: {
     //     // Whether the feature is enabled or not.
-    //     enabled: true,
+        enabled: true,
     //     // The server used to support whiteboard collaboration.
     //     // https://github.com/jitsi/excalidraw-backend
-    //     collabServerBaseUrl: 'https://excalidraw-backend.example.com',
+        collabServerBaseUrl: 'https://jitsi-meet.example.com',
     //     // The user access limit to the whiteboard, introduced as a means
     //     // to control the performance.
     //     userLimit: 25,
     //     // The url for more info about the whiteboard and its usage limitations.
     //     limitUrl: 'https://example.com/blog/whiteboard-limits',
-    // },
+    },
 
     // The watchRTC initialize config params as described :
     // https://testrtc.com/docs/installing-the-watchrtc-javascript-sdk/#h-set-up-the-sdk
