@@ -18,6 +18,7 @@ import {
     CONFERENCE_LOCAL_SUBJECT_CHANGED,
     CONFERENCE_PROPERTIES_CHANGED,
     CONFERENCE_SUBJECT_CHANGED,
+    CONFERENCE_ROOM_OWNER_SET,
     CONFERENCE_TIMESTAMP_CHANGED,
     CONFERENCE_WILL_JOIN,
     CONFERENCE_WILL_LEAVE,
@@ -186,6 +187,7 @@ export interface IConferenceState {
     startReactionsMuted?: boolean;
     startVideoMutedPolicy?: boolean;
     subject?: string;
+    roomOwner?: string;
 }
 
 export interface IJitsiConferenceRoom {
@@ -197,6 +199,7 @@ export interface IJitsiConferenceRoom {
             logout: Function;
         };
     };
+    roomOwner?: string;
 }
 
 interface IConferenceFailedError extends Error {
@@ -218,7 +221,8 @@ ReducerRegistry.register<IConferenceState>('features/base/conference',
 
         case CONFERENCE_JOINED:
             return _conferenceJoined(state, action);
-
+        case CONFERENCE_ROOM_OWNER_SET:
+            return set(state, 'roomOwner', action.roomOwner);
         case CONFERENCE_SUBJECT_CHANGED:
             return set(state, 'subject', action.subject);
 
