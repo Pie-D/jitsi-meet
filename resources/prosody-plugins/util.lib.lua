@@ -474,12 +474,20 @@ end
 
 -- Returns the initiator extension if the stanza is coming from a sip jigasi
 function is_sip_jigasi(stanza)
+    if not stanza then
+        return false;
+    end
+
     return stanza:get_child('initiator', 'http://jitsi.org/protocol/jigasi');
 end
 
 function is_transcriber_jigasi(stanza)
+    if not stanza then
+        return false;
+    end
+
     local features = stanza:get_child('features');
-    if not features  then
+    if not features then
         return false;
     end
 
@@ -532,7 +540,7 @@ function is_sip_jibri_join(stanza)
 end
 
 function is_jibri(occupant)
-    return starts_with_one_of(occupant.jid, RECORDER_PREFIXES)
+    return starts_with_one_of(type(occupant) == "string" and occupant or occupant.jid, RECORDER_PREFIXES)
 end
 
 -- process a host module directly if loaded or hooks to wait for its load

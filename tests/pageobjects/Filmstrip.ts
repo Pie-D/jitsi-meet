@@ -3,6 +3,11 @@ import { Participant } from '../helpers/Participant';
 import BaseDialog from './BaseDialog';
 import BasePageObject from './BasePageObject';
 
+const LOCAL_VIDEO_XPATH = '//span[@id="localVideoContainer"]';
+const LOCAL_VIDEO_MENU_TRIGGER = '#local-video-menu-trigger';
+const LOCAL_USER_CONTROLS = 'aria/Local user controls';
+const HIDE_SELF_VIEW_BUTTON_XPATH = '//div[contains(@class, "popover")]//div[@id="hideselfviewButton"]';
+
 /**
  * Filmstrip elements.
  */
@@ -49,6 +54,28 @@ export default class Filmstrip extends BasePageObject {
     }
 
     /**
+     * Returns the remote video id of a participant with endpointID.
+     * @param endpointId
+     */
+    async getRemoteVideoId(endpointId: string) {
+        const remoteDisplayName = this.participant.driver.$(`span[id="participant_${endpointId}"]`);
+
+        await remoteDisplayName.moveTo();
+
+        return await this.participant.driver.execute(eId =>
+            document.evaluate(`//span[@id="participant_${eId}"]//video`,
+                document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue?.srcObject?.id, endpointId);
+    }
+
+    /**
+     * Returns the local video id.
+     */
+    getLocalVideoId() {
+        return this.participant.driver.execute(
+            'return document.getElementById("localVideo_container").srcObject.id');
+    }
+
+    /**
      * Pins a participant by clicking on their thumbnail.
      * @param participant The participant.
      */
@@ -67,7 +94,7 @@ export default class Filmstrip extends BasePageObject {
         const elem = this.participant.driver.$(
             `//span[@id='participant_${endpointId}']//img[contains(@class,'userAvatar')]`);
 
-        return await elem.isExisting() ? elem.getAttribute('src') : null;
+        return await elem.isExisting() ? await elem.getAttribute('src') : null;
     }
 
     /**
@@ -86,14 +113,16 @@ export default class Filmstrip extends BasePageObject {
      * @private
      */
     private async clickOnRemoteMenuLink(participantId: string, linkClassname: string, dialogConfirm: boolean) {
-        const thumbnail = this.participant.driver.$(
-            `//span[@id='participant_${participantId}']//span[@id='remotevideomenu']`);
+        await this.participant.driver.$(`//span[@id='participant_${participantId}']`).moveTo();
 
-        await thumbnail.moveTo();
+        await this.participant.driver.$(
+            `//span[@id='participant_${participantId
+            }']//span[@id='remotevideomenu']//div[@id='remote-video-menu-trigger']`).moveTo();
 
         const popoverElement = this.participant.driver.$(
             `//div[contains(@class, 'popover')]//div[contains(@class, '${linkClassname}')]`);
 
+        await popoverElement.waitForExist();
         await popoverElement.waitForDisplayed();
         await popoverElement.click();
 
@@ -120,5 +149,74 @@ export default class Filmstrip extends BasePageObject {
      */
     async muteVideo(participant: Participant) {
         await this.clickOnRemoteMenuLink(await participant.getEndpointId(), 'mutevideolink', true);
+    }
+
+    /**
+     * Kicks a participant.
+     * @param participantId
+     */
+    kickParticipant(participantId: string) {
+        return this.clickOnRemoteMenuLink(participantId, 'kicklink', true);
+    }
+
+    /**
+     * Clicks on the hide self view button from local video.
+     */
+    async hideSelfView() {
+        // open local video menu
+        await this.participant.driver.$(LOCAL_VIDEO_MENU_TRIGGER).moveTo();
+        await this.participant.driver.$(LOCAL_USER_CONTROLS).moveTo();
+
+        // click Hide self view button
+        const hideSelfViewButton = this.participant.driver.$(HIDE_SELF_VIEW_BUTTON_XPATH);
+
+        await hideSelfViewButton.waitForExist();
+        await hideSelfViewButton.waitForClickable();
+        await hideSelfViewButton.click();
+    }
+
+    /**
+     * Checks whether the local self view is displayed or not.
+     */
+    assertSelfViewIsHidden(hidden: boolean) {
+        return this.participant.driver.$(LOCAL_VIDEO_XPATH).waitForDisplayed({
+            reverse: hidden,
+            timeout: 5000,
+            timeoutMsg: `Local video thumbnail is${hidden ? '' : ' not'} displayed for ${this.participant.name}`
+        });
+    }
+
+    /**
+     * Toggles the filmstrip.
+     */
+    async toggle() {
+        const toggleButton = this.participant.driver.$('#toggleFilmstripButton');
+
+        await toggleButton.moveTo();
+        await toggleButton.waitForDisplayed();
+        await toggleButton.click();
+    }
+
+    /**
+     * Asserts that the remote videos are hidden or not.
+     * @param reverse
+     */
+    assertRemoteVideosHidden(reverse = false) {
+        return this.participant.driver.waitUntil(
+            async () =>
+                await this.participant.driver.$$('//div[@id="remoteVideos" and contains(@class, "hidden")]').length > 0,
+            {
+                timeout: 10_000, // 10 seconds
+                timeoutMsg: `Timeout waiting fore remote videos to be hidden: ${!reverse}.`
+            }
+        );
+    }
+
+    /**
+     * Counts the displayed remote video thumbnails.
+     */
+    async countVisibleThumbnails() {
+        return (await this.participant.driver.$$('//div[@id="remoteVideos"]//span[contains(@class,"videocontainer")]')
+            .filter(thumbnail => thumbnail.isDisplayed())).length;
     }
 }

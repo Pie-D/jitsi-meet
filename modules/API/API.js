@@ -590,7 +590,7 @@ function initCommands() {
          * @param { string } arg.title - Notification title.
          * @param { string } arg.description - Notification description.
          * @param { string } arg.uid - Optional unique identifier for the notification.
-         * @param { string } arg.type - Notification type, either `error`, `info`, `normal`, `success` or `warning`.
+         * @param { string } arg.type - Notification type, either `error`, `normal`, `success` or `warning`.
          * Defaults to "normal" if not provided.
          * @param { string } arg.timeout - Timeout type, either `short`, `medium`, `long` or `sticky`.
          * Defaults to "short" if not provided.
@@ -850,6 +850,8 @@ function initCommands() {
         },
         'overwrite-config': config => {
             const whitelistedConfig = getWhitelistedJSON('config', config);
+
+            logger.info(`Overwriting config with: ${JSON.stringify(whitelistedConfig)}`);
 
             APP.store.dispatch(overwriteConfig(whitelistedConfig));
         },

@@ -476,12 +476,9 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @returns {boolean}
      */
     _shouldShowAdditionalCard() {
-        return (
-            interfaceConfig.DISPLAY_WELCOME_PAGE_ADDITIONAL_CARD &&
-            this._additionalCardTemplate &&
-            this._additionalCardTemplate.content &&
-            this._additionalCardTemplate.innerHTML.trim()
-        );
+        return interfaceConfig.DISPLAY_WELCOME_PAGE_ADDITIONAL_CARD
+            && this._additionalCardTemplate?.content
+            && this._additionalCardTemplate?.innerHTML?.trim();
     }
 
     /**
@@ -492,12 +489,9 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @returns {boolean}
      */
     _shouldShowAdditionalContent() {
-        return (
-            interfaceConfig.DISPLAY_WELCOME_PAGE_CONTENT &&
-            this._additionalContentTemplate &&
-            this._additionalContentTemplate.content &&
-            this._additionalContentTemplate.innerHTML.trim()
-        );
+        return interfaceConfig.DISPLAY_WELCOME_PAGE_CONTENT
+            && this._additionalContentTemplate?.content
+            && this._additionalContentTemplate?.innerHTML?.trim();
     }
 
     /**
@@ -508,12 +502,9 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @returns {boolean}
      */
     _shouldShowAdditionalToolbarContent() {
-        return (
-            interfaceConfig.DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT &&
-            this._additionalToolbarContentTemplate &&
-            this._additionalToolbarContentTemplate.content &&
-            this._additionalToolbarContentTemplate.innerHTML.trim()
-        );
+        return interfaceConfig.DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT
+            && this._additionalToolbarContentTemplate?.content
+            && this._additionalToolbarContentTemplate?.innerHTML.trim();
     }
 }
 

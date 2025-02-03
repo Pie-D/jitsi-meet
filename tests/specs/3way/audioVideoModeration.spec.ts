@@ -6,7 +6,7 @@ import {
     unmuteVideoAndCheck
 } from '../../helpers/participants';
 
-describe('AVModeration -', () => {
+describe('AVModeration', () => {
 
     it('check for moderators', async () => {
         // if all 3 participants are moderators, skip this test
@@ -135,7 +135,7 @@ describe('AVModeration -', () => {
         await p1.getFilmstrip().grantModerator(p3);
 
         await p3.driver.waitUntil(
-            async () => await p3.isModerator(), {
+            () => p3.isModerator(), {
                 timeout: 5000,
                 timeoutMsg: `${p3.name} is not moderator`
             });
@@ -190,6 +190,7 @@ describe('AVModeration -', () => {
         await p1ParticipantsPane.clickContextMenuButton();
         await p1ParticipantsPane.getAVModerationMenu().clickStartAudioModeration();
         await p1ParticipantsPane.getAVModerationMenu().clickStartVideoModeration();
+        await p1ParticipantsPane.close();
 
         // join with second participant and check
         await ensureTwoParticipants(ctx, {

@@ -67,8 +67,7 @@ const reactionMenu = {
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: BaseTheme.palette.ui01,
-    padding: BaseTheme.spacing[3]
+    backgroundColor: BaseTheme.palette.ui01
 };
 
 /**
@@ -100,8 +99,9 @@ const styles = {
         backgroundColor: BaseTheme.palette.uiBackground,
         flexDirection: 'column',
         maxWidth: 580,
-        marginLeft: 'auto',
-        marginRight: 'auto',
+        marginHorizontal: 'auto',
+        marginVertical: BaseTheme.spacing[0],
+        paddingHorizontal: BaseTheme.spacing[1],
         width: '100%'
     },
 
@@ -165,19 +165,22 @@ ColorSchemeRegistry.register('Toolbox', {
         backgroundColor: 'transparent'
     },
 
-    overflowReactionMenu: reactionMenu,
+    overflowReactionMenu: {
+        ...reactionMenu,
+        padding: BaseTheme.spacing[3]
+    },
 
     reactionMenu: {
         ...reactionMenu,
+        paddingHorizontal: BaseTheme.spacing[3],
         borderRadius: 3,
         width: 360
     },
 
     reactionRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        width: '100%'
+        flexDirection: 'row',
+        justifyContent: 'space-between'
     },
 
     reactionButton: {
