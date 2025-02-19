@@ -271,7 +271,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
                         ) : null}
                     </div>
 
-                    {showAdditionalContent ? ( 
+                    {showAdditionalContent ? (
                         <div className="welcome-page-content" ref={this._setAdditionalContentRef} />
                     ) : null}
                 </div> */}
@@ -358,16 +358,10 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
                                 Copyright © {new Date().getFullYear()}, Bản quyền thuộc Viện nghiên cứu ứng dụng công
                                 nghệ CMC ATI
                             </div>
-                            <a
-                                target="_blank"
-                                className="welcome-badge"
-                                href={iosDownloadLink}>
+                            <a target="_blank" className="welcome-badge" href={env.IOS_LINK}>
                                 <img alt={t("welcomepage.mobileDownLoadLinkIos")} src="./images/app-store-badge.png" />
                             </a>
-                            <a
-                                target="_blank"
-                                className="welcome-badge"
-                                href={androidDownloadLink}>
+                            <a target="_blank" className="welcome-badge" href={env.ANDROID_LINK}>
                                 <img
                                     alt={t("welcomepage.mobileDownLoadLinkAndroid")}
                                     src="./images/google-play-badge.png"

@@ -2,8 +2,6 @@ import React, { Component, RefObject } from "react";
 import { WithTranslation } from "react-i18next";
 import { connect } from "react-redux";
 
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import { v4 as uuidV4 } from "uuid";
 import { IReduxState, IStore } from "../../../app/types";
 import { isMobileBrowser } from "../../../base/environment/utils";
@@ -13,7 +11,6 @@ import Button from "../../../base/ui/components/web/Button";
 import Input from "../../../base/ui/components/web/Input";
 import { CMEET_ENV } from "../../ENV";
 import { LocalStorageHandle } from "../../LocalStorageHandler";
-import { MESSAGE_TYPE_REMOTE } from "../../constants";
 import { areSmileysDisabled } from "../../functions";
 import SmileysPanel from "./SmileysPanel";
 /**
@@ -62,9 +59,6 @@ interface IState {
  * @augments Component
  */
 class ChatInput extends Component<IProps, IState> {
-    // componentWillUnmount(): void {
-    //     this.stompClient.deactivate();
-    // }
     _textArea?: RefObject<HTMLTextAreaElement>;
 
     state = {
@@ -72,7 +66,6 @@ class ChatInput extends Component<IProps, IState> {
         showSmileysPanel: false,
     };
 
-    stompClient: any;
     meetingId: any;
     user: any;
 
@@ -94,11 +87,6 @@ class ChatInput extends Component<IProps, IState> {
         this._onSubmitMessage = this._onSubmitMessage.bind(this);
         this._toggleSmileysPanel = this._toggleSmileysPanel.bind(this);
         this._oninit();
-        this.stompClient = new Client();
-        this.stompClient.webSocketFactory = () => {
-            return new SockJS(CMEET_ENV.urlWS);
-        };
-        this._onConnectWS();
     }
     // oninit method when crete component
     _oninit() {
@@ -109,28 +97,9 @@ class ChatInput extends Component<IProps, IState> {
         this.meetingId = window.location.href.split("/").at(-1);
     }
     // handle connect ws server
-    async _onConnectWS() {
-        this.stompClient.onConnect = (frame: any) => {
-            console.log("Connected to WebSocket");
-            this._onHandleMessage();
-        };
-        this.stompClient.activate();
-    }
+
     // handle message server socket return
-    _onSendChatCMeet(content: String) {
-        if (this._isValidUUID(this.meetingId)) {
-            this._publicStomp(CMEET_ENV.public, {
-                content: content,
-                sender: this.user.displayName,
-                meetingId: this.meetingId,
-                timeSheetId: null,
-                userId: this.user.id,
-                avatar: CMEET_ENV.avatar,
-                fileExtension: null,
-                filePath: null,
-            });
-        }
-    }
+
     // method support invalid UUID type
     _isValidUUID(arg: any) {
         const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -139,35 +108,7 @@ class ChatInput extends Component<IProps, IState> {
         }
         return uuidRegex.test(arg);
     }
-    // send message when user click btn sent
-    _publicStomp(destination: String, body: any) {
-        this.stompClient.publish({
-            destination: destination,
-            body: JSON.stringify(body),
-        });
-    }
     // method handle message : set field in form (server ws , jitsi chat)
-    _onHandleMessage() {
-        this.stompClient.subscribe(CMEET_ENV.subrice, ({ body }: any) => {
-            const data = JSON.parse(body);
-            const { userId, meetingId } = data;
-            console.log("userId, meetingId", userId, meetingId);
-            if (userId && meetingId && data.meetingId == meetingId && this.user.id != userId) {
-                this.props.onSend({
-                    displayName: data.sender,
-                    hasRead: false,
-                    id: data.id,
-                    messageType: MESSAGE_TYPE_REMOTE,
-                    message: data.content,
-                    privateMessage: false,
-                    lobbyChat: false,
-                    recipient: "", //
-                    timestamp: Date.now(),
-                    isReaction: false,
-                });
-            }
-        });
-    }
 
     /**
      * Implements React's {@link Component#componentDidMount()}.
@@ -255,7 +196,6 @@ class ChatInput extends Component<IProps, IState> {
         const trimmed = this.state.message.trim();
         if (trimmed) {
             this.props.onSend(trimmed);
-            this._onSendChatCMeet(trimmed);
             this.setState({ message: "" });
             this._focus();
         }
