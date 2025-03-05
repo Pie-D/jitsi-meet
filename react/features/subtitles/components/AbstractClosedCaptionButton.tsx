@@ -107,7 +107,7 @@ export function _abstractMapStateToProps(state: IReduxState, ownProps: IAbstract
     // if the participant is moderator, it can enable transcriptions and if
     // transcriptions are already started for the meeting, guests can just show them
     const { visible = canStartSubtitles(state) } = ownProps;
-
+    console.log("-----------------tqd: ", visible)
     return {
         _requestingSubtitles,
         _language,

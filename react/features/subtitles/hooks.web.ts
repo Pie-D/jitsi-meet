@@ -16,7 +16,7 @@ const cc = {
  */
 export function useClosedCaptionButton() {
     const isStartSubtitlesButtonVisible = useSelector(canStartSubtitles);
-
+    console.log("=========:   ",cc)
     // if (isStartSubtitlesButtonVisible) {
         return cc;
     // }
