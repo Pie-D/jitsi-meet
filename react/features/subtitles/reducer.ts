@@ -15,10 +15,10 @@ import { ITranscriptMessage } from './types';
  */
 const defaultState = {
     _cachedTranscriptMessages: new Map(),
-    _displaySubtitles: false,
+    _displaySubtitles: true,
     _transcriptMessages: new Map(),
-    _requestingSubtitles: false,
-    _language: null
+    _requestingSubtitles: true,
+    _language: "vi"
 };
 
 export interface ISubtitlesState {
