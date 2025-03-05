@@ -294,7 +294,7 @@ function _requestingSubtitlesChange(
 
     if (enabled && conference?.getTranscriptionStatus() === JitsiMeetJS.constants.transcriptionStatus.OFF) {
         const isModerator = isLocalParticipantModerator(state);
-        const featureAllowed = isJwtFeatureEnabled(getState(), 'transcription', isModerator, false);
+        const featureAllowed = isJwtFeatureEnabled(getState(), 'transcription', true, false);
 
         if (featureAllowed) {
             conference?.dial(TRANSCRIBER_DIAL_NUMBER)
