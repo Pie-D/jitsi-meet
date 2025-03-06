@@ -14,20 +14,20 @@ export * from './functions.any';
  * @returns {void}
  */
 export function maybeShowSuboptimalExperienceNotification(dispatch: IStore['dispatch'], t: Function) {
-    if (isSuboptimalBrowser()) {
-        dispatch(
-            showWarningNotification(
-                {
-                    titleKey: 'notify.suboptimalExperienceTitle',
-                    description: translateToHTML(
-                        t,
-                        'notify.suboptimalBrowserWarning',
-                        {
-                            recommendedBrowserPageLink: `${window.location.origin}/static/recommendedBrowsers.html`
-                        }
-                    )
-                }, NOTIFICATION_TIMEOUT_TYPE.LONG
-            )
-        );
-    }
+    // if (isSuboptimalBrowser()) {
+    //     dispatch(
+    //         showWarningNotification(
+    //             {
+    //                 titleKey: 'notify.suboptimalExperienceTitle',
+    //                 description: translateToHTML(
+    //                     t,
+    //                     'notify.suboptimalBrowserWarning',
+    //                     {
+    //                         recommendedBrowserPageLink: `${window.location.origin}/static/recommendedBrowsers.html`
+    //                     }
+    //                 )
+    //             }, NOTIFICATION_TIMEOUT_TYPE.LONG
+    //         )
+    //     );
+    // }
 }
