@@ -49,15 +49,15 @@ export function getJwtDisabledButtons(
         acc.push('livestreaming');
     }
 
-    if (!isTranscribing && !isJwtFeatureEnabledStateless({
-        jwt,
-        localParticipantFeatures,
-        feature: 'transcription',
-        ifNoToken: isModerator,
-        ifNotInFeatures: false
-    })) {
-        acc.push('closedcaptions');
-    }
+    // if (!isTranscribing && !isJwtFeatureEnabledStateless({
+    //     jwt,
+    //     localParticipantFeatures,
+    //     feature: 'transcription',
+    //     ifNoToken: isModerator,
+    //     ifNotInFeatures: false
+    // })) {
+    //     acc.push('closedcaptions');
+    // }
 
     return acc;
 }

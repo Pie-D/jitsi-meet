@@ -1043,7 +1043,7 @@
         "offBy": "{{name}} đã dừng ghi hình",
         "on": "Đang ghi hình",
         "onBy": "{{name}} đã bắt đầu ghi hình",
-        "onlyRecordSelf": "Chỉ ghi lại luồng âm thanh và video của tôi",
+        "onlyRecordSelf": "Chỉ ghi lại luồng âm thanh của tôi",
         "pending": "Đang chuẩn bị để ghi hình cuộc họp...",
         "recordAudioAndVideo": "Ghi âm và video",
         "recordTranscription": "Ghi chú giọng nói",
