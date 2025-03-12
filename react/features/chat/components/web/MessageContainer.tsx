@@ -206,7 +206,7 @@ export default class MessageContainer extends AbstractMessageContainer<IProps, I
             const scrollTopBefore = container.scrollTop;
             const scrollHeightBefore = container.scrollHeight;
 
-            this.props.loadMoreMessages().then(() => {
+            this.props.loadMoreMessages?.().then(() => {
                 requestAnimationFrame(() => {
                     const scrollHeightAfter = container.scrollHeight;
                     const scrollDifference = scrollHeightAfter - scrollHeightBefore;

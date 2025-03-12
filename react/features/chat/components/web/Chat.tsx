@@ -12,7 +12,7 @@ import PollsPane from '../../../polls/components/web/PollsPane';
 import { sendMessage, setIsPollsTabFocused, toggleChat, addMessage } from '../../actions.web';
 import { CHAT_SIZE, CHAT_TABS, SMALL_WIDTH_THRESHOLD } from '../../constants';
 import { IChatProps as AbstractProps } from '../../types';
-import { syncRocketChatMessages } from '../../../../../rocketchat';
+const RocketChat = require("../../../../../rocketchat") as any;
 
 import ChatHeader from './ChatHeader';
 import ChatInput from './ChatInput';
@@ -360,5 +360,7 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
         _showNamePrompt: !_localParticipant?.name
     };
 }
+
+const syncRocketChatMessages: (offset: number) => Promise<void> = RocketChat.syncRocketChatMessages;
 
 export default translate(connect(_mapStateToProps)(Chat));

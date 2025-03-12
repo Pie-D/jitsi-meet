@@ -27,7 +27,7 @@ const DEFAULT_STATE = {
     privateMessageRecipient: undefined,
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
-    shownMessages: new Set(),
+    shownMessages: new Set<string>(),
 };
 
 export interface IChatState {
