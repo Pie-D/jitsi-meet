@@ -27,8 +27,8 @@ import {
     conferenceJoinInProgress,
     conferenceJoined,
     conferenceLeft,
-    conferenceRoomOwnerSet,
     conferencePropertiesChanged,
+    conferenceRoomOwnerSet,
     conferenceSubjectChanged,
     conferenceTimestampChanged,
     conferenceUniqueIdSet,
@@ -167,6 +167,7 @@ import { createRnnoiseProcessor } from './react/features/stream-effects/rnnoise'
 import { handleToggleVideoMuted } from './react/features/toolbox/actions.any';
 import { transcriberJoined, transcriberLeft } from './react/features/transcribing/actions';
 import { muteLocal } from './react/features/video-menu/actions.any';
+import { startConference } from './rocketchat';
 
 const logger = Logger.getLogger(__filename);
 let room;
@@ -355,6 +356,8 @@ class ConferenceConnector {
     _handleConferenceJoined() {
         this._unsubscribe();
         this._resolve();
+
+        startConference(APP.store, this._conference.roomName);
     }
 
     /**
@@ -1487,7 +1490,7 @@ export default {
                 room.sessionId = room.getMeetingUniqueId();
                 APP.store.dispatch(conferenceUniqueIdSet(room, ...args));
             });
-            room.on(
+        room.on(
                 JitsiConferenceEvents.CONFERENCE_ROOM_OWNER_SET,
                 (...args) => {
                     // logger.info('Room owner: ', room.getRoomOwner());
@@ -1498,6 +1501,7 @@ export default {
                     APP.store.dispatch(conferenceRoomOwnerSet(room, ...args));
                     console.info(APP.store.getState());
                 });
+
         // we want to ignore this event in case of tokenAuthUrl config
         // we are deprecating this and at some point will get rid of it
         if (!config.tokenAuthUrl) {

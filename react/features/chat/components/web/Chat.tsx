@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import { connect } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
@@ -12,6 +12,7 @@ import PollsPane from '../../../polls/components/web/PollsPane';
 import { sendMessage, setIsPollsTabFocused, toggleChat, addMessage } from '../../actions.web';
 import { CHAT_SIZE, CHAT_TABS, SMALL_WIDTH_THRESHOLD } from '../../constants';
 import { IChatProps as AbstractProps } from '../../types';
+import { syncRocketChatMessages } from '../../../../../rocketchat';
 
 import ChatHeader from './ChatHeader';
 import ChatInput from './ChatInput';
@@ -19,6 +20,7 @@ import DisplayNameForm from './DisplayNameForm';
 import KeyboardAvoider from './KeyboardAvoider';
 import MessageContainer from './MessageContainer';
 import MessageRecipient from './MessageRecipient';
+import {IConferenceState} from "../../../base/conference/reducer";
 
 interface IProps extends AbstractProps {
 
@@ -160,6 +162,7 @@ const Chat = ({
     t
 }: IProps) => {
     const { classes, cx } = useStyles();
+    const [offset, setOffset] = useState(0);
 
     /**
     * Sends a text message.
@@ -217,6 +220,20 @@ const Chat = ({
     }, []);
 
     /**
+     * Load more messages when scrolling to the top of the message container.
+     */
+    const loadMoreMessages = useCallback(async () => {
+        const newOffset = offset + 30;
+
+        try {
+            await syncRocketChatMessages(newOffset);
+            setOffset(newOffset);
+        } catch (error) {
+            console.error(error);
+        }
+    }, [offset]);
+
+    /**
      * Returns a React Element for showing chat messages and a form to send new
      * chat messages.
      *
@@ -224,7 +241,7 @@ const Chat = ({
      * @returns {ReactElement}
      */
     function renderChat() {
-        _isPollsEnabled = false 
+        _isPollsEnabled = false
         return (
             <>
                 {_isPollsEnabled && renderTabs()}
@@ -239,7 +256,9 @@ const Chat = ({
                     role = 'tabpanel'
                     tabIndex = { 0 }>
                     <MessageContainer
-                        messages = { _messages } />
+                        messages = { _messages }
+                        loadMoreMessages = { loadMoreMessages }
+                    />
                     <MessageRecipient />
                     <ChatInput
                         onSend = { handldeMessage } />

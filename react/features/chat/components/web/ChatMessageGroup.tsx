@@ -57,6 +57,7 @@ const useStyles = makeStyles()(theme => {
 const ChatMessageGroup = ({ className = '', messages }: IProps) => {
     const { classes } = useStyles();
     const messagesLength = messages.length;
+    const isSystemMessage = messages[0].messageType === 'system';
 
     if (!messagesLength) {
         return null;
@@ -64,10 +65,13 @@ const ChatMessageGroup = ({ className = '', messages }: IProps) => {
 
     return (
         <div className = { clsx(classes.groupContainer, className) }>
-            <Avatar
-                className = { clsx(classes.avatar, 'avatar') }
-                participantId = { messages[0].participantId }
-                size = { 32 } />
+            {!isSystemMessage && (
+                <Avatar
+                    className={clsx(classes.avatar, 'avatar')}
+                    participantId={messages[0].participantId}
+                    size={32}
+                />
+            )}
             <div className = { `${classes.messageGroup} chat-message-group ${className}` }>
                 {messages.map((message, i) => (
                     <ChatMessage
