@@ -8,6 +8,7 @@ import {
     CLOSE_CHAT,
     EDIT_MESSAGE,
     OPEN_CHAT,
+    PREPEND_MESSAGES,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
     SET_IS_POLL_TAB_FOCUSED,
     SET_LOBBY_CHAT_ACTIVE_STATE,
@@ -25,7 +26,8 @@ const DEFAULT_STATE = {
     nbUnreadMessages: 0,
     privateMessageRecipient: undefined,
     lobbyMessageRecipient: undefined,
-    isLobbyChatActive: false
+    isLobbyChatActive: false,
+    shownMessages: new Set(),
 };
 
 export interface IChatState {
@@ -40,11 +42,16 @@ export interface IChatState {
     messages: IMessage[];
     nbUnreadMessages: number;
     privateMessageRecipient?: IParticipant;
+    shownMessages: Set<string>;
 }
 
 ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, action): IChatState => {
     switch (action.type) {
     case ADD_MESSAGE: {
+        if (state.shownMessages.has(action.messageId)) {
+            return state;
+        }
+
         const newMessage: IMessage = {
             displayName: action.displayName,
             error: action.error,
@@ -59,6 +66,8 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             recipient: action.recipient,
             timestamp: action.timestamp
         };
+
+        state.shownMessages.add(action.messageId);
 
         // React native, unlike web, needs a reverse sorted message list.
         const messages = navigator.product === 'ReactNative'
@@ -79,6 +88,12 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             messages
         };
     }
+
+    case PREPEND_MESSAGES:
+        return {
+            ...state,
+            messages: [...action.messages, ...state.messages]
+        };
 
     case ADD_MESSAGE_REACTION: {
         const { participantId, reactionList, messageId } = action;
