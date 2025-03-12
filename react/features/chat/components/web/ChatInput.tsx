@@ -198,6 +198,9 @@ class ChatInput extends Component<IProps, IState> {
             this.props.onSend(trimmed);
             this.setState({ message: "" });
             this._focus();
+
+            // Hide the Emojis box after submitting the message
+            this.setState({ showSmileysPanel: false });
         }
     }
 
