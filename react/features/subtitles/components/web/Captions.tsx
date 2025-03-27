@@ -96,7 +96,7 @@ const styles = (theme: Theme, props: IProps) => {
                 background: 'black',
 
                 // without this when the text is wrapped on 2+ lines there will be a gap in the background:
-                padding: `${padding}px 8px`,
+                padding: `${padding}px 2px`,
                 boxDecorationBreak: 'clone' as const
             }
         },
