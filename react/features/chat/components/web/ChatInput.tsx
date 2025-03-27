@@ -241,6 +241,11 @@ class ChatInput extends Component<IProps, IState> {
      * @returns {void}
      */
     _onMessageChange(value: string) {
+        const maxLength = 1000;
+        if (value.length > maxLength) {
+            alert(`Tin nhắn không được vượt quá ${maxLength} ký tự!`);
+            return;
+        }
         this.setState({ message: value });
     }
 
