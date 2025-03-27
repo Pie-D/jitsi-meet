@@ -558,7 +558,7 @@
         "inviteTextiOSPhone": "Để tham gia qua điện thoại, sử dụng số này: {{number}},,{{conferenceID}}#. Nếu bạn đang tìm kiếm số khác, đây là danh sách đầy đủ: {{didUrl}}.",
         "inviteURLFirstPartGeneral": "Bạn được mời tham gia một cuộc họp.",
         "inviteURLFirstPartPersonal": "{{name}} mời bạn tham gia một cuộc họp.\n",
-        "inviteURLSecondPart": "\nTham gia cuộc họp:\n {{url}}\n",
+        "inviteURLSecondPart": "\nTham gia cuộc họp: {{url}}\n",
         "label": "Thông tin cuộc họp",
         "liveStreamURL": "Phát trực tuyến:",
         "moreNumbers": "Nhiều số hơn",
