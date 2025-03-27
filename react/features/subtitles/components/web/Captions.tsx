@@ -99,6 +99,11 @@ const styles = (theme: Theme, props: IProps) => {
                 padding: `${padding}px 8px`,
                 boxDecorationBreak: 'clone' as const
             }
+        },
+        speakerName: { // Thêm style cho tên người nói
+            fontStyle: 'italic',
+            fontSize: `${fontSize * 0.8}px`, // Giảm font-size xuống 80% so với phụ đề
+            color: '#ccc' // Màu chữ nhẹ hơn để phân biệt
         }
     };
 };
@@ -120,9 +125,22 @@ class Captions extends AbstractCaptions<IProps> {
      * @returns {ReactElement} - The React element which displays the text.
      */
     _renderParagraph(id: string, text: string): ReactElement {
+        // return (
+        //     <p key = { id }>
+        //         <span>{ text }</span>
+        //     </p>
+        // );
+        const classes = withStyles.getClasses(this.props);
+
+    // Tách tên người nói và nội dung phụ đề
+        const parts = text.split(': ');
+        const speaker = parts.length > 1 ? parts[0] : '';
+        const subtitle = parts.length > 1 ? parts.slice(1).join(': ') : text;
+
         return (
             <p key = { id }>
-                <span>{ text }</span>
+                { speaker && <span className={ classes.speakerName }>{ speaker }: </span> }
+                <span>{ subtitle }</span>
             </p>
         );
     }
