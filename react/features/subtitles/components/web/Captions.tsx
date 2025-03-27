@@ -101,8 +101,7 @@ const styles = (theme: Theme, props: IProps) => {
             }
         },
         speakerName: { // Thêm style cho tên người nói
-            fontStyle: 'italic',
-            fontSize: `${fontSize * 0.8}px`, // Giảm font-size xuống 80% so với phụ đề
+            fontStyle: 'italic', 
             color: '#ccc' // Màu chữ nhẹ hơn để phân biệt
         }
     };
