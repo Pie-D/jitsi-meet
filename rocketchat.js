@@ -103,7 +103,7 @@ export async function syncRocketChatMessages(offset = 0) {
         }
 
         CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages});
-        logger.log(`Rocket.Chat messages synced (offset: ${offset})`);
+        logger.info(`Rocket.Chat messages synced (offset: ${offset})`);
     } catch (error) {
         logger.error('Error syncing Rocket.Chat messages:', error);
     }
@@ -117,7 +117,7 @@ function setupRocketChatWebSocket() {
     const ws = new WebSocket(ROCKET_CHAT_CONFIG.wsUrl);
 
     ws.onopen = () => {
-        logger.log('WebSocket connected to Rocket.Chat');
+        logger.info('WebSocket connected to Rocket.Chat');
 
         ws.send(JSON.stringify({msg: 'connect', version: '1', support: ['1']}));
         ws.send(JSON.stringify({
@@ -130,13 +130,13 @@ function setupRocketChatWebSocket() {
     };
 
     ws.onmessage = event => {
-        handleWebSocketMessage(event.data, store, localParticipantName);
+        handleWebSocketMessage(event.data, store, localParticipantName, ws);
     };
 
     ws.onerror = error => logger.error('WebSocket error:', error);
 
     ws.onclose = () => {
-        logger.log('WebSocket disconnected from Rocket.Chat, reconnecting...');
+        logger.info('WebSocket disconnected from Rocket.Chat, reconnecting...');
         setTimeout(setupRocketChatWebSocket, 10000);
     };
 }
@@ -144,7 +144,7 @@ function setupRocketChatWebSocket() {
 /**
  * Xử lý tin nhắn nhận được từ WebSocket
  */
-function handleWebSocketMessage(data, store, localParticipantName) {
+function handleWebSocketMessage(data, store, localParticipantName, ws) {
     const parsedData = JSON.parse(data);
 
     if (parsedData.msg === 'ping') {
@@ -153,7 +153,7 @@ function handleWebSocketMessage(data, store, localParticipantName) {
     }
 
     if (parsedData.msg === 'result' && parsedData.id === 'login-1') {
-        logger.log('WebSocket login successful');
+        logger.info('WebSocket login successful');
         return;
     }
 
@@ -165,7 +165,7 @@ function handleWebSocketMessage(data, store, localParticipantName) {
             messageData.alias !== localParticipantName) {
             const newMessage = formatMessage(messageData);
             store.dispatch(addMessage({...newMessage, hasRead: false}));
-            logger.log(`New message received from Rocket.Chat: ${newMessage.message}`);
+            logger.info(`New message received from Rocket.Chat: ${newMessage.message}`);
         }
     }
 }
