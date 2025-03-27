@@ -167,7 +167,7 @@ import { createRnnoiseProcessor } from './react/features/stream-effects/rnnoise'
 import { handleToggleVideoMuted } from './react/features/toolbox/actions.any';
 import { transcriberJoined, transcriberLeft } from './react/features/transcribing/actions';
 import { muteLocal } from './react/features/video-menu/actions.any';
-import { startConference } from './rocketchat';
+import {setRoomIdOnChange, startConference} from './rocketchat';
 
 const logger = Logger.getLogger(__filename);
 let room;
@@ -258,6 +258,21 @@ class ConferenceConnector {
         this._resolve = resolve;
         this._reject = reject;
         this.reconnectTimeout = null;
+
+        document.addEventListener('rocketChatRoomIdReady', event => {
+            console.log(`Received event: rocketChatRoomIdReady - ${event.detail.roomId}`);
+            const rocketChatRoomId = event.detail.roomId;
+
+            startConference(APP.store, rocketChatRoomId, this._conference.roomName);
+        });
+
+        document.addEventListener('rocketChatRoomIdChanged', event => {
+            console.log(`Received event: rocketChatRoomIdChanged - ${event.detail.roomId}`);
+            const newRocketChatRoomId = event.detail.roomId;
+
+            setRoomIdOnChange(newRocketChatRoomId);
+        });
+
         room.on(JitsiConferenceEvents.CONFERENCE_JOINED,
             this._handleConferenceJoined.bind(this));
         room.on(JitsiConferenceEvents.CONFERENCE_FAILED,
@@ -358,8 +373,6 @@ class ConferenceConnector {
     _handleConferenceJoined() {
         this._unsubscribe();
         this._resolve();
-
-        startConference(APP.store, this._conference.roomName);
     }
 
     /**

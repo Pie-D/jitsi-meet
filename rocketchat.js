@@ -15,7 +15,7 @@ const ROCKET_CHAT_CONFIG = {
     apiUrl: env.ROCKET_CHAT_API_URL,
     token: env.ROCKET_CHAT_TOKEN,
     userId: env.ROCKET_CHAT_USER_ID,
-    wsUrl: env.ROCKET_CHAT_WS_URL,
+    wsUrl: env.ROCKET_CHAT_WS_URL
 };
 
 /**
@@ -23,9 +23,10 @@ const ROCKET_CHAT_CONFIG = {
  */
 const CONFERENCE_INFO = {
     store: null,
-    roomName: null,
+    roomId: null,
     localParticipantId: null,
     localParticipantName: null,
+    meetingId: null,
 }
 
 /**
@@ -38,7 +39,7 @@ async function fetchRocketChatHistory(offset = 0) {
     const shownMessages = CONFERENCE_INFO.store.getState()['features/chat'].shownMessages;
 
     return await fetch(
-        `${ROCKET_CHAT_CONFIG.apiUrl}/groups.history?roomId=${encodeURIComponent(CONFERENCE_INFO.roomName)}&count=30&offset=${offset}`,
+        `${ROCKET_CHAT_CONFIG.apiUrl}/groups.history?roomId=${encodeURIComponent(CONFERENCE_INFO.roomId)}&count=30&offset=${offset}`,
         {
             method: 'GET',
             headers: {
@@ -56,7 +57,9 @@ async function fetchRocketChatHistory(offset = 0) {
     }).then(data => {
         return (data.messages || [])
             .reverse()
-            .filter(msg => {return !shownMessages.has(msg._id);})
+            .filter(msg => {
+                return !shownMessages.has(msg._id);
+            })
             .map(msg => {
                 return {
                     displayName: msg.alias || msg.u?.name || msg.u?.username || 'Anonymous User',
@@ -206,13 +209,20 @@ function setupRocketChatWebSocket() {
     };
 }
 
+export function setRoomIdOnChange(roomId) {
+    CONFERENCE_INFO.roomId = roomId;
+    logger.info(`Updated roomId : ${roomId}`);
+}
+
+
 /**
  * Thiết lập các thông tin cần thiết và đồng bộ tin nhắn, kết nối websocket khi cuộc họp bắt đầu
  *
  */
-export function startConference(store, roomName) {
+export function startConference(store, rocketChatRoomId, meetingId) {
     CONFERENCE_INFO.store = store;
-    CONFERENCE_INFO.roomName = roomName;
+    CONFERENCE_INFO.meetingId = meetingId;
+    CONFERENCE_INFO.roomId = rocketChatRoomId;
 
     const localParticipant = getLocalParticipant(store.getState());
     const localParticipantId = localParticipant?.id || '';
@@ -220,6 +230,7 @@ export function startConference(store, roomName) {
     CONFERENCE_INFO.localParticipantId = localParticipantId;
     CONFERENCE_INFO.localParticipantName = localParticipantName;
 
-    syncRocketChatMessages();
-    setupRocketChatWebSocket();
+    syncRocketChatMessages().then(() => {
+        setupRocketChatWebSocket();
+    });
 }
