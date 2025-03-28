@@ -61,7 +61,7 @@ async function fetchRocketChatHistory(offset = 0) {
         const data = await fetchWithAuth(url);
         return (data.messages || [])
             .reverse()
-            .filter(msg => !shownMessages.has(msg._id))
+            .filter(msg => !shownMessages.has(msg._id) && !msg.t)
             .map(formatMessage);
     } catch (error) {
         logger.error('Error fetching Rocket.Chat history:', error);
@@ -162,7 +162,9 @@ function handleWebSocketMessage(data, store, localParticipantName, ws) {
 
         if (!messageData.customFields?.fromJitsi &&
             messageData.u?.username !== localParticipantName &&
-            messageData.alias !== localParticipantName) {
+            messageData.alias !== localParticipantName &&
+            !messageData.t
+        ) {
             const newMessage = formatMessage(messageData);
             store.dispatch(addMessage({...newMessage, hasRead: false}));
             logger.info(`New message received from Rocket.Chat: ${newMessage.message}`);
@@ -176,6 +178,8 @@ function handleWebSocketMessage(data, store, localParticipantName, ws) {
 export function setRoomIdOnChange(roomId) {
     CONFERENCE_INFO.roomId = roomId;
     logger.info(`Updated roomId: ${roomId}`);
+
+    setupRocketChatWebSocket();
 }
 
 /**

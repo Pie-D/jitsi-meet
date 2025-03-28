@@ -51,6 +51,11 @@ interface IState {
      * Whether or not the smiley selector is visible.
      */
     showSmileysPanel: boolean;
+
+    /**
+     * Whether or not chat is disabled.
+     */
+    isChatDisabled: boolean;
 }
 
 /**
@@ -64,6 +69,7 @@ class ChatInput extends Component<IProps, IState> {
     state = {
         message: "",
         showSmileysPanel: false,
+        isChatDisabled: false,
     };
 
     meetingId: any;
@@ -122,7 +128,17 @@ class ChatInput extends Component<IProps, IState> {
         } else {
             this._focus();
         }
+
+        document.addEventListener("timeSheetEnd", (event) => this.handleTimeSheetEnd(event));
     }
+
+    componentWillUnmount() {
+        document.addEventListener("timeSheetEnd", (event) => this.handleTimeSheetEnd(event));
+    }
+
+    handleTimeSheetEnd = (event) => {
+        this.setState({ isChatDisabled: event.detail?.isChatDisabled ?? false });
+    };
 
     /**
      * Implements {@code Component#componentDidUpdate}.
@@ -145,7 +161,7 @@ class ChatInput extends Component<IProps, IState> {
         return (
             <div className={`chat-input-container${this.state.message.trim().length ? " populated" : ""}`}>
                 <div id="chat-input">
-                    {!this.props._areSmileysDisabled && this.state.showSmileysPanel && (
+                    {!this.state.isChatDisabled && !this.props._areSmileysDisabled && this.state.showSmileysPanel && (
                         <div className="smiley-input">
                             <div className="smileys-panel">
                                 <SmileysPanel onSmileySelect={this._onSmileySelect} />
@@ -164,10 +180,11 @@ class ChatInput extends Component<IProps, IState> {
                         ref={this._textArea}
                         textarea={true}
                         value={this.state.message}
+                        disabled={this.state.isChatDisabled}
                     />
                     <Button
                         accessibilityLabel={this.props.t("chat.sendButton")}
-                        disabled={!this.state.message.trim()}
+                        disabled={!this.state.message.trim() || this.state.isChatDisabled}
                         icon={IconSend}
                         onClick={this._onSubmitMessage}
                         size={isMobileBrowser() ? "large" : "medium"}
