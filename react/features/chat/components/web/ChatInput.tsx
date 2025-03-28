@@ -133,7 +133,7 @@ class ChatInput extends Component<IProps, IState> {
     }
 
     componentWillUnmount() {
-        document.addEventListener("timeSheetEnd", (event: CustomEvent<{ isChatDisabled: boolean }>) => this.handleTimeSheetEnd(event));
+        document.removeEventListener("timeSheetEnd", (event: CustomEvent<{ isChatDisabled: boolean }>) => this.handleTimeSheetEnd(event));
     }
 
     handleTimeSheetEnd = (event: CustomEvent<{ isChatDisabled: boolean }>) => {
