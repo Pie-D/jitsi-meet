@@ -129,15 +129,15 @@ class ChatInput extends Component<IProps, IState> {
             this._focus();
         }
 
-        document.addEventListener("timeSheetEnd", (event) => this.handleTimeSheetEnd(event));
+        document.addEventListener("timeSheetEnd", (event: CustomEvent<{ isChatDisabled: boolean }>) => this.handleTimeSheetEnd(event));
     }
 
     componentWillUnmount() {
-        document.addEventListener("timeSheetEnd", (event) => this.handleTimeSheetEnd(event));
+        document.addEventListener("timeSheetEnd", (event: CustomEvent<{ isChatDisabled: boolean }>) => this.handleTimeSheetEnd(event));
     }
 
-    handleTimeSheetEnd = (event) => {
-        this.setState({ isChatDisabled: event.detail?.isChatDisabled ?? false });
+    handleTimeSheetEnd = (event: CustomEvent<{ isChatDisabled: boolean }>) => {
+        this.setState({ isChatDisabled: event.detail.isChatDisabled ?? false });
     };
 
     /**
