@@ -167,7 +167,7 @@ import { createRnnoiseProcessor } from './react/features/stream-effects/rnnoise'
 import { handleToggleVideoMuted } from './react/features/toolbox/actions.any';
 import { transcriberJoined, transcriberLeft } from './react/features/transcribing/actions';
 import { muteLocal } from './react/features/video-menu/actions.any';
-import {setRoomIdOnChange, startConference} from './rocketchat';
+import { setRoomIdOnChange, startConference } from './rocketchat';
 
 const logger = Logger.getLogger(__filename);
 let room;
@@ -258,6 +258,9 @@ class ConferenceConnector {
         this._resolve = resolve;
         this._reject = reject;
         this.reconnectTimeout = null;
+        this.accessToken = this._getTokenFromXMPP();
+        // Test whip
+        this._getWhipLink();
 
         document.addEventListener('rocketChatRoomIdReady', event => {
             console.log(`Received event: rocketChatRoomIdReady - ${event.detail.roomId}`);
@@ -277,6 +280,54 @@ class ConferenceConnector {
             this._handleConferenceJoined.bind(this));
         room.on(JitsiConferenceEvents.CONFERENCE_FAILED,
             this._onConferenceFailed.bind(this));
+    }
+
+    /**
+     *
+     */
+    _getTokenFromXMPP() {
+        const token = this._conference._room.connection.token;
+
+        if (!token) {
+            return null;
+        }
+
+        const parts = token.split('.');
+
+        if (parts.length !== 3) {
+            throw new Error('Invalid JWT token format');
+        }
+
+        const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+
+        return decoded?.context?.token || null;
+    }
+
+    /**
+     *
+     */
+    _getWhipLink() {
+        fetch(
+            'https://cmeet.cmcati.vn/cmeet-server-socket/api/speech-to-text/36d20bed-4c1d-448b-b2bf-5be0d4768e94',
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    isVoiceSeparation: true
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                this.whipLink = data.data;
+
+                logger.info('Speech to text whip link: ', this.whipLink);
+            })
+            .catch(err => {
+                logger.error('Could not fetch whip link: ', err);
+            });
     }
 
     /**
