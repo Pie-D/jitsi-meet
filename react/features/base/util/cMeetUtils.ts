@@ -29,7 +29,7 @@ export const getWhipLink = async (store: IStore, token: string, meetingId: strin
 
         if (!timeSheetId) {
             logger.error('No valid timesheet found');
-            return undefined;
+            return "";
         }
 
         const response = await fetch(
@@ -53,7 +53,7 @@ export const getWhipLink = async (store: IStore, token: string, meetingId: strin
         return data.data;
     } catch (err) {
         logger.error('Could not fetch whip link: ', err);
-        return undefined;
+        return "";
     }
 }
 
@@ -77,12 +77,12 @@ async function getTimeSheetId(meetingId: string): Promise<string> {
 
         if (filteredData.length === 0) {
             logger.error('No timesheets running');
-            return undefined;
+            return "";
         }
 
         return filteredData[0].id;
     } catch (err) {
         logger.error('Could not fetch time sheet id: ', err);
-        return undefined;
+        return "";
     }
 }
