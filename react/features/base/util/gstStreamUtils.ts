@@ -23,10 +23,15 @@ let localStore: IStore;
  */
 export const startGstStream = async (store: IStore, token: string, meetingId: string): Promise<void> => {
     localStore = store;
-    const whipLink = await getWhipLink(store, token, meetingId);
     const domain = 'meet-dev.cmcati.vn';
 
     try {
+        const whipLink = await getWhipLink(store, token, meetingId);
+        if (!whipLink) {
+            logger.error('Cannot get whip link');
+            return;
+        }
+
         await fetch(
             `${env.GST_STREAM_URL}?roomId=${meetingId}&domain=${domain}&whipEndpoint=${whipLink}`,
             {

@@ -21,7 +21,7 @@ export const getWhipLink = async (store: IStore, token: string, meetingId: strin
     const state = store.getState();
 
     if (state['features/base/conference'].gstStreamConnected) {
-        return;
+        return 'GST_STREAM_CONNECTED';
     }
 
     try {
@@ -29,7 +29,7 @@ export const getWhipLink = async (store: IStore, token: string, meetingId: strin
 
         if (!timeSheetId) {
             logger.error('No valid timesheet found');
-            return;
+            return undefined;
         }
 
         const response = await fetch(
@@ -73,7 +73,7 @@ async function getTimeSheetId(meetingId: string): Promise<string> {
         );
         const data = await response.json();
 
-        const filteredData = data.data.filter(item => item.status === 1);
+        const filteredData = data.data.filter((item: { status: number; }) => item.status === 1);
 
         if (filteredData.length === 0) {
             logger.error('No timesheets running');
