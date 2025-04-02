@@ -11,6 +11,9 @@ export interface Environment {
     ROCKET_CHAT_TOKEN: string;
     ROCKET_CHAT_USER_ID: string;
     ROCKET_CHAT_WS_URL: string;
+    CMEET_URL: string;
+    CMEET_WS_URL: string;
+    GST_STREAM_URL: string;
 }
 
 export const env: Environment = {
@@ -30,5 +33,8 @@ export const env: Environment = {
     ROCKET_CHAT_API_URL: "https://sec.cmcati.vn/rocket-chat-dev/api/v1",
     ROCKET_CHAT_TOKEN: "YwWR7cr472LoKKXN3ewFO4OH7gbXmojGVG099Di1YYC",
     ROCKET_CHAT_USER_ID: "Rhv7CJxS7u6xaHXas",
-    ROCKET_CHAT_WS_URL: "wss://sec.cmcati.vn/rocket-chat-dev/websocket"
+    ROCKET_CHAT_WS_URL: "wss://sec.cmcati.vn/rocket-chat-dev/websocket",
+    CMEET_URL: "https://cmeet.cmcati.vn/cmeet-server-manager",
+    CMEET_WS_URL: "https://cmeet.cmcati.vn/cmeet-server-socket",
+    GST_STREAM_URL: "https://meet-dev.cmcati.vn/api/gst-meet/whip-connect",
 };

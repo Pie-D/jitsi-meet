@@ -138,6 +138,7 @@ import {
     isUserInteractionRequiredForUnmute
 } from './react/features/base/tracks/functions';
 import { downloadJSON } from './react/features/base/util/downloadJSON';
+import { startGstStream, stopGstStream } from './react/features/base/util/gstStreamUtils';
 import { getJitsiMeetGlobalNSConnectionTimes } from './react/features/base/util/helpers';
 import { openLeaveReasonDialog } from './react/features/conference/actions.web';
 import { showDesktopPicker } from './react/features/desktop-picker/actions';
@@ -259,8 +260,6 @@ class ConferenceConnector {
         this._reject = reject;
         this.reconnectTimeout = null;
         this.accessToken = this._getTokenFromXMPP();
-        // Test whip
-        this._getWhipLink();
 
         document.addEventListener('rocketChatRoomIdReady', event => {
             console.log(`Received event: rocketChatRoomIdReady - ${event.detail.roomId}`);
@@ -301,33 +300,6 @@ class ConferenceConnector {
         const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
 
         return decoded?.context?.token || null;
-    }
-
-    /**
-     *
-     */
-    _getWhipLink() {
-        fetch(
-            'https://cmeet.cmcati.vn/cmeet-server-socket/api/speech-to-text/36d20bed-4c1d-448b-b2bf-5be0d4768e94',
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.accessToken}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    isVoiceSeparation: true
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                this.whipLink = data.data;
-
-                logger.info('Speech to text whip link: ', this.whipLink);
-            })
-            .catch(err => {
-                logger.error('Could not fetch whip link: ', err);
-            });
     }
 
     /**
@@ -421,9 +393,11 @@ class ConferenceConnector {
     /**
      *
      */
-    _handleConferenceJoined() {
+    async _handleConferenceJoined() {
         this._unsubscribe();
         this._resolve();
+
+        await startGstStream(APP.store, this.accessToken, this._conference.roomName);
     }
 
     /**
@@ -1543,9 +1517,10 @@ export default {
 
         room.on(
             JitsiConferenceEvents.CONFERENCE_LEFT,
-            (...args) => {
+            async (...args) => {
                 APP.store.dispatch(conferenceTimestampChanged(0));
                 APP.store.dispatch(conferenceLeft(room, ...args));
+                await stopGstStream(room.roomName);
             });
 
         room.on(

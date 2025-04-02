@@ -33,6 +33,22 @@ export const CONFERENCE_FAILED = 'CONFERENCE_FAILED';
 export const CONFERENCE_JOINED = 'CONFERENCE_JOINED';
 
 /**
+ * A constant representing the action type for connecting to a GST (GStreamer) stream.
+ * This variable is used to signal the initiation of a connection to a specific media stream
+ * within applications utilizing GStreamer for media handling.
+ */
+export const CONNECT_GST_STREAM = 'CONNECT_GST_STREAM';
+
+/**
+ * Constant representing the action type for disconnecting a GST (GStreamer) stream.
+ *
+ * This variable is typically used in scenarios where a GStreamer-based streaming
+ * session needs to be terminated, such as stopping an ongoing media pipeline or
+ * disconnecting from a remote streaming source.
+ */
+export const DISCONNECT_GST_STREAM = 'DISCONNECT_GST_STREAM';
+
+/**
  * The type of (redux) action which signals that a specific conference joining is in progress.
  * A CONFERENCE_JOINED is guaranteed to follow.
  *
