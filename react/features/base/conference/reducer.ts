@@ -51,7 +51,8 @@ const DEFAULT_STATE = {
     metadata: undefined,
     password: undefined,
     passwordRequired: undefined,
-    properties: undefined
+    properties: undefined,
+    gstStreamConnected: false
 };
 
 export interface IConferenceMetadata {

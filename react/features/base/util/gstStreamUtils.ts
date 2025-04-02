@@ -32,6 +32,11 @@ export const startGstStream = async (store: IStore, token: string, meetingId: st
             return;
         }
 
+        if (whipLink === 'GST_STREAM_CONNECTED') {
+            logger.info('GST stream already connected');
+            return;
+        }
+
         await fetch(
             `${env.GST_STREAM_URL}?roomId=${meetingId}&domain=${domain}&whipEndpoint=${whipLink}`,
             {
