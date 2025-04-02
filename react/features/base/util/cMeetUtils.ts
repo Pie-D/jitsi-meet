@@ -77,11 +77,12 @@ async function getTimeSheetId(meetingId: string): Promise<string> {
 
         if (filteredData.length === 0) {
             logger.error('No timesheets running');
-            return null;
+            return undefined;
         }
 
         return filteredData[0].id;
     } catch (err) {
         logger.error('Could not fetch time sheet id: ', err);
+        return undefined;
     }
 }
