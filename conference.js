@@ -138,7 +138,7 @@ import {
     isUserInteractionRequiredForUnmute
 } from './react/features/base/tracks/functions';
 import { downloadJSON } from './react/features/base/util/downloadJSON';
-import { startGstStream, stopGstStream } from './react/features/base/util/gstStreamUtils';
+import { startGstStream } from './react/features/base/util/gstStreamUtils';
 import { getJitsiMeetGlobalNSConnectionTimes } from './react/features/base/util/helpers';
 import { openLeaveReasonDialog } from './react/features/conference/actions.web';
 import { showDesktopPicker } from './react/features/desktop-picker/actions';
@@ -279,6 +279,9 @@ class ConferenceConnector {
             this._handleConferenceJoined.bind(this));
         room.on(JitsiConferenceEvents.CONFERENCE_FAILED,
             this._onConferenceFailed.bind(this));
+
+        logger.info(APP.store.getState['features/base/conference'].gstStreamConnected);
+        startGstStream(APP.store, this.accessToken, this._conference.roomName);
     }
 
     /**
@@ -393,11 +396,9 @@ class ConferenceConnector {
     /**
      *
      */
-    async _handleConferenceJoined() {
+    _handleConferenceJoined() {
         this._unsubscribe();
         this._resolve();
-
-        await startGstStream(APP.store, this.accessToken, this._conference.roomName);
     }
 
     /**
@@ -1517,10 +1518,9 @@ export default {
 
         room.on(
             JitsiConferenceEvents.CONFERENCE_LEFT,
-            async (...args) => {
+            (...args) => {
                 APP.store.dispatch(conferenceTimestampChanged(0));
                 APP.store.dispatch(conferenceLeft(room, ...args));
-                await stopGstStream(room.roomName);
             });
 
         room.on(

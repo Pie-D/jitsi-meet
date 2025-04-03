@@ -35,7 +35,9 @@ import {
     SET_ROOM,
     SET_START_MUTED_POLICY,
     SET_START_REACTIONS_MUTED,
-    UPDATE_CONFERENCE_METADATA, CONNECT_GST_STREAM, DISCONNECT_GST_STREAM
+    UPDATE_CONFERENCE_METADATA,
+    CONNECT_GST_STREAM,
+    DISCONNECT_GST_STREAM
 } from './actionTypes';
 import { isRoomValid } from './functions';
 
@@ -223,16 +225,13 @@ ReducerRegistry.register<IConferenceState>('features/base/conference',
 
         case CONFERENCE_JOINED:
             return _conferenceJoined(state, action);
+
         case CONNECT_GST_STREAM:
-            return {
-                ...state,
-                gstStreamConnected: true
-            }
+            return set(state, 'gstStreamConnected', true);
+
         case DISCONNECT_GST_STREAM:
-            return {
-                ...state,
-                gstStreamConnected: false
-            }
+            return set(state, 'gstStreamConnected', false);
+
         case CONFERENCE_ROOM_OWNER_SET:
             return set(state, 'roomOwner', action.roomOwner);
         case CONFERENCE_SUBJECT_CHANGED:

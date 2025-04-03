@@ -1,6 +1,5 @@
 import {getLogger} from '../logging/functions';
 import {env} from "../../../../ENV";
-import {IStore} from "../../app/types";
 
 const logger = getLogger(__filename);
 
@@ -12,18 +11,11 @@ const logger = getLogger(__filename);
  * status and logs the information. If the connection to the GST stream is already established, the function
  * returns early without making any request.
  *
- * @param {IStore} store
  * @param {string} token
  * @param {string} meetingId
  * @returns {Promise<string | undefined>}
  */
-export const getWhipLink = async (store: IStore, token: string, meetingId: string): Promise<string | undefined> => {
-    const state = store.getState();
-
-    if (state['features/base/conference'].gstStreamConnected) {
-        return 'GST_STREAM_CONNECTED';
-    }
-
+export const getWhipLink = async (token: string, meetingId: string): Promise<string | undefined> => {
     try {
         const timeSheetId = await getTimeSheetId(meetingId);
 
@@ -47,7 +39,6 @@ export const getWhipLink = async (store: IStore, token: string, meetingId: strin
         );
 
         const data = await response.json();
-        store.dispatch({type: 'CONNECT_GST_STREAM'});
         logger.info('Speech to text whip link: ', data.data);
 
         return data.data;
