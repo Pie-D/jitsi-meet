@@ -30,7 +30,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
         if(!_toggled) {
             const token = _conference?.connection.token;
-        
+            
             if (!token) {
                 return null;
             }

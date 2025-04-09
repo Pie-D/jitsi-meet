@@ -16,7 +16,7 @@ export interface ISaveSpeechToTextAction extends Partial<ISaveSpeechToTextState>
 
 ReducerRegistry.register<ISaveSpeechToTextState>(
     'features/saveSpeechToText',
-    (state: ISaveSpeechToTextState = DEFAULT_STATE, action: ISaveSpeechToTextAction) => {
+    (state = DEFAULT_STATE, action): ISaveSpeechToTextState  => {
         switch (action.type) {
             case SET_SAVESPEECHTOTEXT_OPEN: {
                 return {
