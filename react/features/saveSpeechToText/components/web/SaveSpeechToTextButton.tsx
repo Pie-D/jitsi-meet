@@ -18,7 +18,7 @@ interface IProps extends AbstractButtonProps {
 }
 
 
-class SaveSpeechToTextButtuon extends AbstractButton<IProps>{
+class SaveSpeechToTextButton extends AbstractButton<IProps>{
     accessibilityLabel = 'toolbar.accessibilityLabel.saveSpeechToText';
     toggledAccessibilityLabel = 'toolbar.accessibilityLabel.saveSpeechToTextHiden';
     icon = IconSaveSpeechToText;
@@ -65,4 +65,4 @@ function _mapStateToProps(state: IReduxState) {
     };
 }
 
-export default translate(connect(_mapStateToProps)(SaveSpeechToTextButtuon));
+export default translate(connect(_mapStateToProps)(SaveSpeechToTextButton));
