@@ -55,7 +55,7 @@ export const isGstStreamConnected = (state: any): boolean => {
  * @throws Will log an error if unable to retrieve the WHIP link or start the GST stream.
  */
 export const startGstStream = (token: string, meetingId: string): void => {
-    // localStore = store;
+    localStore = store;
 
     // if (isGstStreamConnected(store.getState())) {
     //     logger.warn('GST stream already connected for meeting:', meetingId);
