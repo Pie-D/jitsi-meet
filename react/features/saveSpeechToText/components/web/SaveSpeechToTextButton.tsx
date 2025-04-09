@@ -6,6 +6,7 @@ import { IReduxState } from '../../../app/types';
 import { setOverflowMenuVisible } from '../../../toolbox/actions.web';
 import { setSaveSpeechToTextOpen } from '../../actionTypes';
 import { startGstStream } from '../../../base/util/gstStreamUtils';
+import { IJitsiConference } from '../../../base/conference/reducer';
 
 interface IProps extends AbstractButtonProps {
 
@@ -13,7 +14,7 @@ interface IProps extends AbstractButtonProps {
      * Whether or not the button is toggled.
      */
     _toggled: boolean;
-    _conference: any;
+    _conference: IJitsiConference;
 }
 
 

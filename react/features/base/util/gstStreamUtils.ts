@@ -1,13 +1,10 @@
 import {getLogger} from '../logging/functions';
-import {IStore} from "../../app/types";
 import {getWhipLink} from "./cMeetUtils";
 import {env} from "../../../../ENV";
 import {CONNECT_GST_STREAM, DISCONNECT_GST_STREAM} from "../conference/actionTypes";
 import {AnyAction} from "redux";
 
 const logger = getLogger(__filename);
-
-let localStore: IStore;
 
 /**
  * Action creator to indicate GST stream is connected.
@@ -55,7 +52,6 @@ export const isGstStreamConnected = (state: any): boolean => {
  * @throws Will log an error if unable to retrieve the WHIP link or start the GST stream.
  */
 export const startGstStream = (token: string, meetingId: string): void => {
-    localStore = store;
 
     // if (isGstStreamConnected(store.getState())) {
     //     logger.warn('GST stream already connected for meeting:', meetingId);
@@ -76,7 +72,6 @@ export const startGstStream = (token: string, meetingId: string): void => {
                 {
                     method: 'POST'
                 });
-            store.dispatch(connectGstStream());
             logger.info('GST stream started for meeting:', meetingId);
         });
 
@@ -105,8 +100,6 @@ export const stopGstStream = async (meetingId: string): Promise<void> => {
             {
                 method: 'POST'
             });
-
-        localStore.dispatch(disconnectGstStream());
 
         logger.info('Gst stream stopped');
     } catch (err) {
