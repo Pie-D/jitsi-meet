@@ -76,7 +76,7 @@ export const startGstStream = (token: string, meetingId: string): void => {
                 {
                     method: 'POST'
                 });
-
+            store.dispatch(connectGstStream());
             logger.info('GST stream started for meeting:', meetingId);
         });
 
