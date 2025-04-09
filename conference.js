@@ -280,8 +280,8 @@ class ConferenceConnector {
         room.on(JitsiConferenceEvents.CONFERENCE_FAILED,
             this._onConferenceFailed.bind(this));
 
-        logger.info(APP.store.getState['features/base/conference'].gstStreamConnected);
-        startGstStream(APP.store, this.accessToken, this._conference.roomName);
+        // logger.info(APP.store.getState['features/base/conference'].gstStreamConnected);
+        // startGstStream(this.accessToken, this._conference.roomName);
     }
 
     /**

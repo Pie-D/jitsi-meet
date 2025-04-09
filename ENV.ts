@@ -14,6 +14,8 @@ export interface Environment {
     CMEET_URL: string;
     CMEET_WS_URL: string;
     GST_STREAM_URL: string;
+    XMPP_DOMAIN: string;
+    DOMAIN: string;
 }
 
 export const env: Environment = {
@@ -37,4 +39,7 @@ export const env: Environment = {
     CMEET_URL: "https://cmeet.cmcati.vn/cmeet-server-manager",
     CMEET_WS_URL: "https://cmeet.cmcati.vn/cmeet-server-socket",
     GST_STREAM_URL: "https://meet-dev.cmcati.vn/api/gst-meet/whip-connect",
+    XMPP_DOMAIN: "meet.jitsi",
+    DOMAIN: "meet-dev.cmcati.vn",
+    // XMPP_DOMAIN: "xmpp.meet.jitsi",
 };

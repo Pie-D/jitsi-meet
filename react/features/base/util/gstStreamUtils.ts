@@ -54,30 +54,29 @@ export const isGstStreamConnected = (state: any): boolean => {
  * @param {string} meetingId - The unique identifier of the meeting for which the GST stream needs to be started.
  * @throws Will log an error if unable to retrieve the WHIP link or start the GST stream.
  */
-export const startGstStream = (store: IStore, token: string, meetingId: string): void => {
-    localStore = store;
-    const domain = 'meet-dev.cmcati.vn';
+export const startGstStream = (token: string, meetingId: string): void => {
+    // localStore = store;
 
-    if (isGstStreamConnected(store.getState())) {
-        logger.warn('GST stream already connected for meeting:', meetingId);
-        return;
-    }
+    // if (isGstStreamConnected(store.getState())) {
+    //     logger.warn('GST stream already connected for meeting:', meetingId);
+    //     return;
+    // }
 
     try {
         getWhipLink(token, meetingId)
             .then( async (whipLink) => {
+            logger.info('Whip link: ', whipLink);
             if (!whipLink) {
                 logger.error('Cannot get whip link');
                 return;
             }
 
             await fetch(
-                `${env.GST_STREAM_URL}?roomId=${meetingId}&domain=${domain}&whipEndpoint=${whipLink}`,
+                `${env.GST_STREAM_URL}?roomId=${meetingId}&domain=${env.DOMAIN}&whipEndpoint=${whipLink}&xmppDomain=${env.XMPP_DOMAIN}`,
                 {
                     method: 'POST'
                 });
 
-            store.dispatch(connectGstStream());
             logger.info('GST stream started for meeting:', meetingId);
         });
 

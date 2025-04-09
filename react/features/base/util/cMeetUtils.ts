@@ -17,15 +17,8 @@ const logger = getLogger(__filename);
  */
 export const getWhipLink = async (token: string, meetingId: string): Promise<string | undefined> => {
     try {
-        const timeSheetId = await getTimeSheetId(meetingId);
-
-        if (!timeSheetId) {
-            logger.error('No valid timesheet found');
-            return "";
-        }
-
         const response = await fetch(
-            `${env.CMEET_WS_URL}/api/speech-to-text/${timeSheetId}`,
+            `${env.CMEET_WS_URL}/api/speech-to-text-meeting-online/${meetingId}`,
             {
                 method: 'POST',
                 headers: {

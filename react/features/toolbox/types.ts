@@ -53,6 +53,7 @@ export type ToolbarButton = 'camera' |
     'toggle-camera' |
     'videoquality' |
     'whiteboard' |
+    'saveSpeechToText' |
     '__end';
 
 export enum NOTIFY_CLICK_MODE {
