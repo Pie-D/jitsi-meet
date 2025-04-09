@@ -80,6 +80,9 @@ export interface IJitsiConference {
     avModerationApprove: Function;
     avModerationReject: Function;
     callUUID?: string;
+    connection: {
+        token: string
+    }
     createVideoSIPGWSession: Function;
     dial: Function;
     disableAVModeration: Function;
@@ -204,6 +207,7 @@ export interface IJitsiConferenceRoom {
         };
     };
     roomOwner?: string;
+    cmeetMeetingId: string;
 }
 
 interface IConferenceFailedError extends Error {

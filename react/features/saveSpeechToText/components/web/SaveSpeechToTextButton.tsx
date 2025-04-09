@@ -1,6 +1,6 @@
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
 import { translate } from '../../../base/i18n/functions';
-import { connect } from 'react-redux';
+import { connect, DispatchProp } from 'react-redux';
 import { IconSaveSpeechToText, IconSaveSpeechToTextHiden } from '../../../base/icons/svg';
 import { IReduxState } from '../../../app/types';
 import { setOverflowMenuVisible } from '../../../toolbox/actions.web';
@@ -9,12 +9,9 @@ import { startGstStream } from '../../../base/util/gstStreamUtils';
 import { IJitsiConference } from '../../../base/conference/reducer';
 
 interface IProps extends AbstractButtonProps {
-
-    /**
-     * Whether or not the button is toggled.
-     */
     _toggled: boolean;
-    _conference: IJitsiConference;
+    _conference?: IJitsiConference;
+    visible: boolean;
 }
 
 
@@ -32,7 +29,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
         const { dispatch, _toggled, _conference } = this.props;
 
         if(!_toggled) {
-            const token = _conference.connection.token;
+            const token = _conference?.connection.token;
         
             if (!token) {
                 return null;
