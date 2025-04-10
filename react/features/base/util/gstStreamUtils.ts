@@ -68,9 +68,18 @@ export const startGstStream = (token: string, meetingId: string): void => {
             }
 
             await fetch(
-                `${env.GST_STREAM_URL}?roomId=${meetingId}&domain=${env.DOMAIN}&whipEndpoint=${whipLink}&xmppDomain=${env.XMPP_DOMAIN}`,
+                `${env.GST_STREAM_URL}`,
                 {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        roomId: meetingId,
+                        domain: env.DOMAIN,
+                        whipEndpoint: whipLink,
+                        xmppDomain: env.XMPP_DOMAIN
+                    })
                 });
             logger.info('GST stream started for meeting:', meetingId);
         });
