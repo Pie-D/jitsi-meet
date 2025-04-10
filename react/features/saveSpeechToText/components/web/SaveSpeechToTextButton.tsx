@@ -5,7 +5,7 @@ import { IconSaveSpeechToText, IconSaveSpeechToTextHiden } from '../../../base/i
 import { IReduxState } from '../../../app/types';
 import { setOverflowMenuVisible } from '../../../toolbox/actions.web';
 import { setSaveSpeechToTextOpen } from '../../actionTypes';
-import { startGstStream } from '../../../base/util/gstStreamUtils';
+import { startGstStream, stopGstStream } from '../../../base/util/gstStreamUtils';
 import { IJitsiConference } from '../../../base/conference/reducer';
 
 interface IProps extends AbstractButtonProps {
@@ -43,6 +43,10 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
             const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
             startGstStream(decoded?.context?.token || null, _conference.room.cmeetMeetingId)
+        } else {
+            const roomId = _conference?.room.cmeetMeetingId;
+            if(!roomId) return null;
+            stopGstStream(roomId);
         }
 
         dispatch(setSaveSpeechToTextOpen(!_toggled));
