@@ -1,19 +1,19 @@
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
 import { translate } from '../../../base/i18n/functions';
-import { connect, DispatchProp } from 'react-redux';
+import { connect, DispatchProp, useSelector } from 'react-redux';
 import { IconSaveSpeechToText, IconSaveSpeechToTextHiden } from '../../../base/icons/svg';
 import { IReduxState } from '../../../app/types';
 import { setOverflowMenuVisible } from '../../../toolbox/actions.web';
 import { setSaveSpeechToTextOpen } from '../../actionTypes';
 import { startGstStream, stopGstStream } from '../../../base/util/gstStreamUtils';
 import { IJitsiConference } from '../../../base/conference/reducer';
+import { isLocalRoomOwner } from '../../../base/participants/functions';
 
 interface IProps extends AbstractButtonProps {
     _toggled: boolean;
     _conference?: IJitsiConference;
     visible: boolean;
 }
-
 
 class SaveSpeechToTextButton extends AbstractButton<IProps>{
     accessibilityLabel = 'toolbar.accessibilityLabel.saveSpeechToText';
@@ -27,7 +27,6 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
     _handleClick() {
         const { dispatch, _toggled, _conference } = this.props;
-
         if(!_toggled) {
             const token = _conference?.connection.token;
             
@@ -59,10 +58,11 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 }
 
 function _mapStateToProps(state: IReduxState) {
+    const isOwner = isLocalRoomOwner(state);
     return {
         _toggled: state['features/saveSpeechToText'].isOpen,
         _conference: state['features/base/conference'].conference,
-        visible: true 
+        visible: isOwner 
     };
 }
 
