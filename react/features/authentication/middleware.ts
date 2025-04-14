@@ -139,9 +139,12 @@ MiddlewareRegistry.register(store => next => action => {
         const { getState } = store;
         const state = getState();
         const isOwner = isLocalRoomOwner(state);
+        console.log(isOwner)
         if(isOwner) {
+            console.log(isOwner)
             const _conference = state['features/base/conference'].conference
             const roomId = _conference?.room.cmeetMeetingId;
+            console.log(roomId)
             if(roomId) stopGstStream(roomId);
         }
 
