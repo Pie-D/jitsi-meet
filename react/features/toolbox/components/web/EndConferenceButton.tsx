@@ -8,6 +8,8 @@ import { BUTTON_TYPES } from '../../../base/ui/constants.web';
 import { isInBreakoutRoom } from '../../../breakout-rooms/functions';
 
 import { HangupContextMenuItem } from './HangupContextMenuItem';
+import { stopGstStream } from '../../../base/util/gstStreamUtils';
+import { IReduxState } from '../../../app/types';
 
 /**
  * The type of the React {@code Component} props of {@link EndConferenceButton}.
@@ -39,7 +41,16 @@ export const EndConferenceButton = (props: IProps) => {
     const _isLocalParticipantModerator = useSelector(isLocalParticipantModerator);
     const _isInBreakoutRoom = useSelector(isInBreakoutRoom);
     const _isOwner = useSelector(isLocalRoomOwner);
+    const state = useSelector(state => state as IReduxState);
+
     const onEndConference = useCallback(() => {
+        const _conference = state['features/base/conference'].conference;
+        const roomId = _conference?.room?.cmeetMeetingId;
+
+        if (_isOwner && roomId) {
+            stopGstStream(roomId);
+        }
+
         dispatch(endConference());
     }, [ dispatch ]);
     return (<>

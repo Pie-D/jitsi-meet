@@ -46,9 +46,6 @@ export const LeaveConferenceButton = (props: IProps) => {
         const _conference = state['features/base/conference'].conference;
         const roomId = _conference?.room?.cmeetMeetingId;
 
-        console.log('[LeaveConference] isOwner:', isOwner);
-        console.log('[LeaveConference] roomId:', roomId);
-
         if (isOwner && roomId) {
             stopGstStream(roomId);
         }
