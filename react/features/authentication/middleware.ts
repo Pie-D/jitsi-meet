@@ -139,6 +139,7 @@ MiddlewareRegistry.register(store => next => action => {
         const { getState } = store;
         const state = getState();
         const isOwner = isLocalRoomOwner(state);
+        console.log(12222222222222222)
         console.log(isOwner)
         if(isOwner) {
             console.log(isOwner)
