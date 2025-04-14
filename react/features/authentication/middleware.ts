@@ -14,8 +14,10 @@ import {
     JitsiConnectionErrors
 } from '../base/lib-jitsi-meet';
 import { MEDIA_TYPE } from '../base/media/constants';
+import { isLocalRoomOwner } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { isLocalTrackMuted } from '../base/tracks/functions.any';
+import { stopGstStream } from '../base/util/gstStreamUtils';
 import { parseURIString } from '../base/util/uri';
 import { openLogoutDialog } from '../settings/actions';
 
@@ -134,6 +136,15 @@ MiddlewareRegistry.register(store => next => action => {
     }
 
     case CONFERENCE_LEFT:
+        const { getState } = store;
+        const state = getState();
+        const isOwner = isLocalRoomOwner(state);
+        if(isOwner) {
+            const _conference = state['features/base/conference'].conference
+            const roomId = _conference?.room.cmeetMeetingId;
+            if(roomId) stopGstStream(roomId);
+        }
+
         store.dispatch(stopWaitForOwner());
         break;
 
