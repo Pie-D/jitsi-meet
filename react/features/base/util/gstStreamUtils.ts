@@ -52,7 +52,7 @@ export const isGstStreamConnected = (state: any): boolean => {
  * @param {string} meetingId - The unique identifier of the meeting for which the GST stream needs to be started.
  * @throws Will log an error if unable to retrieve the WHIP link or start the GST stream.
  */
-export const startGstStream = async (token: string, meetingId: string, whipLink: string): Promise<boolean> => {
+export const startGstStream = async (meetingId: string, whipLink: string): Promise<boolean> => {
 
     // if (isGstStreamConnected(store.getState())) {
     //     logger.warn('GST stream already connected for meeting:', meetingId);

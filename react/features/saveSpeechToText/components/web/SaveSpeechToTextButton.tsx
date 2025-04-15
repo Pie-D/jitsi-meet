@@ -43,10 +43,10 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
             const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
 
-            const whipLink = await getWhipLink(decoded?.context?.userId || null, _conference.room.cmeetMeetingId);
+            const whipLink = await getWhipLink(decoded?.context?.token || null, _conference.room.cmeetMeetingId);
             if(whipLink == undefined) return;
 
-            const isStart = await startGstStream(decoded?.context?.token || null, _conference.room.cmeetMeetingId, whipLink);
+            const isStart = await startGstStream(_conference.room.cmeetMeetingId, whipLink);
             if(!isStart) return;
         } else {
             const roomId = _conference?.room.cmeetMeetingId;
