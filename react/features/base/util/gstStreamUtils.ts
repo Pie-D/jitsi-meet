@@ -3,6 +3,7 @@ import {getWhipLink} from "./cMeetUtils";
 import {env} from "../../../../ENV";
 import {CONNECT_GST_STREAM, DISCONNECT_GST_STREAM} from "../conference/actionTypes";
 import {AnyAction} from "redux";
+import { toast } from 'react-toastify';
 
 const logger = getLogger(__filename);
 
@@ -51,42 +52,34 @@ export const isGstStreamConnected = (state: any): boolean => {
  * @param {string} meetingId - The unique identifier of the meeting for which the GST stream needs to be started.
  * @throws Will log an error if unable to retrieve the WHIP link or start the GST stream.
  */
-export const startGstStream = (token: string, meetingId: string): void => {
+export const startGstStream = async (token: string, meetingId: string, whipLink: string): Promise<boolean> => {
 
     // if (isGstStreamConnected(store.getState())) {
     //     logger.warn('GST stream already connected for meeting:', meetingId);
     //     return;
     // }
-
-    try {
-        getWhipLink(token, meetingId)
-            .then( async (whipLink) => {
-            logger.info('Whip link: ', whipLink);
-            if (!whipLink) {
-                logger.error('Cannot get whip link');
-                return;
-            }
-
-            await fetch(
-                `${env.GST_STREAM_URL}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        roomId: meetingId,
-                        domain: env.DOMAIN,
-                        whipEndpoint: whipLink,
-                        xmppDomain: env.XMPP_DOMAIN
-                    })
-                });
-            logger.info('GST stream started for meeting:', meetingId);
+    const response = await fetch(
+        `${env.GST_STREAM_URL}`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                roomId: meetingId,
+                domain: env.DOMAIN,
+                whipEndpoint: whipLink,
+                xmppDomain: env.XMPP_DOMAIN
+            })
         });
-
-    } catch (err) {
-        logger.error('Could not start GST stream:', err);
+    
+    if(!response.ok) {
+        logger.error('Khởi động GST stream thất bại');
+        return false;
     }
+
+    toast.success('Bật bóc băng thành công');
+    return true;
 }
 
 

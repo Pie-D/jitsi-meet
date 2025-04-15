@@ -1,5 +1,6 @@
 import {getLogger} from '../logging/functions';
 import {env} from "../../../../ENV";
+import { toast } from 'react-toastify';
 
 const logger = getLogger(__filename);
 
@@ -16,29 +17,38 @@ const logger = getLogger(__filename);
  * @returns {Promise<string | undefined>}
  */
 export const getWhipLink = async (token: string, meetingId: string): Promise<string | undefined> => {
-    try {
-        const response = await fetch(
-            `${env.CMEET_WS_URL}/api/speech-to-text-meeting-online/${meetingId}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    isVoiceSeparation: true
-                })
-            }
-        );
+    const response = await fetch(
+        `${env.CMEET_WS_URL}/api/speech-to-text-meeting-online/${meetingId}`,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                isVoiceSeparation: true
+            })
+        }
+    );
+    const data = await response.json();
 
-        const data = await response.json();
-        logger.info('Speech to text whip link: ', data.data);
+    if(!response.ok) {
+        if(response.status === 401) {
+            toast.error('Token hết hạn. Vui lòng đăng nhập lại');
+        } else if(response.status === 400) {
+            const code = data.code;
+            const message = data.message;
 
-        return data.data;
-    } catch (err) {
-        logger.error('Could not fetch whip link: ', err);
-        return "";
+            // code 39 là cần đợi sau bao nhiêu giây nữa
+            if(code == 39) toast.error(`Vui lòng đợi ${message} giây`);
+
+            // code 46 là đang có luồng bóc băng chưa kết thúc
+            if(code == 46) toast.error("Luồng bóc băng chưa kết thúc. Vui lòng thử lại sau");
+        } else toast.error('Lỗi hệ thống. Vui lòng thử lại sau');
+        return undefined;
     }
+
+    return data.data;
 }
 
 /**

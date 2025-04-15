@@ -1,5 +1,6 @@
 import React from 'react';
-
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import GlobalStyles from '../../base/ui/components/GlobalStyles.web';
 import JitsiThemeProvider from '../../base/ui/components/JitsiThemeProvider.web';
 import DialogContainer from '../../base/ui/components/web/DialogContainer';
@@ -59,9 +60,21 @@ export class App extends AbstractApp {
      */
     _renderDialogContainer() {
         return (
-            <JitsiThemeProvider>
-                <DialogContainer />
-            </JitsiThemeProvider>
+            <>
+                <JitsiThemeProvider>
+                    <DialogContainer />
+                </JitsiThemeProvider>
+                <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
+            </>
         );
     }
 }

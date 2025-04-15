@@ -8,6 +8,7 @@ import { setSaveSpeechToTextOpen } from '../../actionTypes';
 import { startGstStream, stopGstStream } from '../../../base/util/gstStreamUtils';
 import { IJitsiConference } from '../../../base/conference/reducer';
 import { isLocalRoomOwner } from '../../../base/participants/functions';
+import { getWhipLink } from '../../../base/util/cMeetUtils';
 
 interface IProps extends AbstractButtonProps {
     _toggled: boolean;
@@ -25,7 +26,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
     toggledTooltip = 'toolbar.saveSpeechToTextHiden';
     tooltip = 'toolbar.saveSpeechToText';
 
-    _handleClick() {
+    async _handleClick() {
         const { dispatch, _toggled, _conference } = this.props;
         if(!_toggled) {
             const token = _conference?.connection.token;
@@ -41,7 +42,12 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
             }
 
             const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-            startGstStream(decoded?.context?.token || null, _conference.room.cmeetMeetingId)
+
+            const whipLink = await getWhipLink(decoded?.context?.userId || null, _conference.room.cmeetMeetingId);
+            if(whipLink == undefined) return;
+
+            const isStart = await startGstStream(decoded?.context?.token || null, _conference.room.cmeetMeetingId, whipLink);
+            if(!isStart) return;
         } else {
             const roomId = _conference?.room.cmeetMeetingId;
             if(!roomId) return null;
