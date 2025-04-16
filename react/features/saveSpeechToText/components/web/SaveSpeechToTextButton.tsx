@@ -63,7 +63,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
             this.stompClient.onConnect = (frame: any) => {
                 this.stompClient.publish({
-                    destination: '/conference/' + _conference.room.cmeetMeetingId,
+                    destination: '/app/conference/' + _conference.room.cmeetMeetingId,
                     body: JSON.stringify({
                         roomId: _conference.room.cmeetMeetingId
                     }),
