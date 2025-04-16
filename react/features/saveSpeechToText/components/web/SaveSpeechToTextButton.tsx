@@ -34,7 +34,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
         super(props);
         this.stompClient = new Client();
         this.stompClient.webSocketFactory = () => {
-            return new SockJS(env.GST_STREAM_URL + "/ws");
+            return new SockJS(env.GST_STREAM_WS);
         };
     }
 

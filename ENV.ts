@@ -16,6 +16,7 @@ export interface Environment {
     GST_STREAM_URL: string;
     XMPP_DOMAIN: string;
     DOMAIN: string;
+    GST_STREAM_WS: string;
 }
 
 export const env: Environment = {
@@ -41,5 +42,6 @@ export const env: Environment = {
     GST_STREAM_URL: "https://meet-dev.cmcati.vn/api/gst-meet/whip-connect",
     XMPP_DOMAIN: "meet.jitsi",
     DOMAIN: "meet-dev.cmcati.vn",
+    GST_STREAM_WS: "https://meet-dev.cmcati.vn/gst-meet/ws"
     // XMPP_DOMAIN: "xmpp.meet.jitsi",
 };
