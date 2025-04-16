@@ -9,6 +9,9 @@ import { startGstStream, stopGstStream } from '../../../base/util/gstStreamUtils
 import { IJitsiConference } from '../../../base/conference/reducer';
 import { isLocalRoomOwner } from '../../../base/participants/functions';
 import { getWhipLink } from '../../../base/util/cMeetUtils';
+import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
+import { env } from '../../../../../ENV';
 
 interface IProps extends AbstractButtonProps {
     _toggled: boolean;
@@ -25,6 +28,15 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
     toggledLabel = 'toolbar.saveSpeechToTextHiden';
     toggledTooltip = 'toolbar.saveSpeechToTextHiden';
     tooltip = 'toolbar.saveSpeechToText';
+    stompClient: any;
+
+    constructor(props: IProps) {
+        super(props);
+        this.stompClient = new Client();
+        this.stompClient.webSocketFactory = () => {
+            return new SockJS(env.CMEET_WS_URL + "/ws");
+        };
+    }
 
     async _handleClick() {
         const { dispatch, _toggled, _conference } = this.props;
@@ -48,10 +60,21 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
             const isStart = await startGstStream(_conference.room.cmeetMeetingId, whipLink);
             if(!isStart) return;
+
+            this.stompClient.onConnect = (frame: any) => {
+                this.stompClient.publish({
+                    destination: '/conference/' + _conference.room.cmeetMeetingId,
+                    body: JSON.stringify({
+                        roomId: _conference.room.cmeetMeetingId
+                    }),
+                });
+            };
+            this.stompClient.activate();
         } else {
             const roomId = _conference?.room.cmeetMeetingId;
             if(!roomId) return null;
             stopGstStream(roomId);
+            this.stompClient.deactivate();
         }
 
         dispatch(setSaveSpeechToTextOpen(!_toggled));

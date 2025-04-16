@@ -74,7 +74,7 @@ export const startGstStream = async (meetingId: string, whipLink: string): Promi
         });
     
     if(!response.ok) {
-        logger.error('Khởi động GST stream thất bại');
+        toast.error('Khởi động GST stream thất bại');
         return false;
     }
 
