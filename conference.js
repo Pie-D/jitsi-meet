@@ -170,6 +170,7 @@ import { transcriberJoined, transcriberLeft } from './react/features/transcribin
 import { muteLocal } from './react/features/video-menu/actions.any';
 import { setRoomIdOnChange, startConference } from './rocketchat';
 import { toast } from 'react-toastify';
+import i18next from 'i18next';
 
 const logger = Logger.getLogger(__filename);
 let room;
@@ -343,7 +344,8 @@ class ConferenceConnector {
                 this._passwordTried = true;
         
             } else {
-                toast.error('Mật khẩu không chính xác')
+                const message = i18next.t('dialog.incorrectRoomLockPassword');
+                toast.error(message)
             }
             break;
         }
