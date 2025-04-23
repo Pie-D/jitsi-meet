@@ -260,6 +260,7 @@ class ConferenceConnector {
         this._reject = reject;
         this.reconnectTimeout = null;
         this.accessToken = this._getTokenFromXMPP();
+        this._passwordTried = false
 
         document.addEventListener('rocketChatRoomIdReady', event => {
             console.log(`Received event: rocketChatRoomIdReady - ${event.detail.roomId}`);
@@ -333,6 +334,19 @@ class ConferenceConnector {
                 descriptionKey: 'dialog.reservationErrorMsg',
                 titleKey: 'dialog.reservationError'
             }));
+            break;
+        }
+
+        case JitsiConferenceErrors.PASSWORD_REQUIRED: {
+            if (!this._passwordTried) {
+                this._passwordTried = true;
+        
+            } else {
+                APP.store.dispatch(showErrorNotification({
+                    descriptionKey: 'dialog.incorrectRoomLockPassword',
+                    titleKey: 'dialog.incorrectRoomLockPassword'
+                }));
+            }
             break;
         }
 
