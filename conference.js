@@ -169,6 +169,7 @@ import { handleToggleVideoMuted } from './react/features/toolbox/actions.any';
 import { transcriberJoined, transcriberLeft } from './react/features/transcribing/actions';
 import { muteLocal } from './react/features/video-menu/actions.any';
 import { setRoomIdOnChange, startConference } from './rocketchat';
+import { toast } from 'react-toastify';
 
 const logger = Logger.getLogger(__filename);
 let room;
@@ -342,10 +343,7 @@ class ConferenceConnector {
                 this._passwordTried = true;
         
             } else {
-                APP.store.dispatch(showErrorNotification({
-                    descriptionKey: 'dialog.incorrectRoomLockPassword',
-                    titleKey: 'dialog.incorrectRoomLockPassword'
-                }));
+                toast.error('Mật khẩu không chính xác')
             }
             break;
         }
