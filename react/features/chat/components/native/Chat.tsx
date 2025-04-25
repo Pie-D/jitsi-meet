@@ -53,9 +53,10 @@ class Chat extends Component<IProps> {
      * @inheritdoc
      */
     render() {
-        const { _messages, route } = this.props;
+        let { _messages, route } = this.props;
         const privateMessageRecipient = route?.params?.privateMessageRecipient;
 
+        _messages = []
         return (
             <JitsiScreen
                 disableForcedKeyboardDismiss = { true }
