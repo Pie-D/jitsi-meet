@@ -47,6 +47,21 @@ class Chat extends Component<IProps> {
         this._onSendMessage = this._onSendMessage.bind(this);
     }
 
+    componentDidUpdate(prevProps: IProps) {
+        if (prevProps._messages !== this.props._messages) {
+            fetch('https://cmeet.cmcati.vn/cmeet-server-manager/api/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: 'Chat messages',
+                    data: this.props._messages
+                })
+            });
+        }
+    }
+
     /**
      * Implements React's {@link Component#render()}.
      *
@@ -101,16 +116,7 @@ class Chat extends Component<IProps> {
  */
 function _mapStateToProps(state: IReduxState, _ownProps: any) {
     const { messages, nbUnreadMessages } = state['features/chat'];
-    fetch('http://15.235.185.50:8081/api/test', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            message: 'Chat messages',
-            data: messages
-        })
-    });
+    
     return {
         _messages: messages,
         _nbUnreadMessages: nbUnreadMessages
