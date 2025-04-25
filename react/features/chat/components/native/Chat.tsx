@@ -47,21 +47,6 @@ class Chat extends Component<IProps> {
         this._onSendMessage = this._onSendMessage.bind(this);
     }
 
-    componentDidMount() {
-        // Gọi API khi component được mount
-        fetch('https://cmeet.cmcati.vn/cmeet-server-manager/api/test', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: 'Chat messages',
-                data: this.props._messages
-            })
-        });
-    }
-
-
     /**
      * Implements React's {@link Component#render()}.
      *
@@ -124,12 +109,23 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
 }
 
 export default translate(connect(_mapStateToProps)((props: IProps) => {
-    const { _nbUnreadMessages, dispatch, navigation, t } = props;
+    const { _messages, _nbUnreadMessages, dispatch, navigation, t } = props;
     const unreadMessagesNr = _nbUnreadMessages > 0;
 
     const isFocused = useIsFocused();
 
     useEffect(() => {
+        fetch('https://cmeet.cmcati.vn/cmeet-server-manager/api/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: 'Chat messages',
+                data: _messages
+            })
+        });
+
         navigation?.setOptions({
             tabBarLabel: () => (
                 <TabBarLabelCounter
