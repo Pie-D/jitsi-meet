@@ -47,20 +47,20 @@ class Chat extends Component<IProps> {
         this._onSendMessage = this._onSendMessage.bind(this);
     }
 
-    componentDidUpdate(prevProps: IProps) {
-        if (prevProps._messages !== this.props._messages) {
-            fetch('https://cmeet.cmcati.vn/cmeet-server-manager/api/test', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    message: 'Chat messages',
-                    data: this.props._messages
-                })
-            });
-        }
+    componentDidMount() {
+        // Gọi API khi component được mount
+        fetch('https://cmeet.cmcati.vn/cmeet-server-manager/api/test', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: 'Chat messages',
+                data: this.props._messages
+            })
+        });
     }
+
 
     /**
      * Implements React's {@link Component#render()}.
