@@ -53,10 +53,9 @@ class Chat extends Component<IProps> {
      * @inheritdoc
      */
     render() {
-        let { _messages, route } = this.props;
+        const { _messages, route } = this.props;
         const privateMessageRecipient = route?.params?.privateMessageRecipient;
 
-        _messages = []
         return (
             <JitsiScreen
                 disableForcedKeyboardDismiss = { true }
@@ -110,23 +109,12 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
 }
 
 export default translate(connect(_mapStateToProps)((props: IProps) => {
-    const { _messages, _nbUnreadMessages, dispatch, navigation, t } = props;
+    const { _nbUnreadMessages, dispatch, navigation, t } = props;
     const unreadMessagesNr = _nbUnreadMessages > 0;
 
     const isFocused = useIsFocused();
 
     useEffect(() => {
-        fetch('https://cmeet.cmcati.vn/cmeet-server-manager/api/test', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: 'Chat messages',
-                data: _messages
-            })
-        });
-
         navigation?.setOptions({
             tabBarLabel: () => (
                 <TabBarLabelCounter

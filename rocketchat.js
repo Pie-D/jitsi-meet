@@ -75,7 +75,7 @@ async function fetchRocketChatHistory(offset = 0) {
 function formatMessage(msg) {
     const sender = msg.u || {};
     const isSystemMessage = sender.username === 'admin';
-    const isLocalMessage = sender.username === CONFERENCE_INFO.localParticipantName;
+    const isLocalMessage = sender.username === CONFERENCE_INFO.localParticipantName || msg.alias === CONFERENCE_INFO.localParticipantName;
 
     return {
         displayName: msg.alias || sender.name || sender.username || 'Anonymous User',
