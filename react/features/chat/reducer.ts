@@ -90,7 +90,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
     }
 
     case PREPEND_MESSAGES:
-        action.messages.forEach(message => {
+        action.messages.forEach((message: IMessage) => {
             state.shownMessages.add(message.messageId);
         });
 
