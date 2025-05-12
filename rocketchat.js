@@ -76,18 +76,40 @@ function formatMessage(msg) {
     const sender = msg.u || {};
     const isSystemMessage = sender.username === 'admin';
     const isLocalMessage = sender.username === CONFERENCE_INFO.localParticipantName || msg.alias === CONFERENCE_INFO.localParticipantName;
+    
+    const displayName = msg.alias || sender.username || 'Anonymous User';
+    const participantId = isSystemMessage ? 'system' : msg.alias || sender.username || msg.customFields?.participantId;
+
+    const reactions = new Map();
+    if (msg.reactions) {
+        Object.entries(msg.reactions).forEach(([reaction, users]) => {
+            reactions.set(reaction, new Set(users.usernames));
+        });
+    }
+    
+    let timestamp;
+    if (typeof msg.ts === 'string') {
+        timestamp = new Date(msg.ts).getTime();
+    } else if (msg.ts && msg.ts.$date) {
+        timestamp = new Date(msg.ts.$date).getTime();
+    } else {
+        timestamp = Date.now();
+    }
 
     return {
-        displayName: msg.alias || sender.name || sender.username || 'Anonymous User',
-        participantId: isSystemMessage ? 'system' : msg.alias || sender.username || msg.customFields?.participantId,
+        displayName,
+        error: false,
+        participantId,
+        isReaction: false,
         messageId: msg._id,
-        message: msg.msg || 'No message content',
         messageType: isSystemMessage ? 'system' : isLocalMessage ? 'local' : 'remote',
+        message: msg.msg || 'No message content',
+        reactions,
         privateMessage: false,
         lobbyChat: false,
-        reactions: new Map(),
-        timestamp: new Date(msg.ts).getTime(),
-        isReaction: false
+        recipient: undefined,
+        timestamp,
+        hasRead: true
     };
 }
 
@@ -102,7 +124,11 @@ export async function syncRocketChatMessages(offset = 0) {
             return;
         }
 
-        CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages});
+        await new Promise(resolve => {
+            CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages});
+            resolve();
+        });
+        
         logger.info(`Rocket.Chat messages synced (offset: ${offset})`);
     } catch (error) {
         logger.error('Error syncing Rocket.Chat messages:', error);
@@ -160,11 +186,7 @@ function handleWebSocketMessage(data, store, localParticipantName, ws) {
     if (parsedData.msg === 'changed' && parsedData.collection === 'stream-room-messages') {
         const messageData = parsedData.fields.args[0];
 
-        if (!messageData.customFields?.fromJitsi &&
-            messageData.u?.username !== localParticipantName &&
-            messageData.alias !== localParticipantName &&
-            !messageData.t
-        ) {
+        if (!messageData.customFields?.fromJitsi && !messageData.t) {
             const newMessage = formatMessage(messageData);
             store.dispatch(addMessage({...newMessage, hasRead: false}));
             logger.info(`New message received from Rocket.Chat: ${newMessage.message}`);
@@ -194,6 +216,8 @@ export function startConference(store, rocketChatRoomId, meetingId) {
     CONFERENCE_INFO.localParticipantId = localParticipant.id || '';
     CONFERENCE_INFO.localParticipantName = localParticipant.name || 'Anonymous User';
 
-    syncRocketChatMessages().then(setupRocketChatWebSocket);
+    syncRocketChatMessages().then(() => {
+        setupRocketChatWebSocket();
+    });
 }
 
