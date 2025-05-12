@@ -51,6 +51,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         if (state.shownMessages.has(action.messageId)) {
             return state;
         }
+        console.log('action.displayName add message', action.displayName);
 
         const newMessage: IMessage = {
             displayName: action.displayName,
@@ -93,6 +94,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         action.messages.forEach((message: IMessage) => {
             state.shownMessages.add(message.messageId);
         });
+        console.log('action.displayName prepend messages', action.displayName);
 
         return {
             ...state,
