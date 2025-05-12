@@ -133,12 +133,8 @@ export async function syncRocketChatMessages(offset = 0) {
             return;
         }
 
-        // Đảm bảo tin nhắn lịch sử được load trước và đúng thứ tự thời gian
         const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp);
-        await new Promise(resolve => {
-            CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages: sortedMessages});
-            resolve();
-        });
+        CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages: sortedMessages});
         
         logger.info(`Rocket.Chat messages synced (offset: ${offset})`);
     } catch (error) {
