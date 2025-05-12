@@ -69,6 +69,15 @@ async function fetchRocketChatHistory(offset = 0) {
     }
 }
 
+function getNonEmptyValue(...values) {
+    for (const value of values) {
+        if (value && value.trim()) {
+            return value.trim();
+        }
+    }
+    return undefined;
+}
+
 /**
  * Định dạng tin nhắn nhận được từ Rocket.Chat
  */
@@ -77,8 +86,8 @@ function formatMessage(msg) {
     const isSystemMessage = sender.username === 'admin';
     const isLocalMessage = sender.username === CONFERENCE_INFO.localParticipantName || msg.alias === CONFERENCE_INFO.localParticipantName;
     
-    const displayName = msg.alias || sender.username || 'Anonymous User';
-    const participantId = isSystemMessage ? 'system' : msg.alias || sender.username || msg.customFields?.participantId;
+    const displayName = getNonEmptyValue(msg.alias, sender.username, 'Anonymous User');
+    const participantId = isSystemMessage ? 'system' : getNonEmptyValue(msg.alias, sender.username, msg.customFields?.participantId);
 
     const reactions = new Map();
     if (msg.reactions) {
@@ -124,8 +133,10 @@ export async function syncRocketChatMessages(offset = 0) {
             return;
         }
 
+        // Đảm bảo tin nhắn lịch sử được load trước và đúng thứ tự thời gian
+        const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp);
         await new Promise(resolve => {
-            CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages});
+            CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages: sortedMessages});
             resolve();
         });
         
