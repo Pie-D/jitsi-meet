@@ -54,7 +54,6 @@ import {
 } from './constants';
 import { getUnreadCount } from './functions';
 import { INCOMING_MSG_SOUND_FILE } from './sounds';
-import { isHistoryLoaded } from '../../../rocketchat';
 /**
  * Timeout for when to show the privacy notice after a private message was received.
  *
@@ -62,9 +61,6 @@ import { isHistoryLoaded } from '../../../rocketchat';
  * message after we have received a private message in the last 20 seconds.
  */
 const PRIVACY_NOTICE_TIMEOUT = 20 * 1000;
-
-// Load history of Rocket.Chat flag
-let isHistoryLoaded = false;
 
 /**
  * Implements the middleware of the chat feature.
