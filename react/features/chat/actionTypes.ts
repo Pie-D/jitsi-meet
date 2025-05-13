@@ -96,6 +96,11 @@ export const SEND_MESSAGE = 'SEND_MESSAGE';
 export const SEND_REACTION = 'SEND_REACTION';
 
 /**
+ * The type of the action which signals to set the history Rocket.Chat loaded state.
+ */
+export const SET_HISTORY_LOADED = 'SET_HISTORY_LOADED';
+
+/**
  * The type of action which signals the initiation of sending of as private message to the
  * supplied recipient.
  *

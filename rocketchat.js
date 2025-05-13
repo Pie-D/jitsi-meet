@@ -1,7 +1,7 @@
 /* eslint-disable */
 import Logger from '@jitsi/logger';
 import {env} from './ENV';
-import {PREPEND_MESSAGES} from './react/features/chat/actionTypes';
+import {PREPEND_MESSAGES, SET_HISTORY_LOADED} from './react/features/chat/actionTypes';
 import {addMessage} from './react/features/chat/actions.any';
 import {getLocalParticipant} from './react/features/base/participants/functions';
 
@@ -136,9 +136,12 @@ export async function syncRocketChatMessages(offset = 0) {
         const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp);
         CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages: sortedMessages});
         
+        CONFERENCE_INFO.store.dispatch({type: SET_HISTORY_LOADED, isHistoryLoaded: true});
+        
         logger.info(`Rocket.Chat messages synced (offset: ${offset})`);
     } catch (error) {
         logger.error('Error syncing Rocket.Chat messages:', error);
+        CONFERENCE_INFO.store.dispatch({type: SET_HISTORY_LOADED, isHistoryLoaded: true});
     }
 }
 

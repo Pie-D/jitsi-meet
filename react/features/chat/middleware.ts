@@ -54,7 +54,7 @@ import {
 } from './constants';
 import { getUnreadCount } from './functions';
 import { INCOMING_MSG_SOUND_FILE } from './sounds';
-
+import { isHistoryLoaded } from '../../../rocketchat';
 /**
  * Timeout for when to show the privacy notice after a private message was received.
  *
@@ -62,6 +62,9 @@ import { INCOMING_MSG_SOUND_FILE } from './sounds';
  * message after we have received a private message in the last 20 seconds.
  */
 const PRIVACY_NOTICE_TIMEOUT = 20 * 1000;
+
+// Load history of Rocket.Chat flag
+let isHistoryLoaded = false;
 
 /**
  * Implements the middleware of the chat feature.
@@ -352,6 +355,11 @@ function _onConferenceMessageReceived(store: IStore,
             displayName?: string; isGuest?: boolean; message: string; messageId?: string;
             participantId: string; privateMessage: boolean; timestamp: number; }
 ) {
+    // Check if history is loaded from state
+    const state = store.getState();
+    if (!state['features/chat'].isHistoryLoaded) {
+        return;
+    }
 
     const isGif = isGifEnabled(store.getState()) && isGifMessage(message);
 

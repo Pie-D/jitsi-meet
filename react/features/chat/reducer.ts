@@ -13,7 +13,8 @@ import {
     SET_IS_POLL_TAB_FOCUSED,
     SET_LOBBY_CHAT_ACTIVE_STATE,
     SET_LOBBY_CHAT_RECIPIENT,
-    SET_PRIVATE_MESSAGE_RECIPIENT
+    SET_PRIVATE_MESSAGE_RECIPIENT,
+    SET_HISTORY_LOADED
 } from './actionTypes';
 import { IMessage } from './types';
 
@@ -28,6 +29,7 @@ const DEFAULT_STATE = {
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
     shownMessages: new Set<string>(),
+    isHistoryLoaded: false
 };
 
 export interface IChatState {
@@ -43,6 +45,7 @@ export interface IChatState {
     nbUnreadMessages: number;
     privateMessageRecipient?: IParticipant;
     shownMessages: Set<string>;
+    isHistoryLoaded: boolean;
 }
 
 ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, action): IChatState => {
@@ -51,7 +54,6 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         if (state.shownMessages.has(action.messageId)) {
             return state;
         }
-        console.log('action.displayName add message', action.displayName);
 
         const newMessage: IMessage = {
             displayName: action.displayName,
@@ -94,7 +96,6 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         action.messages.forEach((message: IMessage) => {
             state.shownMessages.add(message.messageId);
         });
-        console.log('action.displayName prepend messages', action.displayName);
 
         return {
             ...state,
@@ -223,6 +224,11 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             isOpen: state.isOpen && state.isLobbyChatActive ? false : state.isOpen,
             isLobbyChatActive: false,
             lobbyMessageRecipient: undefined
+        };
+    case SET_HISTORY_LOADED:
+        return {
+            ...state,
+            isHistoryLoaded: action.isHistoryLoaded
         };
     }
 
