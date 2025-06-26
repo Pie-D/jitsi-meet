@@ -41,6 +41,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
     async _handleClick() {
         const { dispatch, _toggled, _conference } = this.props;
         if(!_toggled) {
+            console.log('SaveSpeechToTextButton clicked', _conference);
             const token = _conference?.connection.token;
 
             if (!token) {
