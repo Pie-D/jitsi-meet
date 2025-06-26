@@ -14,6 +14,15 @@
 export const ADD_MESSAGE = 'ADD_MESSAGE';
 
 /**
+ * The type of the action which signals to prepend messages.
+ *
+ * {
+ *     type: PREPEND_MESSAGES,
+ * }
+ */
+export const PREPEND_MESSAGES = 'PREPEND_MESSAGES';
+
+/**
  * The type of the action that adds a reaction to a chat message.
  *
  * {
@@ -85,6 +94,11 @@ export const SEND_MESSAGE = 'SEND_MESSAGE';
  * }
  */
 export const SEND_REACTION = 'SEND_REACTION';
+
+/**
+ * The type of the action which signals to set the history Rocket.Chat loaded state.
+ */
+export const SET_HISTORY_LOADED = 'SET_HISTORY_LOADED';
 
 /**
  * The type of action which signals the initiation of sending of as private message to the

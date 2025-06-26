@@ -35,7 +35,9 @@ import {
     SET_ROOM,
     SET_START_MUTED_POLICY,
     SET_START_REACTIONS_MUTED,
-    UPDATE_CONFERENCE_METADATA
+    UPDATE_CONFERENCE_METADATA,
+    CONNECT_GST_STREAM,
+    DISCONNECT_GST_STREAM
 } from './actionTypes';
 import { isRoomValid } from './functions';
 
@@ -51,7 +53,8 @@ const DEFAULT_STATE = {
     metadata: undefined,
     password: undefined,
     passwordRequired: undefined,
-    properties: undefined
+    properties: undefined,
+    gstStreamConnected: false
 };
 
 export interface IConferenceMetadata {
@@ -77,6 +80,9 @@ export interface IJitsiConference {
     avModerationApprove: Function;
     avModerationReject: Function;
     callUUID?: string;
+    connection: {
+        token: string
+    }
     createVideoSIPGWSession: Function;
     dial: Function;
     disableAVModeration: Function;
@@ -188,6 +194,7 @@ export interface IConferenceState {
     startVideoMutedPolicy?: boolean;
     subject?: string;
     roomOwner?: string;
+    gstStreamConnected?: boolean;
 }
 
 export interface IJitsiConferenceRoom {
@@ -200,6 +207,7 @@ export interface IJitsiConferenceRoom {
         };
     };
     roomOwner?: string;
+    cmeetMeetingId: string;
 }
 
 interface IConferenceFailedError extends Error {
@@ -221,6 +229,13 @@ ReducerRegistry.register<IConferenceState>('features/base/conference',
 
         case CONFERENCE_JOINED:
             return _conferenceJoined(state, action);
+
+        case CONNECT_GST_STREAM:
+            return set(state, 'gstStreamConnected', true);
+
+        case DISCONNECT_GST_STREAM:
+            return set(state, 'gstStreamConnected', false);
+
         case CONFERENCE_ROOM_OWNER_SET:
             return set(state, 'roomOwner', action.roomOwner);
         case CONFERENCE_SUBJECT_CHANGED:

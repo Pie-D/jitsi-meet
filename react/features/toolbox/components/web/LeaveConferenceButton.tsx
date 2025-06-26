@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { createToolbarEvent } from '../../../analytics/AnalyticsEvents';
 import { sendAnalytics } from '../../../analytics/functions';
@@ -8,6 +8,9 @@ import { leaveConference } from '../../../base/conference/actions';
 import { BUTTON_TYPES } from '../../../base/ui/constants.web';
 
 import { HangupContextMenuItem } from './HangupContextMenuItem';
+import { isLocalRoomOwner } from '../../../base/participants/functions';
+import { stopGstStream } from '../../../base/util/gstStreamUtils';
+import { IReduxState } from '../../../app/types';
 
 /**
  * The type of the React {@code Component} props of {@link LeaveConferenceButton}.
@@ -36,8 +39,17 @@ interface IProps {
 export const LeaveConferenceButton = (props: IProps) => {
     const { t } = useTranslation();
     const dispatch = useDispatch();
+    const state = useSelector(state => state as IReduxState);
 
     const onLeaveConference = useCallback(() => {
+        const isOwner = isLocalRoomOwner(state);
+        const _conference = state['features/base/conference'].conference;
+        const roomId = _conference?.room?.cmeetMeetingId;
+
+        if (isOwner && roomId) {
+            stopGstStream(roomId);
+        }
+        
         sendAnalytics(createToolbarEvent('hangup'));
         dispatch(leaveConference());
     }, [ dispatch ]);
