@@ -17,7 +17,6 @@ const logger = getLogger(__filename);
  * @returns {Promise<string | undefined>}
  */
 export const getWhipLink = async (token: string, meetingId: string): Promise<string | undefined> => {
-    console.log('getWhipLink', token, meetingId);
     const response = await fetch(
         `${env.CMEET_WS_URL}/api/speech-to-text-meeting-online/${meetingId}`,
         {

@@ -41,7 +41,6 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
     async _handleClick() {
         const { dispatch, _toggled, _conference } = this.props;
         if(!_toggled) {
-            console.log('SaveSpeechToTextButton clicked', _conference);
             const token = _conference?.connection.token;
 
             if (!token) {
@@ -56,7 +55,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
             const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
 
-            const whipLink = await getWhipLink(decoded?.context?.token || null, _conference.room.cmeetMeetingId);
+            const whipLink = await getWhipLink(token || null, _conference.room.cmeetMeetingId);
             if(whipLink == undefined) return;
 
             const isStart = await startGstStream(_conference.room.cmeetMeetingId, whipLink);
