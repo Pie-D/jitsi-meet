@@ -44,6 +44,7 @@ async function fetchWithAuth(url) {
 
         return response.json();
     } catch (error) {
+        CONFERENCE_INFO.store.dispatch({type: SET_HISTORY_LOADED, isHistoryLoaded: true});
         logger.error('Fetch error:', error);
         throw error;
     }
@@ -64,6 +65,7 @@ async function fetchRocketChatHistory(offset = 0) {
             .filter(msg => !shownMessages.has(msg._id) && !msg.t)
             .map(formatMessage);
     } catch (error) {
+        CONFERENCE_INFO.store.dispatch({type: SET_HISTORY_LOADED, isHistoryLoaded: true});
         logger.error('Error fetching Rocket.Chat history:', error);
         return [];
     }
@@ -85,7 +87,7 @@ function formatMessage(msg) {
     const sender = msg.u || {};
     const isSystemMessage = sender.username === 'admin';
     const isLocalMessage = sender.username === CONFERENCE_INFO.localParticipantName || msg.alias === CONFERENCE_INFO.localParticipantName;
-    
+
     const displayName = getNonEmptyValue(msg.alias, sender.username, 'Anonymous User');
     const participantId = isSystemMessage ? 'system' : getNonEmptyValue(msg.alias, sender.username, msg.customFields?.participantId);
 
@@ -95,7 +97,7 @@ function formatMessage(msg) {
             reactions.set(reaction, new Set(users.usernames));
         });
     }
-    
+
     let timestamp;
     if (typeof msg.ts === 'string') {
         timestamp = new Date(msg.ts).getTime();
@@ -135,9 +137,9 @@ export async function syncRocketChatMessages(offset = 0) {
 
         const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp);
         CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages: sortedMessages});
-        
+
         CONFERENCE_INFO.store.dispatch({type: SET_HISTORY_LOADED, isHistoryLoaded: true});
-        
+
         logger.info(`Rocket.Chat messages synced (offset: ${offset})`);
     } catch (error) {
         logger.error('Error syncing Rocket.Chat messages:', error);
