@@ -1,9 +1,9 @@
 /* eslint-disable */
-import Logger from '@jitsi/logger';
-import {env} from './ENV';
-import {PREPEND_MESSAGES, SET_HISTORY_LOADED} from './react/features/chat/actionTypes';
-import {addMessage} from './react/features/chat/actions.any';
-import {getLocalParticipant} from './react/features/base/participants/functions';
+import Logger from "@jitsi/logger";
+import { env } from "./ENV";
+import { PREPEND_MESSAGES, SET_HISTORY_LOADED } from "./react/features/chat/actionTypes";
+import { addMessage } from "./react/features/chat/actions.any";
+import { getLocalParticipant } from "./react/features/base/participants/functions";
 
 const logger = Logger.getLogger(__filename);
 
@@ -12,7 +12,7 @@ const ROCKET_CHAT_CONFIG = {
     apiUrl: env.ROCKET_CHAT_API_URL,
     token: env.ROCKET_CHAT_TOKEN,
     userId: env.ROCKET_CHAT_USER_ID,
-    wsUrl: env.ROCKET_CHAT_WS_URL
+    wsUrl: env.ROCKET_CHAT_WS_URL,
 };
 
 // Thông tin cuộc họp
@@ -21,7 +21,7 @@ const CONFERENCE_INFO = {
     roomId: null,
     localParticipantId: null,
     localParticipantName: null,
-    meetingId: null
+    meetingId: null,
 };
 
 /**
@@ -30,12 +30,12 @@ const CONFERENCE_INFO = {
 async function fetchWithAuth(url) {
     try {
         const response = await fetch(url, {
-            method: 'GET',
+            method: "GET",
             headers: {
-                'Content-Type': 'application/json',
-                'X-Auth-Token': ROCKET_CHAT_CONFIG.token,
-                'X-User-Id': ROCKET_CHAT_CONFIG.userId
-            }
+                "Content-Type": "application/json",
+                "X-Auth-Token": ROCKET_CHAT_CONFIG.token,
+                "X-User-Id": ROCKET_CHAT_CONFIG.userId,
+            },
         });
 
         if (!response.ok) {
@@ -44,7 +44,8 @@ async function fetchWithAuth(url) {
 
         return response.json();
     } catch (error) {
-        logger.error('Fetch error:', error);
+        CONFERENCE_INFO.store.dispatch({ type: SET_HISTORY_LOADED, isHistoryLoaded: true });
+        logger.error("Fetch error:", error);
         throw error;
     }
 }
@@ -53,18 +54,21 @@ async function fetchWithAuth(url) {
  * Lấy lịch sử tin nhắn từ Rocket.Chat
  */
 async function fetchRocketChatHistory(offset = 0) {
-    const {store, roomId} = CONFERENCE_INFO;
-    const shownMessages = store.getState()['features/chat'].shownMessages;
-    const url = `${ROCKET_CHAT_CONFIG.apiUrl}/groups.history?roomId=${encodeURIComponent(roomId)}&count=30&offset=${offset}`;
+    const { store, roomId } = CONFERENCE_INFO;
+    const shownMessages = store.getState()["features/chat"].shownMessages;
+    const url = `${ROCKET_CHAT_CONFIG.apiUrl}/groups.history?roomId=${encodeURIComponent(
+        roomId
+    )}&count=30&offset=${offset}`;
 
     try {
         const data = await fetchWithAuth(url);
         return (data.messages || [])
             .reverse()
-            .filter(msg => !shownMessages.has(msg._id) && !msg.t)
+            .filter((msg) => !shownMessages.has(msg._id) && !msg.t)
             .map(formatMessage);
     } catch (error) {
-        logger.error('Error fetching Rocket.Chat history:', error);
+        CONFERENCE_INFO.store.dispatch({ type: SET_HISTORY_LOADED, isHistoryLoaded: true });
+        logger.error("Error fetching Rocket.Chat history:", error);
         return [];
     }
 }
@@ -83,11 +87,14 @@ function getNonEmptyValue(...values) {
  */
 function formatMessage(msg) {
     const sender = msg.u || {};
-    const isSystemMessage = sender.username === 'admin';
-    const isLocalMessage = sender.username === CONFERENCE_INFO.localParticipantName || msg.alias === CONFERENCE_INFO.localParticipantName;
-    
-    const displayName = getNonEmptyValue(msg.alias, sender.username, 'Anonymous User');
-    const participantId = isSystemMessage ? 'system' : getNonEmptyValue(msg.alias, sender.username, msg.customFields?.participantId);
+    const isSystemMessage = sender.username === "admin";
+    const isLocalMessage =
+        sender.username === CONFERENCE_INFO.localParticipantName || msg.alias === CONFERENCE_INFO.localParticipantName;
+
+    const displayName = getNonEmptyValue(msg.alias, sender.username, "Anonymous User");
+    const participantId = isSystemMessage
+        ? "system"
+        : getNonEmptyValue(msg.alias, sender.username, msg.customFields?.participantId);
 
     const reactions = new Map();
     if (msg.reactions) {
@@ -95,9 +102,9 @@ function formatMessage(msg) {
             reactions.set(reaction, new Set(users.usernames));
         });
     }
-    
+
     let timestamp;
-    if (typeof msg.ts === 'string') {
+    if (typeof msg.ts === "string") {
         timestamp = new Date(msg.ts).getTime();
     } else if (msg.ts && msg.ts.$date) {
         timestamp = new Date(msg.ts.$date).getTime();
@@ -111,14 +118,14 @@ function formatMessage(msg) {
         participantId,
         isReaction: false,
         messageId: msg._id,
-        messageType: isSystemMessage ? 'system' : isLocalMessage ? 'local' : 'remote',
-        message: msg.msg || 'No message content',
+        messageType: isSystemMessage ? "system" : isLocalMessage ? "local" : "remote",
+        message: msg.msg || "No message content",
         reactions,
         privateMessage: false,
         lobbyChat: false,
         recipient: undefined,
         timestamp,
-        hasRead: true
+        hasRead: true,
     };
 }
 
@@ -129,19 +136,19 @@ export async function syncRocketChatMessages(offset = 0) {
     try {
         const messages = await fetchRocketChatHistory(offset);
         if (messages.length === 0) {
-            logger.warn('No messages found in Rocket.Chat history');
+            logger.warn("No messages found in Rocket.Chat history");
             return;
         }
 
         const sortedMessages = messages.sort((a, b) => a.timestamp - b.timestamp);
-        CONFERENCE_INFO.store.dispatch({type: PREPEND_MESSAGES, messages: sortedMessages});
-        
-        CONFERENCE_INFO.store.dispatch({type: SET_HISTORY_LOADED, isHistoryLoaded: true});
-        
+        CONFERENCE_INFO.store.dispatch({ type: PREPEND_MESSAGES, messages: sortedMessages });
+
+        CONFERENCE_INFO.store.dispatch({ type: SET_HISTORY_LOADED, isHistoryLoaded: true });
+
         logger.info(`Rocket.Chat messages synced (offset: ${offset})`);
     } catch (error) {
-        logger.error('Error syncing Rocket.Chat messages:', error);
-        CONFERENCE_INFO.store.dispatch({type: SET_HISTORY_LOADED, isHistoryLoaded: true});
+        logger.error("Error syncing Rocket.Chat messages:", error);
+        CONFERENCE_INFO.store.dispatch({ type: SET_HISTORY_LOADED, isHistoryLoaded: true });
     }
 }
 
@@ -149,30 +156,32 @@ export async function syncRocketChatMessages(offset = 0) {
  * Thiết lập kết nối WebSocket đến Rocket.Chat
  */
 function setupRocketChatWebSocket() {
-    const {store, localParticipantName, roomId} = CONFERENCE_INFO;
+    const { store, localParticipantName, roomId } = CONFERENCE_INFO;
     const ws = new WebSocket(ROCKET_CHAT_CONFIG.wsUrl);
 
     ws.onopen = () => {
-        logger.info('WebSocket connected to Rocket.Chat');
+        logger.info("WebSocket connected to Rocket.Chat");
 
-        ws.send(JSON.stringify({msg: 'connect', version: '1', support: ['1']}));
-        ws.send(JSON.stringify({
-            msg: 'method',
-            method: 'login',
-            id: 'login-1',
-            params: [{resume: ROCKET_CHAT_CONFIG.token}]
-        }));
-        ws.send(JSON.stringify({msg: 'sub', id: 'sub-1', name: 'stream-room-messages', params: [roomId, false]}));
+        ws.send(JSON.stringify({ msg: "connect", version: "1", support: ["1"] }));
+        ws.send(
+            JSON.stringify({
+                msg: "method",
+                method: "login",
+                id: "login-1",
+                params: [{ resume: ROCKET_CHAT_CONFIG.token }],
+            })
+        );
+        ws.send(JSON.stringify({ msg: "sub", id: "sub-1", name: "stream-room-messages", params: [roomId, false] }));
     };
 
-    ws.onmessage = event => {
+    ws.onmessage = (event) => {
         handleWebSocketMessage(event.data, store, localParticipantName, ws);
     };
 
-    ws.onerror = error => logger.error('WebSocket error:', error);
+    ws.onerror = (error) => logger.error("WebSocket error:", error);
 
     ws.onclose = () => {
-        logger.info('WebSocket disconnected from Rocket.Chat, reconnecting...');
+        logger.info("WebSocket disconnected from Rocket.Chat, reconnecting...");
         setTimeout(setupRocketChatWebSocket, 10000);
     };
 }
@@ -183,22 +192,22 @@ function setupRocketChatWebSocket() {
 function handleWebSocketMessage(data, store, localParticipantName, ws) {
     const parsedData = JSON.parse(data);
 
-    if (parsedData.msg === 'ping') {
-        ws.send(JSON.stringify({msg: 'pong'}));
+    if (parsedData.msg === "ping") {
+        ws.send(JSON.stringify({ msg: "pong" }));
         return;
     }
 
-    if (parsedData.msg === 'result' && parsedData.id === 'login-1') {
-        logger.info('WebSocket login successful');
+    if (parsedData.msg === "result" && parsedData.id === "login-1") {
+        logger.info("WebSocket login successful");
         return;
     }
 
-    if (parsedData.msg === 'changed' && parsedData.collection === 'stream-room-messages') {
+    if (parsedData.msg === "changed" && parsedData.collection === "stream-room-messages") {
         const messageData = parsedData.fields.args[0];
 
         if (!messageData.customFields?.fromJitsi && !messageData.t) {
             const newMessage = formatMessage(messageData);
-            store.dispatch(addMessage({...newMessage, hasRead: false}));
+            store.dispatch(addMessage({ ...newMessage, hasRead: false }));
             logger.info(`New message received from Rocket.Chat: ${newMessage.message}`);
         }
     }
@@ -223,11 +232,10 @@ export function startConference(store, rocketChatRoomId, meetingId) {
     CONFERENCE_INFO.roomId = rocketChatRoomId;
 
     const localParticipant = getLocalParticipant(store.getState()) || {};
-    CONFERENCE_INFO.localParticipantId = localParticipant.id || '';
-    CONFERENCE_INFO.localParticipantName = localParticipant.name || 'Anonymous User';
+    CONFERENCE_INFO.localParticipantId = localParticipant.id || "";
+    CONFERENCE_INFO.localParticipantName = localParticipant.name || "Anonymous User";
 
     syncRocketChatMessages().then(() => {
         setupRocketChatWebSocket();
     });
 }
-
