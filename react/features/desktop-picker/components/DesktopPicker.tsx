@@ -120,7 +120,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
 
     _poller: any = null;
 
-    state: IState = {
+    override state: IState = {
         screenShareAudio: false,
         selectedSource: {},
         selectedTab: DEFAULT_TAB_TYPE,
@@ -155,7 +155,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
      * @inheritdoc
      * @returns {void}
      */
-    componentDidMount() {
+    override componentDidMount() {
         this._startPolling();
     }
 
@@ -164,7 +164,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
      *
      * @inheritdoc
      */
-    componentWillUnmount() {
+    override componentWillUnmount() {
         this._stopPolling();
     }
 
@@ -174,7 +174,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
      *
      * @inheritdoc
      */
-    render() {
+    override render() {
         const { selectedTab, selectedSource, sources, types } = this.state;
 
         return (
@@ -270,7 +270,14 @@ class DesktopPicker extends PureComponent<IProps, IState> {
      * @returns {void}
      */
     _onCloseModal(id = '', type?: string, screenShareAudio = false) {
-        this.props.onSourceChoose(id, type, screenShareAudio);
+        // Find the entire source object from the id. We need the name in order
+        // to get getDisplayMedia working in Electron.
+        const { sources } = this.state;
+
+        // @ts-ignore
+        const source = (sources?.screen ?? []).concat(sources?.window ?? []).find(s => s.id === id);
+
+        this.props.onSourceChoose(id, type, screenShareAudio, source);
         this.props.dispatch(hideDialog());
     }
 

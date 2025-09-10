@@ -1,6 +1,6 @@
 # Follow Our Updated Guide to See How You Can Contribute
 
-Hello there! 👋
+**Hello there! 👋**
 
 We're thrilled that you're eager to contribute to C-Meet! ❤️ 
 
@@ -11,4 +11,4 @@ Ready to get started? Head over to our [Jitsi Meet Handbook](https://jitsi.githu
 ### ❗️Additional Note
 Before sending us your code, double-check that it meets our coding standards. You can do this by running a command: `npm run lint`. If there are any issues, don't worry! You can fix them by running: `npm run lint-fix`. Once your code passes these checks, feel free to submit your pull request.
 
-Happy coding!
+**Happy coding!**

@@ -1,7 +1,9 @@
 import { Participant } from '../../helpers/Participant';
+import { config } from '../../helpers/TestsConfig';
 import {
     ensureOneParticipant,
     ensureThreeParticipants, ensureTwoParticipants,
+    hangupAllParticipants,
     unmuteAudioAndCheck,
     unmuteVideoAndCheck
 } from '../../helpers/participants';
@@ -10,7 +12,7 @@ describe('AVModeration', () => {
 
     it('check for moderators', async () => {
         // if all 3 participants are moderators, skip this test
-        await ensureThreeParticipants(ctx);
+        await ensureThreeParticipants();
 
         const { p1, p2, p3 } = ctx;
 
@@ -69,14 +71,21 @@ describe('AVModeration', () => {
         // participant3 was unmuted by unmuteByModerator
         await unmuteAudioAndCheck(p2, p1);
         await unmuteVideoAndCheck(p2, p1);
-        await unmuteAudioAndCheck(p1, p2);
-        await unmuteVideoAndCheck(p1, p2);
+
+        // make sure p1 is not muted after turning on and then off the AV moderation
+        await p1.getFilmstrip().assertAudioMuteIconIsDisplayed(p1, true);
+        await p2.getFilmstrip().assertAudioMuteIconIsDisplayed(p2, true);
     });
 
     it('hangup and change moderator', async () => {
+        // no moderator switching if jaas is available.
+        if (config.iframe.usesJaas) {
+            return;
+        }
+
         await Promise.all([ ctx.p2.hangup(), ctx.p3.hangup() ]);
 
-        await ensureThreeParticipants(ctx);
+        await ensureThreeParticipants();
         const { p1, p2, p3 } = ctx;
 
         await p2.getToolbar().clickAudioMuteButton();
@@ -95,7 +104,7 @@ describe('AVModeration', () => {
 
         // we don't use ensureThreeParticipants to avoid all meeting join checks
         // all participants are muted and checks for media will fail
-        await ensureOneParticipant(ctx);
+        await ensureOneParticipant();
 
         // After p1 re-joins either p2 or p3 is promoted to moderator. They should still be muted.
         const isP2Moderator = await p2.isModerator();
@@ -120,9 +129,9 @@ describe('AVModeration', () => {
         await moderatorParticipantsPane.getAVModerationMenu().clickStopVideoModeration();
     });
     it('grant moderator', async () => {
-        await Promise.all([ ctx.p1.hangup(), ctx.p2.hangup(), ctx.p3.hangup() ]);
+        await hangupAllParticipants();
 
-        await ensureThreeParticipants(ctx);
+        await ensureThreeParticipants();
 
         const { p1, p2, p3 } = ctx;
 
@@ -143,9 +152,9 @@ describe('AVModeration', () => {
         await unmuteByModerator(p3, p2, false, true);
     });
     it('ask to unmute', async () => {
-        await Promise.all([ ctx.p1.hangup(), ctx.p2.hangup(), ctx.p3.hangup() ]);
+        await hangupAllParticipants();
 
-        await ensureTwoParticipants(ctx);
+        await ensureTwoParticipants();
 
         const { p1, p2 } = ctx;
 
@@ -181,9 +190,9 @@ describe('AVModeration', () => {
         await tryToVideoUnmuteAndCheck(p2, p1);
     });
     it('join moderated', async () => {
-        await Promise.all([ ctx.p1.hangup(), ctx.p2.hangup(), ctx.p3.hangup() ]);
+        await hangupAllParticipants();
 
-        await ensureOneParticipant(ctx);
+        await ensureOneParticipant();
 
         const p1ParticipantsPane = ctx.p1.getParticipantsPane();
 
@@ -193,11 +202,12 @@ describe('AVModeration', () => {
         await p1ParticipantsPane.close();
 
         // join with second participant and check
-        await ensureTwoParticipants(ctx, {
+        await ensureTwoParticipants({
             skipInMeetingChecks: true
         });
         const { p1, p2 } = ctx;
 
+        await p2.getNotifications().closeYouAreMutedNotification();
         await tryToAudioUnmuteAndCheck(p2, p1);
         await tryToVideoUnmuteAndCheck(p2, p1);
 

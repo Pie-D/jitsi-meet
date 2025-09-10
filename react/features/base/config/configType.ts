@@ -86,15 +86,6 @@ export type Sounds = 'ASKED_TO_UNMUTE_SOUND' |
     'RECORDING_ON_SOUND' |
     'TALK_WHILE_MUTED_SOUND';
 
-
-export interface IMobileDynamicLink {
-    apn: string;
-    appCode: string;
-    customDomain?: string;
-    ibi: string;
-    isi: string;
-}
-
 export interface IDeeplinkingPlatformConfig {
     appName: string;
     appScheme: string;
@@ -103,7 +94,6 @@ export interface IDeeplinkingPlatformConfig {
 export interface IDeeplinkingMobileConfig extends IDeeplinkingPlatformConfig {
     appPackage?: string;
     downloadLink: string;
-    dynamicLink?: IMobileDynamicLink;
     fDroidUrl?: string;
 }
 
@@ -182,7 +172,6 @@ export interface IConfig {
     _screenshotHistoryRegionUrl?: number;
     analytics?: {
         amplitudeAPPKey?: string;
-        amplitudeIncludeUTM?: boolean;
         blackListedEvents?: string[];
         disabled?: boolean;
         matomoEndpoint?: string;
@@ -190,10 +179,10 @@ export interface IConfig {
         obfuscateRoomName?: boolean;
         rtcstatsEnabled?: boolean;
         rtcstatsEndpoint?: string;
+        rtcstatsLogFlushSizeBytes?: number;
         rtcstatsPollInterval?: number;
         rtcstatsSendSdp?: boolean;
         rtcstatsStoreLogs?: boolean;
-        rtcstatsUseLegacy?: boolean;
         scriptURLs?: Array<string>;
         watchRTCEnabled?: boolean;
         whiteListedEvents?: string[];
@@ -292,6 +281,7 @@ export interface IConfig {
     disableAddingBackgroundImages?: boolean;
     disableAudioLevels?: boolean;
     disableBeforeUnloadHandlers?: boolean;
+    disableCameraTintForeground?: boolean;
     disableChatSmileys?: boolean;
     disableDeepLinking?: boolean;
     disableFilmstripAutohiding?: boolean;
@@ -307,6 +297,7 @@ export interface IConfig {
     disablePolls?: boolean;
     disableProfile?: boolean;
     disableReactions?: boolean;
+    disableReactionsInChat?: boolean;
     disableReactionsModeration?: boolean;
     disableRecordAudioNotification?: boolean;
     disableRemoteControl?: boolean;
@@ -386,11 +377,18 @@ export interface IConfig {
     feedbackPercentage?: number;
     fileRecordingsServiceEnabled?: boolean;
     fileRecordingsServiceSharingEnabled?: boolean;
+    fileSharing?: {
+        apiUrl?: string;
+        enabled?: boolean;
+        maxFileSize?: number;
+    };
     filmstrip?: {
+        alwaysShowResizeBar?: boolean;
         disableResizable?: boolean;
         disableStageFilmstrip?: boolean;
         disableTopPanel?: boolean;
         disabled?: boolean;
+        initialWidth?: number;
         minParticipantCountForTopPanel?: number;
     };
     flags?: {
@@ -437,6 +435,7 @@ export interface IConfig {
     };
     iAmRecorder?: boolean;
     iAmSipGateway?: boolean;
+    iAmSpot?: boolean;
     ignoreStartMuted?: boolean;
     inviteAppName?: string | null;
     inviteServiceCallFlowsUrl?: string;
@@ -479,11 +478,14 @@ export interface IConfig {
     noiseSuppression?: INoiseSuppressionConfig;
     noticeMessage?: string;
     notificationTimeouts?: {
+        extraLong?: number;
         long?: number;
         medium?: number;
         short?: number;
+        sticky?: number;
     };
     notifications?: Array<string>;
+    notifyOnConferenceDestruction?: boolean;
     openSharedDocumentOnJoin?: boolean;
     opusMaxAverageBitrate?: number;
     p2p?: {
@@ -519,7 +521,6 @@ export interface IConfig {
         preCallTestEnabled?: boolean;
         preCallTestICEUrl?: string;
     };
-    prejoinPageEnabled?: boolean;
     raisedHands?: {
         disableLowerHandByModerator?: boolean;
         disableLowerHandNotification?: boolean;
@@ -539,16 +540,19 @@ export interface IConfig {
     };
     recordingSharingUrl?: string;
     recordings?: {
+        consentLearnMoreLink?: string;
         recordAudioAndVideo?: boolean;
+        requireConsent?: boolean;
         showPrejoinWarning?: boolean;
         showRecordingLink?: boolean;
+        skipConsentInMeeting?: boolean;
         suggestRecording?: boolean;
     };
     remoteVideoMenu?: {
         disableDemote?: boolean;
         disableGrantModerator?: boolean;
         disableKick?: boolean;
-        disablePrivateChat?: boolean;
+        disablePrivateChat?: 'all' | 'allow-moderator-chat' | 'disable-visitor-chat';
         disabled?: boolean;
     };
     replaceParticipant?: string;
@@ -590,6 +594,7 @@ export interface IConfig {
         failICE?: boolean;
         noAutoPlayVideo?: boolean;
         p2pTestMode?: boolean;
+        showSpotConsentDialog?: boolean;
         skipInterimTranscriptions?: boolean;
         testMode?: boolean;
     };
@@ -599,7 +604,9 @@ export interface IConfig {
     };
     tokenAuthUrl?: string;
     tokenAuthUrlAutoRedirect?: string;
+    tokenGetUserInfoOutOfContext?: boolean;
     tokenLogoutUrl?: string;
+    tokenRespectTenant?: boolean;
     toolbarButtons?: Array<ToolbarButton>;
     toolbarConfig?: {
         alwaysVisible?: boolean;
@@ -612,7 +619,9 @@ export interface IConfig {
     transcription?: {
         autoCaptionOnTranscribe?: boolean;
         autoTranscribeOnRecord?: boolean;
+        disableClosedCaptions?: boolean;
         enabled?: boolean;
+        inviteJigasiOnBackendTranscribing?: boolean;
         preferredLanguage?: string;
         translationLanguages?: Array<string>;
         translationLanguagesHead?: Array<string>;

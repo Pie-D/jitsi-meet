@@ -7,6 +7,7 @@ import { isEmpty, mergeWith, pick } from 'lodash-es';
 
 import { IReduxState } from '../../app/types';
 import { getLocalParticipant } from '../participants/functions';
+import { isEmbedded } from '../util/embedUtils';
 import { parseURLParams } from '../util/parseURLParams';
 
 import { IConfig } from './configType';
@@ -193,6 +194,13 @@ export function overrideConfigJSON(config: IConfig, interfaceConfig: any, json: 
  * that are whitelisted.
  */
 export function getWhitelistedJSON(configName: 'interfaceConfig' | 'config', configJSON: any): Object {
+    // Disable whitelisting in dev mode.
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        logger.warn('Whitelisting is disabled in dev mode, accepting any overrides');
+
+        return configJSON;
+    }
+
     if (configName === 'interfaceConfig') {
         return pick(configJSON, INTERFACE_CONFIG_WHITELIST);
     } else if (configName === 'config') {
@@ -327,6 +335,50 @@ export function setConfigFromURLParams(
     }
 
     overrideConfigJSON(config, interfaceConfig, json);
+
+    // Print warning about deprecated URL params
+    if ('interfaceConfig.SUPPORT_URL' in params) {
+        logger.warn('Using SUPPORT_URL interfaceConfig URL overwrite is deprecated.'
+            + ' Please use supportUrl from advanced branding!');
+    }
+
+    if ('config.defaultLogoUrl' in params) {
+        logger.warn('Using defaultLogoUrl config URL overwrite is deprecated.'
+            + ' Please use logoImageUrl from advanced branding!');
+    }
+
+    const deploymentUrlsConfig = params['config.deploymentUrls'] ?? {};
+
+    if ('config.deploymentUrls.downloadAppsUrl' in params || 'config.deploymentUrls.userDocumentationURL' in params
+            || (typeof deploymentUrlsConfig === 'object'
+                && ('downloadAppsUrl' in deploymentUrlsConfig || 'userDocumentationURL' in deploymentUrlsConfig))) {
+        logger.warn('Using deploymentUrls config URL overwrite is deprecated.'
+            + ' Please use downloadAppsUrl and/or userDocumentationURL from advanced branding!');
+    }
+
+    const liveStreamingConfig = params['config.liveStreaming'] ?? {};
+
+    if (('interfaceConfig.LIVE_STREAMING_HELP_LINK' in params)
+            || ('config.liveStreaming.termsLink' in params)
+            || ('config.liveStreaming.dataPrivacyLink' in params)
+            || ('config.liveStreaming.helpLink' in params)
+            || (typeof params['config.liveStreaming'] === 'object' && 'config.liveStreaming' in params
+                && (
+                    'termsLink' in liveStreamingConfig
+                    || 'dataPrivacyLink' in liveStreamingConfig
+                    || 'helpLink' in liveStreamingConfig
+                )
+            )) {
+        logger.warn('Using liveStreaming config URL overwrite and/or LIVE_STREAMING_HELP_LINK interfaceConfig URL'
+            + ' overwrite is deprecated. Please use liveStreaming from advanced branding!');
+    }
+
+    // When not in an iframe, start without media if the pre-join page is not enabled.
+    if (!isEmbedded()
+            && 'config.prejoinConfig.enabled' in params && config.prejoinConfig?.enabled === false) {
+        logger.warn('Using prejoinConfig.enabled config URL overwrite implies starting without media.');
+        config.disableInitialGUM = true;
+    }
 }
 
 /* eslint-enable max-params */

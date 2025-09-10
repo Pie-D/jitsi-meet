@@ -1,3 +1,6 @@
+import https from 'node:https';
+import process from 'node:process';
+
 import type { Participant } from '../../helpers/Participant';
 
 /**
@@ -32,7 +35,7 @@ export async function waitForAudioFromDialInParticipant(participant: Participant
 export async function cleanup(participant: Participant) {
     // cleanup
     if (await participant.isModerator()) {
-        const jigasiEndpointId = await participant.driver.execute(() => APP.conference.listMembers()[0].getId());
+        const jigasiEndpointId = await participant.execute(() => APP?.conference?.listMembers()[0].getId());
 
         await participant.getFilmstrip().kickParticipant(jigasiEndpointId);
     }
@@ -43,6 +46,45 @@ export async function cleanup(participant: Participant) {
  * @param participant
  */
 export async function isDialInEnabled(participant: Participant) {
-    return await participant.driver.execute(() => Boolean(
+    return await participant.execute(() => Boolean(
         config.dialInConfCodeUrl && config.dialInNumbersUrl && config.hosts?.muc));
+}
+
+/**
+ * Sends a request to the REST API to dial in the participant using the provided pin.
+ * @param participant
+ */
+export async function dialIn(participant: Participant) {
+    if (!await participant.isInMuc()) {
+        // local participant did not join abort
+        return;
+    }
+
+    const dialInPin = await participant.getDialInPin();
+
+    const restUrl = process.env.DIAL_IN_REST_URL?.replace('{0}', dialInPin);
+
+    // we have already checked in the first test that DIAL_IN_REST_URL exist so restUrl cannot be ''
+    const responseData: string = await new Promise((resolve, reject) => {
+        https.get(restUrl || '', res => {
+            let data = '';
+
+            res.on('data', chunk => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                ctx.times.restAPIExecutionTS = performance.now();
+
+                resolve(data);
+            });
+        }).on('error', err => {
+            console.error('dial-in.test.restAPI.request.fail');
+            console.error(err);
+            reject(err);
+        });
+    });
+
+    console.log(`dial-in.test.call_session_history_id:${JSON.parse(responseData).call_session_history_id}`);
+    console.log(`API response:${responseData}`);
 }

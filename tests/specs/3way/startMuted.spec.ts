@@ -1,6 +1,8 @@
 import {
+    checkForScreensharingTile,
     ensureOneParticipant,
     ensureTwoParticipants,
+    hangupAllParticipants,
     joinSecondParticipant,
     joinThirdParticipant,
     unmuteVideoAndCheck
@@ -8,11 +10,21 @@ import {
 
 describe('StartMuted', () => {
     it('checkboxes test', async () => {
-        const options = { configOverwrite: { p2p: { enabled: true } } };
+        const options = {
+            configOverwrite: {
+                p2p: {
+                    enabled: true
+                },
+                testing: {
+                    testMode: true,
+                    debugAudioLevels: true
+                }
+            } };
 
-        await ensureOneParticipant(ctx, options);
+        await ensureOneParticipant(options);
 
         const { p1 } = ctx;
+        const p1EndpointId = await p1.getEndpointId();
 
         await p1.getToolbar().clickSettingsButton();
 
@@ -24,23 +36,37 @@ describe('StartMuted', () => {
         await settingsDialog.setStartVideoMuted(true);
         await settingsDialog.submit();
 
-        await joinSecondParticipant(ctx, {
+        //  Check that p1 doesn't get muted.
+        await p1.getFilmstrip().assertAudioMuteIconIsDisplayed(p1, true);
+        await p1.getParticipantsPane().assertVideoMuteIconIsDisplayed(p1, true);
+
+        await joinSecondParticipant({
             ...options,
             skipInMeetingChecks: true
         });
 
+        // Enable screenshare on p1.
+        p1.getToolbar().clickDesktopSharingButton();
+        await checkForScreensharingTile(p1, p1);
+
         const { p2 } = ctx;
+        const p2EndpointId = await p2.getEndpointId();
 
         await p2.waitForIceConnected();
-        await p2.waitForSendReceiveData({ checkSend: false });
+        await p2.waitForReceiveMedia();
 
         await p2.getFilmstrip().assertAudioMuteIconIsDisplayed(p2);
         await p2.getParticipantsPane().assertVideoMuteIconIsDisplayed(p2);
         await p1.waitForAudioMuted(p2, true);
-
+        await p1.waitForRemoteVideo(p2EndpointId, true);
 
         await p2.getFilmstrip().assertAudioMuteIconIsDisplayed(p1, true);
         await p2.getParticipantsPane().assertVideoMuteIconIsDisplayed(p1, true);
+        await p2.waitForAudioMuted(p1, false);
+        await p2.waitForRemoteVideo(p1EndpointId, false);
+
+        // Check if a remote screenshare tile is created on p2.
+        await checkForScreensharingTile(p1, p2);
 
         // Enable video on p2 and check if p2 appears unmuted on p1.
         await Promise.all([
@@ -51,9 +77,10 @@ describe('StartMuted', () => {
         await p2.getParticipantsPane().assertVideoMuteIconIsDisplayed(p2, true);
 
         await p1.waitForAudioMuted(p2, false);
+        await p1.waitForRemoteVideo(p2EndpointId, false);
 
         // Add a third participant and check p3 is able to receive audio and video from p2.
-        await joinThirdParticipant(ctx, {
+        await joinThirdParticipant({
             ...options,
             skipInMeetingChecks: true
         });
@@ -61,12 +88,12 @@ describe('StartMuted', () => {
         const { p3 } = ctx;
 
         await p3.waitForIceConnected();
-        await p3.waitForSendReceiveData({ checkSend: false });
+        await p3.waitForReceiveMedia();
 
         await p3.getFilmstrip().assertAudioMuteIconIsDisplayed(p2, true);
         await p3.getParticipantsPane().assertVideoMuteIconIsDisplayed(p2, true);
+        await checkForScreensharingTile(p1, p3);
     });
-
 
     it('config options test', async () => {
         await hangupAllParticipants();
@@ -82,28 +109,32 @@ describe('StartMuted', () => {
             }
         };
 
-        await ensureOneParticipant(ctx, options);
-        await joinSecondParticipant(ctx, { skipInMeetingChecks: true });
+        await ensureOneParticipant(options);
+        await joinSecondParticipant({
+            ...options,
+            skipInMeetingChecks: true
+        });
 
         const { p2 } = ctx;
 
         await p2.waitForIceConnected();
-        await p2.waitForSendReceiveData({ checkSend: false });
+        await p2.waitForReceiveMedia();
 
-        await joinThirdParticipant(ctx, { skipInMeetingChecks: true });
+        await joinThirdParticipant({
+            ...options,
+            skipInMeetingChecks: true
+        });
 
         const { p3 } = ctx;
 
         await p3.waitForIceConnected();
-        await p3.waitForSendReceiveData({ checkSend: false });
+        await p3.waitForReceiveMedia();
 
         const { p1 } = ctx;
 
         const p2ID = await p2.getEndpointId();
 
-
         p1.log(`Start configOptionsTest, second participant: ${p2ID}`);
-
 
         // Participant 3 should be muted, 1 and 2 unmuted.
         await p3.getFilmstrip().assertAudioMuteIconIsDisplayed(p3);
@@ -141,10 +172,9 @@ describe('StartMuted', () => {
             }
         };
 
-        await ensureTwoParticipants(ctx, options);
+        await ensureTwoParticipants(options);
 
         const { p1, p2 } = ctx;
-
 
         await p1.getParticipantsPane().assertVideoMuteIconIsDisplayed(p2);
         await p2.getParticipantsPane().assertVideoMuteIconIsDisplayed(p1);
@@ -155,7 +185,6 @@ describe('StartMuted', () => {
         ]);
 
         await unmuteVideoAndCheck(p2, p1);
-
         await p1.getLargeVideo().assertPlaying();
     });
 
@@ -164,11 +193,15 @@ describe('StartMuted', () => {
 
         const options = {
             configOverwrite: {
-                startWithAudioMuted: true
+                startWithAudioMuted: true,
+                testing: {
+                    testMode: true,
+                    debugAudioLevels: true
+                }
             }
         };
 
-        await ensureTwoParticipants(ctx, options);
+        await ensureTwoParticipants(options);
 
         const { p1, p2 } = ctx;
 
@@ -190,22 +223,24 @@ describe('StartMuted', () => {
             }
         };
 
-        await Promise.all([
-            ensureOneParticipant(ctx, options),
-            joinSecondParticipant(ctx, {
-                configOverwrite: {
-                    p2p: {
-                        enabled: true
-                    }
+        await ensureOneParticipant(options);
+        await joinSecondParticipant({
+            configOverwrite: {
+                testing: {
+                    testMode: true,
+                    debugAudioLevels: true
                 },
-                skipInMeetingChecks: true
-            })
-        ]);
+                p2p: {
+                    enabled: true
+                }
+            },
+            skipInMeetingChecks: true
+        });
 
         const { p1, p2 } = ctx;
 
         await p2.waitForIceConnected();
-        await p2.waitForSendReceiveData({ checkReceive: false });
+        await p2.waitForSendMedia();
 
         await p2.waitForAudioMuted(p1, true);
         await p2.getParticipantsPane().assertVideoMuteIconIsDisplayed(p1);
@@ -225,7 +260,7 @@ describe('StartMuted', () => {
         // Mute p2's video just before p3 joins.
         await p2.getToolbar().clickVideoMuteButton();
 
-        await joinThirdParticipant(ctx, {
+        await joinThirdParticipant({
             configOverwrite: {
                 p2p: {
                     enabled: true
@@ -236,10 +271,8 @@ describe('StartMuted', () => {
         const { p3 } = ctx;
 
         // Unmute p2 and check if its video is being received by p1 and p3.
-        await p2.getToolbar().clickVideoUnmuteButton();
-
+        await unmuteVideoAndCheck(p2, p3);
         await p1.getParticipantsPane().assertVideoMuteIconIsDisplayed(p2, true);
-        await p3.getParticipantsPane().assertVideoMuteIconIsDisplayed(p2, true);
 
         // Mute p2's video just before p3 leaves.
         await p2.getToolbar().clickVideoMuteButton();
@@ -255,11 +288,3 @@ describe('StartMuted', () => {
         await p1.getLargeVideo().assertPlaying();
     });
 });
-
-/**
- * Hangs up all participants (p1, p2 and p3)
- * @returns {Promise<void>}
- */
-function hangupAllParticipants() {
-    return Promise.all([ ctx.p1?.hangup(), ctx.p2?.hangup(), ctx.p3?.hangup() ]);
-}

@@ -11,7 +11,6 @@ import {
     getAvailableDevices,
     getCurrentDevices,
     isDeviceChangeAvailable,
-    isDeviceListAvailable,
     isMultipleAudioInputSupported,
     setAudioInputDevice,
     setAudioOutputDevice,
@@ -39,6 +38,7 @@ const commands = {
     endConference: 'end-conference',
     email: 'email',
     grantModerator: 'grant-moderator',
+    grantRecordingConsent: 'grant-recording-consent',
     hangup: 'video-hangup',
     hideNotification: 'hide-notification',
     initiatePrivateChat: 'initiate-private-chat',
@@ -114,6 +114,7 @@ const events = {
     'compute-pressure-changed': 'computePressureChanged',
     'conference-created-timestamp': 'conferenceCreatedTimestamp',
     'content-sharing-participants-changed': 'contentSharingParticipantsChanged',
+    'custom-notification-action-triggered': 'customNotificationActionTriggered',
     'data-channel-closed': 'dataChannelClosed',
     'data-channel-opened': 'dataChannelOpened',
     'device-list-changed': 'deviceListChanged',
@@ -151,6 +152,7 @@ const events = {
     'proxy-connection-event': 'proxyConnectionEvent',
     'raise-hand-updated': 'raiseHandUpdated',
     'ready': 'ready',
+    'recording-consent-dialog-open': 'recordingConsentDialogOpen',
     'recording-link-available': 'recordingLinkAvailable',
     'recording-status-changed': 'recordingStatusChanged',
     'participant-menu-button-clicked': 'participantMenuButtonClick',
@@ -675,9 +677,20 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      *
      * @returns {Object} Rooms info.
      */
-    async getRoomsInfo() {
+    getRoomsInfo() {
         return this._transport.sendRequest({
             name: 'rooms-info'
+        });
+    }
+
+    /**
+     * Returns the Shared Document Url of the conference.
+     *
+     * @returns {Object} Rooms info.
+     */
+    getSharedDocumentUrl() {
+        return this._transport.sendRequest({
+            name: 'get-shared-document-url'
         });
     }
 
@@ -808,7 +821,28 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
     }
 
     /**
-     * Removes the listeners and removes the C-Meet frame.
+     * Captures a picture through OS camera.
+     *
+     * @param {string} cameraFacingMode - The OS camera facing mode (environment/user).
+     * @param {string} descriptionText - The OS camera facing mode (environment/user).
+     * @param {string} titleText - The OS camera facing mode (environment/user).
+     * @returns {Promise<string>} - Resolves with a base64 encoded image data of the screenshot.
+     */
+    captureCameraPicture(
+            cameraFacingMode,
+            descriptionText,
+            titleText
+    ) {
+        return this._transport.sendRequest({
+            name: 'capture-camera-picture',
+            cameraFacingMode,
+            descriptionText,
+            titleText
+        });
+    }
+
+    /**
+     * Removes the listeners and removes the Jitsi Meet frame.
      *
      * @returns {void}
      */
@@ -977,10 +1011,15 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      * Returns Promise that resolves with true if the device list is available
      * and with false if not.
      *
+     * @deprecated
+     *
      * @returns {Promise}
      */
     isDeviceListAvailable() {
-        return isDeviceListAvailable(this._transport);
+        console.warn('isDeviceListAvailable is deprecated and will be removed in the future. '
+                     + 'It always returns true');
+
+        return Promise.resolve(true);
     }
 
     /**
@@ -1243,7 +1282,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      * @returns {Promise}
      *
      * TODO: should be removed after we make sure that all Electron clients use only versions
-     * after with the legacy SS suport was removed from the electron SDK. If we remove it now the SS for Electron
+     * after with the legacy SS support was removed from the electron SDK. If we remove it now the SS for Electron
      * clients with older versions wont work.
      */
     _isNewElectronScreensharingSupported() {
@@ -1454,5 +1493,16 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
     */
     setVirtualBackground(enabled, backgroundImage) {
         this.executeCommand('setVirtualBackground', enabled, backgroundImage);
+    }
+
+    /**
+     * Opens the desktop picker. This is invoked by the Electron SDK when gDM is used.
+     *
+     * @returns {Promise}
+     */
+    _openDesktopPicker() {
+        return this._transport.sendRequest({
+            name: 'open-desktop-picker'
+        });
     }
 }

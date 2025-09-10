@@ -1,4 +1,7 @@
+import { isEmbedded } from '../util/embedUtils';
+
 import extraConfigWhitelist from './extraConfigWhitelist';
+import isEmbeddedConfigWhitelist from './isEmbeddedConfigWhitelist';
 
 /**
  * The config keys to whitelist, the keys that can be overridden.
@@ -77,7 +80,6 @@ export default [
     'channelLastN',
     'connectionIndicators',
     'constraints',
-    'customToolbarButtons',
     'deeplinking.disabled',
     'deeplinking.desktop.enabled',
     'defaultLocalDisplayName',
@@ -91,6 +93,7 @@ export default [
     'disableAddingBackgroundImages',
     'disableAudioLevels',
     'disableBeforeUnloadHandlers',
+    'disableCameraTintForeground',
     'disableChatSmileys',
     'disableDeepLinking',
     'disabledNotifications',
@@ -106,6 +109,7 @@ export default [
     'disablePolls',
     'disableProfile',
     'disableReactions',
+    'disableReactionsInChat',
     'disableReactionsModeration',
     'disableRecordAudioNotification',
     'disableRemoteControl',
@@ -147,6 +151,7 @@ export default [
     'enableTcc',
     'faceLandmarks',
     'feedbackPercentage',
+    'fileSharing.enabled',
     'filmstrip',
     'flags',
     'forceTurnRelay',
@@ -166,6 +171,7 @@ export default [
     'hideLobbyButton',
     'iAmRecorder',
     'iAmSipGateway',
+    'iAmSpot',
     'ignoreStartMuted',
     'inviteAppName',
     'liveStreaming.enabled',
@@ -179,6 +185,7 @@ export default [
     'mouseMoveCallbackInterval',
     'notifications',
     'notificationTimeouts',
+    'notifyOnConferenceDestruction',
     'openSharedDocumentOnJoin',
     'opusMaxAverageBitrate',
     'p2p.backToP2PDelay',
@@ -195,14 +202,16 @@ export default [
     'prejoinConfig.enabled',
     'prejoinConfig.hideDisplayName',
     'prejoinConfig.hideExtraJoinButtons',
-    'prejoinPageEnabled',
     'raisedHands',
     'recordingService',
     'requireDisplayName',
     'remoteVideoMenu',
     'roomPasswordNumberOfDigits',
     'readOnlyName',
-    'recordings',
+    'recordings.recordAudioAndVideo',
+    'recordings.showPrejoinWarning',
+    'recordings.showRecordingLink',
+    'recordings.suggestRecording',
     'replaceParticipant',
     'resolution',
     'screenshotCapture',
@@ -242,4 +251,4 @@ export default [
     'webrtcIceTcpDisable',
     'webrtcIceUdpDisable',
     'whiteboard.enabled'
-].concat(extraConfigWhitelist);
+].concat(extraConfigWhitelist).concat(isEmbedded() ? isEmbeddedConfigWhitelist : []);

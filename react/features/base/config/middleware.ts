@@ -2,6 +2,7 @@ import { AnyAction } from 'redux';
 
 import { IStore } from '../../app/types';
 import { SET_DYNAMIC_BRANDING_DATA } from '../../dynamic-branding/actionTypes';
+import { setUserFilmstripWidth } from '../../filmstrip/actions.web';
 import { getFeatureFlag } from '../flags/functions';
 import MiddlewareRegistry from '../redux/MiddlewareRegistry';
 import { updateSettings } from '../settings/actions';
@@ -79,10 +80,16 @@ function _setConfig({ dispatch, getState }: IStore, next: Function, action: AnyA
         }));
     }
 
-    if (action.config.filmstrip?.stageFilmstripParticipants !== undefined) {
+    const { initialWidth, stageFilmstripParticipants } = action.config.filmstrip || {};
+
+    if (stageFilmstripParticipants !== undefined) {
         dispatch(updateSettings({
-            maxStageParticipants: action.config.filmstrip.stageFilmstripParticipants
+            maxStageParticipants: stageFilmstripParticipants
         }));
+    }
+
+    if (initialWidth) {
+        dispatch(setUserFilmstripWidth(initialWidth));
     }
 
     dispatch(updateConfig(config));
@@ -114,11 +121,15 @@ function _setConfig({ dispatch, getState }: IStore, next: Function, action: AnyA
 function _setDynamicBrandingData({ dispatch }: IStore, next: Function, action: AnyAction) {
     const config: IConfig = {};
     const {
+        customParticipantMenuButtons,
+        customToolbarButtons,
         downloadAppsUrl,
+        etherpadBase,
         liveStreamingDialogUrls = {},
         preCallTest = {},
         salesforceUrl,
-        userDocumentationUrl
+        userDocumentationUrl,
+        peopleSearchUrl,
     } = action.value;
 
     const { helpUrl, termsUrl, dataPrivacyUrl } = liveStreamingDialogUrls;
@@ -154,6 +165,10 @@ function _setDynamicBrandingData({ dispatch }: IStore, next: Function, action: A
         config.salesforceUrl = salesforceUrl;
     }
 
+    if (peopleSearchUrl) {
+        config.peopleSearchUrl = peopleSearchUrl;
+    }
+
     const { enabled, iceUrl } = preCallTest;
 
     if (typeof enabled === 'boolean') {
@@ -162,9 +177,22 @@ function _setDynamicBrandingData({ dispatch }: IStore, next: Function, action: A
         };
     }
 
+    if (etherpadBase) {
+        // eslint-disable-next-line camelcase
+        config.etherpad_base = etherpadBase;
+    }
+
     if (iceUrl) {
         config.prejoinConfig = config.prejoinConfig || {};
         config.prejoinConfig.preCallTestICEUrl = iceUrl;
+    }
+
+    if (customToolbarButtons) {
+        config.customToolbarButtons = customToolbarButtons;
+    }
+
+    if (customParticipantMenuButtons) {
+        config.customParticipantMenuButtons = customParticipantMenuButtons;
     }
 
     dispatch(updateConfig(config));

@@ -1,9 +1,10 @@
 import BasePageObject from './BasePageObject';
 
 const ASK_TO_UNMUTE_NOTIFICATION_ID = 'notify.hostAskedUnmute';
+const AV_MODERATION_MUTED_NOTIFICATION_ID = 'notify.moderationInEffectTitle';
+const JOIN_MULTIPLE_TEST_ID = 'notify.connectedThreePlusMembers';
 const JOIN_ONE_TEST_ID = 'notify.connectedOneMember';
 const JOIN_TWO_TEST_ID = 'notify.connectedTwoMembers';
-const JOIN_MULTIPLE_TEST_ID = 'notify.connectedThreePlusMembers';
 const LOBBY_ACCESS_DENIED_TEST_ID = 'lobby.joinRejectedMessage';
 const LOBBY_ENABLED_TEST_ID = 'lobby.notificationLobbyEnabled';
 const LOBBY_KNOCKING_PARTICIPANT_NOTIFICATION_XPATH
@@ -14,8 +15,13 @@ const LOBBY_PARTICIPANT_ACCESS_GRANTED_TEST_ID = 'lobby.notificationLobbyAccessG
 const LOBBY_PARTICIPANT_ADMIT_TEST_ID = 'participantsPane.actions.admit';
 const LOBBY_PARTICIPANT_REJECT_TEST_ID = 'participantsPane.actions.reject';
 const RAISE_HAND_NOTIFICATION_ID = 'notify.raisedHand';
-const REENABLE_SELF_VIEW_NOTIFICATION_ID = 'notify.selfViewTitle';
 const REENABLE_SELF_VIEW_CLOSE_NOTIFICATION = 'notify.selfViewTitle-dismiss';
+const REENABLE_SELF_VIEW_NOTIFICATION_ID = 'notify.selfViewTitle';
+const YOU_ARE_MUTED_TEST_ID = 'notify.mutedTitle';
+
+export const MAX_USERS_TEST_ID = 'dialog.maxUsersLimitReached';
+export const TOKEN_AUTH_FAILED_TEST_ID = 'dialog.tokenAuthFailed';
+export const TOKEN_AUTH_FAILED_TITLE_TEST_ID = 'dialog.tokenAuthFailedTitle';
 
 /**
  * Gathers all notifications logic in the UI and obtaining those.
@@ -42,6 +48,20 @@ export default class Notifications extends BasePageObject {
 
         await displayNameEl.waitForExist({ timeout: 2000 });
         await displayNameEl.waitForDisplayed();
+    }
+
+    /**
+     * Closes the muted notification.
+     */
+    async closeAVModerationMutedNotification(skipNonExisting = false) {
+        return this.closeNotification(AV_MODERATION_MUTED_NOTIFICATION_ID, skipNonExisting);
+    }
+
+    /**
+     * Closes the ask to unmute notification.
+     */
+    async closeAskToUnmuteNotification(skipNonExisting = false) {
+        return this.closeNotification(ASK_TO_UNMUTE_NOTIFICATION_ID, skipNonExisting);
     }
 
     /**
@@ -76,7 +96,29 @@ export default class Notifications extends BasePageObject {
      * The notification on participants page when Lobby is being enabled or disabled.
      */
     getLobbyEnabledText() {
-        return this.getNotificationText(LOBBY_ENABLED_TEST_ID);
+        return this.waitForNotificationText(LOBBY_ENABLED_TEST_ID);
+    }
+
+    /**
+     * Closes a specific lobby notification.
+     * @param testId
+     * @param skipNonExisting
+     * @private
+     */
+    private async closeNotification(testId: string, skipNonExisting = false) {
+        const notification = this.participant.driver.$(`[data-testid="${testId}"]`);
+
+        if (skipNonExisting && !await notification.isExisting()) {
+            return Promise.resolve();
+        }
+
+        await notification.waitForExist();
+        await notification.waitForStable();
+
+        const closeButton = notification.$('#close-notification');
+
+        await closeButton.moveTo();
+        await closeButton.click();
     }
 
     /**
@@ -136,7 +178,7 @@ export default class Notifications extends BasePageObject {
      * The notification that someone's access was approved.
      */
     getLobbyParticipantAccessGranted() {
-        return this.getNotificationText(LOBBY_PARTICIPANT_ACCESS_GRANTED_TEST_ID);
+        return this.waitForNotificationText(LOBBY_PARTICIPANT_ACCESS_GRANTED_TEST_ID);
     }
 
     /**
@@ -147,15 +189,29 @@ export default class Notifications extends BasePageObject {
     }
 
     /**
-     * Returns notification text if the notification is found in the next few seconds.
+     * Waits until a notifications with the given testId is found and returns its text.
      * @return the notification text.
      */
-    private async getNotificationText(testId: string) {
+    private async waitForNotificationText(testId: string) {
         const notificationElement = this.participant.driver.$(`[data-testid="${testId}"]`);
 
         await notificationElement.waitForExist({ timeout: 2_000 });
 
         return await notificationElement.getText();
+    }
+
+    /**
+     * Gets the text from the notification with the given testId, if the notification exists (otherwise returns
+     * undefined).
+     * @param testId
+     * @return the notification text.
+     */
+    async getNotificationText(testId: string) {
+        const notificationElement = this.participant.driver.$(`[data-testid="${testId}"]`);
+
+        if (await notificationElement.isExisting()) {
+            return await notificationElement.getText();
+        }
     }
 
     /**
@@ -174,7 +230,7 @@ export default class Notifications extends BasePageObject {
      * The notification test that someone's access was denied.
      */
     getLobbyParticipantAccessDenied() {
-        return this.getNotificationText(LOBBY_PARTICIPANT_ACCESS_DENIED_TEST_ID);
+        return this.waitForNotificationText(LOBBY_PARTICIPANT_ACCESS_DENIED_TEST_ID);
     }
 
     /**
@@ -218,5 +274,12 @@ export default class Notifications extends BasePageObject {
 
         await dismissButton.moveTo();
         await dismissButton.click();
+    }
+
+    /**
+     * Closes the `you are muted` notification.
+     */
+    async closeYouAreMutedNotification() {
+        return this.closeNotification(YOU_ARE_MUTED_TEST_ID, true);
     }
 }

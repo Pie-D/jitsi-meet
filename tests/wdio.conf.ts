@@ -1,14 +1,17 @@
 import AllureReporter from '@wdio/allure-reporter';
 import { multiremotebrowser } from '@wdio/globals';
 import { Buffer } from 'buffer';
-import minimatch from 'minimatch';
+import { glob } from 'glob';
 import path from 'node:path';
 import process from 'node:process';
 import pretty from 'pretty';
 
+import { getTestProperties, loadTestFiles } from './helpers/TestProperties';
+import { config as testsConfig } from './helpers/TestsConfig';
 import WebhookProxy from './helpers/WebhookProxy';
 import { getLogs, initLogger, logInfo } from './helpers/browserLogger';
 import { IContext } from './helpers/types';
+import { generateRoomName } from './helpers/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const allure = require('allure-commandline');
@@ -16,8 +19,6 @@ const allure = require('allure-commandline');
 // This is deprecated without alternative (https://github.com/nodejs/node/issues/32483)
 // we need it to be able to reuse jitsi-meet code in tests
 require.extensions['.web.ts'] = require.extensions['.ts'];
-
-const usingGrid = Boolean(new URL(import.meta.url).searchParams.get('grid'));
 
 const chromeArgs = [
     '--allow-insecure-localhost',
@@ -35,8 +36,7 @@ const chromeArgs = [
     // Avoids - "You are checking for animations on an inactive tab, animations do not run for inactive tabs"
     // when executing waitForStable()
     '--disable-renderer-backgrounding',
-    `--use-file-for-fake-audio-capture=${
-        usingGrid ? process.env.REMOTE_RESOURCE_PATH : 'tests/resources'}/fakeAudioStream.wav`
+    '--use-file-for-fake-audio-capture=tests/resources/fakeAudioStream.wav'
 ];
 
 if (process.env.RESOLVER_RULES) {
@@ -47,7 +47,7 @@ if (process.env.ALLOW_INSECURE_CERTS === 'true') {
 }
 if (process.env.HEADLESS === 'true') {
     chromeArgs.push('--headless');
-    chromeArgs.push('--window-size=1280,720');
+    chromeArgs.push('--window-size=1280,1024');
 }
 if (process.env.VIDEO_CAPTURE_FILE) {
     chromeArgs.push(`--use-file-for-fake-video-capture=${process.env.VIDEO_CAPTURE_FILE}`);
@@ -57,16 +57,83 @@ const chromePreferences = {
     'intl.accept_languages': 'en-US'
 };
 
+const specs = [
+    'specs/**/*.spec.ts'
+];
+
+/**
+ * Analyzes test files at config construction time to determine browser requirements
+ * and generate capabilities with appropriate exclusions.
+ */
+function generateCapabilitiesFromSpecs(): Record<string, any> {
+    const allSpecFiles: string[] = [];
+    const browsers = [ 'p1', 'p2', 'p3', 'p4' ];
+
+    for (const pattern of specs) {
+        const matches = glob.sync(pattern, { cwd: path.join(__dirname) });
+
+        allSpecFiles.push(...matches.map(f => path.resolve(__dirname, f)));
+    }
+
+    // Load test files to populate the testProperties registry
+    loadTestFiles(allSpecFiles);
+
+    // Import TestProperties to access the populated registry
+    const { testProperties } = require('./helpers/TestProperties');
+
+    // Determine which browsers need which exclusions
+    const browserExclusions: Record<string, Set<string>> = {
+        p1: new Set(),
+        p2: new Set(),
+        p3: new Set(),
+        p4: new Set()
+    };
+
+    for (const file of allSpecFiles) {
+        const props = testProperties[file];
+        const relativeFile = path.relative(__dirname, file);
+
+        // If a test doesn't use a particular browser, add it to exclusions for that browser
+        if (props?.usesBrowsers) {
+            browsers.forEach(browser => {
+                if (!props.usesBrowsers!.includes(browser)) {
+                    browserExclusions[browser].add(relativeFile);
+                }
+            });
+        }
+    }
+
+    return Object.fromEntries(
+        browsers.map(browser => [
+            browser,
+            {
+                capabilities: {
+                    browserName: 'chrome',
+                    ...(browser === 'p1' && process.env.BROWSER_CHROME_BETA ? { browserVersion: 'beta' } : {}),
+                    'goog:chromeOptions': {
+                        args: chromeArgs,
+                        prefs: chromePreferences
+                    },
+                    'wdio:exclude': Array.from(browserExclusions[browser] || [])
+                }
+            }
+        ])
+    );
+}
+
+const capabilities = generateCapabilitiesFromSpecs();
+
 const TEST_RESULTS_DIR = 'test-results';
+
+const keepAlive: Array<any> = [];
 
 export const config: WebdriverIO.MultiremoteConfig = {
 
     runner: 'local',
 
-    specs: [
-        'specs/**'
-    ],
-    maxInstances: 1, // if changing check onWorkerStart logic
+    specs,
+
+    maxInstances: parseInt(process.env.MAX_INSTANCES || '1', 10), // if changing check onWorkerStart logic
 
     baseUrl: process.env.BASE_URL || 'https://alpha.jitsi.net/torture/',
     tsConfigPath: './tsconfig.json',
@@ -84,59 +151,10 @@ export const config: WebdriverIO.MultiremoteConfig = {
     framework: 'mocha',
 
     mochaOpts: {
-        timeout: 60_000
+        timeout: 180_000
     },
 
-    capabilities: {
-        participant1: {
-            capabilities: {
-                browserName: 'chrome',
-                'goog:chromeOptions': {
-                    args: chromeArgs,
-                    prefs: chromePreferences
-                }
-            }
-        },
-        participant2: {
-            capabilities: {
-                browserName: 'chrome',
-                'goog:chromeOptions': {
-                    args: chromeArgs,
-                    prefs: chromePreferences
-                },
-                'wdio:exclude': [
-                    'specs/alone/**'
-                ]
-            }
-        },
-        participant3: {
-            capabilities: {
-                browserName: 'chrome',
-                'goog:chromeOptions': {
-                    args: chromeArgs,
-                    prefs: chromePreferences
-                },
-                'wdio:exclude': [
-                    'specs/alone/**',
-                    'specs/2way/**'
-                ]
-            }
-        },
-        participant4: {
-            capabilities: {
-                browserName: 'chrome',
-                'goog:chromeOptions': {
-                    args: chromeArgs,
-                    prefs: chromePreferences
-                },
-                'wdio:exclude': [
-                    'specs/alone/**',
-                    'specs/2way/**',
-                    'specs/3way/**'
-                ]
-            }
-        }
-    },
+    capabilities,
 
     // Level of logging verbosity: trace | debug | info | warn | error | silent
     logLevel: 'trace',
@@ -169,14 +187,40 @@ export const config: WebdriverIO.MultiremoteConfig = {
     /**
      * Gets executed before test execution begins. At this point you can access to all global
      * variables like `browser`. It is the perfect place to define custom commands.
+     * We have overriden this function in beforeSession to be able to pass cid as first param.
      *
      * @returns {Promise<void>}
      */
-    async before() {
+    async before(cid, _, files) {
+        if (files.length !== 1) {
+            console.warn('We expect to run a single suite, but got more than one');
+        }
+
+        const testFilePath = files[0].replace(/^file:\/\//, '');
+        const testName = path.relative('tests/specs', testFilePath)
+            .replace(/.spec.ts$/, '')
+            .replace(/\//g, '-');
+        const testProperties = await getTestProperties(testFilePath);
+
+        console.log(`Running test: ${testName} via worker: ${cid}`);
+
+        const globalAny: any = global;
+
+        globalAny.ctx = {
+            times: {}
+        } as IContext;
+        globalAny.ctx.testProperties = testProperties;
+
         await Promise.all(multiremotebrowser.instances.map(async (instance: string) => {
             const bInstance = multiremotebrowser.getInstance(instance);
 
-            initLogger(bInstance, instance, TEST_RESULTS_DIR);
+            // @ts-ignore
+            initLogger(bInstance, `${instance}-${cid}-${testName}`, TEST_RESULTS_DIR);
+
+            // setup keepalive
+            keepAlive.push(setInterval(async () => {
+                await bInstance.execute(() => console.log(`${new Date().toISOString()} keep-alive`));
+            }, 20_000));
 
             if (bInstance.isFirefox) {
                 return;
@@ -188,22 +232,55 @@ export const config: WebdriverIO.MultiremoteConfig = {
             bInstance.iframePageBase = `file://${path.dirname(rpath)}`;
         }));
 
-        const globalAny: any = global;
-        const roomName = `jitsimeettorture-${crypto.randomUUID()}`;
+        globalAny.ctx.roomName = generateRoomName(testName);
+        console.log(`Using room name: ${globalAny.ctx.roomName}`);
 
-        globalAny.ctx = {
-            times: {}
-        } as IContext;
-        globalAny.ctx.roomName = roomName;
-        globalAny.ctx.jwtPrivateKeyPath = process.env.JWT_PRIVATE_KEY_PATH;
-        globalAny.ctx.jwtKid = process.env.JWT_KID;
+        // If we are running the iFrameApi tests, we need to mark it as such and if needed to create the proxy
+        // and connect to it.
+        if (testProperties.useWebhookProxy && testsConfig.webhooksProxy.enabled && !globalAny.ctx.webhooksProxy) {
+            // Note this prevents iframe and jaas test from running together.
+            const tenant = testsConfig.jaas.enabled ? testsConfig.jaas.tenant : testsConfig.iframe.tenant;
+
+            globalAny.ctx.webhooksProxy = new WebhookProxy(
+                `${testsConfig.webhooksProxy.url}?tenant=${tenant}&room=${globalAny.ctx.roomName}`,
+                testsConfig.webhooksProxy.sharedSecret!,
+                `${TEST_RESULTS_DIR}/webhooks-${cid}-${testName}.log`);
+            globalAny.ctx.webhooksProxy.connect();
+        }
+
+        if (testProperties.useWebhookProxy && !globalAny.ctx.webhooksProxy) {
+            console.warn(`WebhookProxy is not available, skipping ${testName}`);
+            globalAny.ctx.skipSuiteTests = true;
+        }
+
+        if (testProperties.useJaas && !testsConfig.jaas.enabled) {
+            console.warn(`JaaS is not configured, skipping ${testName}.`);
+            globalAny.ctx.skipSuiteTests = true;
+        }
     },
 
     after() {
         const { ctx }: any = global;
 
-        if (ctx?.webhooksProxy) {
-            ctx.webhooksProxy.disconnect();
+        ctx?.webhooksProxy?.disconnect();
+        keepAlive.forEach(clearInterval);
+    },
+
+    beforeSession(c, capabilities_, specs_, cid) {
+        const originalBefore = c.before;
+
+        if (!originalBefore || !Array.isArray(originalBefore) || originalBefore.length !== 1) {
+            console.warn('No before hook found or more than one found, skipping');
+
+            return;
+        }
+
+        if (originalBefore) {
+            c.before = [ async function(...args) {
+                // Call original with cid as first param, followed by original args
+                // @ts-ignore
+                return await originalBefore[0].call(c, cid, ...args);
+            } ];
         }
     },
 
@@ -213,22 +290,6 @@ export const config: WebdriverIO.MultiremoteConfig = {
      * @param {Object} suite - Suite details.
      */
     beforeSuite(suite) {
-        const { ctx }: any = global;
-
-        // If we are running the iFrameApi tests, we need to mark it as such and if needed to create the proxy
-        // and connect to it.
-        if (path.basename(suite.file).startsWith('iFrameApi')) {
-            ctx.iframeAPI = true;
-
-            if (!ctx.webhooksProxy
-                && process.env.WEBHOOKS_PROXY_URL && process.env.WEBHOOKS_PROXY_SHARED_SECRET) {
-                ctx.webhooksProxy = new WebhookProxy(
-                    `${process.env.WEBHOOKS_PROXY_URL}&room=${ctx.roomName}`,
-                    process.env.WEBHOOKS_PROXY_SHARED_SECRET);
-                ctx.webhooksProxy.connect();
-            }
-        }
-
         multiremotebrowser.instances.forEach((instance: string) => {
             logInfo(multiremotebrowser.getInstance(instance),
                 `---=== Begin ${suite.file.substring(suite.file.lastIndexOf('/') + 1)} ===---`);
@@ -251,26 +312,6 @@ export const config: WebdriverIO.MultiremoteConfig = {
         multiremotebrowser.instances.forEach((instance: string) => {
             logInfo(multiremotebrowser.getInstance(instance), `---=== Start test ${test.title} ===---`);
         });
-    },
-
-    /**
-     * Gets executed before a worker process is spawned and can be used to initialize specific service
-     * for that worker as well as modify runtime environments in an async fashion.
-     */
-    onWorkerStart(...args) {
-        // We run a worker per suite, and replay on this logic here
-        if (args[2].length > 1) {
-            console.warn('Our worker is supposed to get a single suite, but got more than one');
-
-            return;
-        }
-
-        // We skip the suite tests if the suite is marked as such, we used that from firefox overwrite
-        // @ts-ignore
-        if (config?.ffExcludes?.some(
-                (e: string) => minimatch(args[2][0].replace('file://', ''), `${__dirname}/${e}`))) {
-            args[2].pop();
-        }
     },
 
     /**
@@ -298,6 +339,14 @@ export const config: WebdriverIO.MultiremoteConfig = {
                         'image/png');
                 }));
 
+                // @ts-ignore
+                allProcessing.push(bInstance.execute(() => typeof APP !== 'undefined' && APP.connection?.getLogs())
+                    .then(logs =>
+                        logs && AllureReporter.addAttachment(
+                            `debug-logs-${instance}`,
+                            JSON.stringify(logs, null, '    '),
+                            'text/plain'))
+                    .catch(e => console.error('Failed grabbing debug logs', e)));
 
                 AllureReporter.addAttachment(`console-logs-${instance}`, getLogs(bInstance) || '', 'text/plain');
 
@@ -306,7 +355,7 @@ export const config: WebdriverIO.MultiremoteConfig = {
                 }));
             });
 
-            await Promise.all(allProcessing);
+            await Promise.allSettled(allProcessing);
         }
     },
 

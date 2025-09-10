@@ -1,5 +1,7 @@
+import { UPDATE_CONFERENCE_METADATA } from '../base/conference/actionTypes';
 import { ILocalParticipant, IParticipant } from '../base/participants/types';
 import ReducerRegistry from '../base/redux/ReducerRegistry';
+import { IVisitorChatParticipant } from '../visitors/types';
 
 import {
     ADD_MESSAGE,
@@ -7,31 +9,44 @@ import {
     CLEAR_MESSAGES,
     CLOSE_CHAT,
     EDIT_MESSAGE,
+    NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
     OPEN_CHAT,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
-    SET_IS_POLL_TAB_FOCUSED,
+    SET_CHAT_IS_RESIZING,
+    SET_CHAT_WIDTH,
+    SET_FOCUSED_TAB,
     SET_LOBBY_CHAT_ACTIVE_STATE,
     SET_LOBBY_CHAT_RECIPIENT,
-    SET_PRIVATE_MESSAGE_RECIPIENT
+    SET_PRIVATE_MESSAGE_RECIPIENT,
+    SET_USER_CHAT_WIDTH
 } from './actionTypes';
+import { CHAT_SIZE, ChatTabs } from './constants';
 import { IMessage } from './types';
 
 const DEFAULT_STATE = {
+    groupChatWithPermissions: false,
     isOpen: false,
-    isPollsTabFocused: false,
-    lastReadMessage: undefined,
     messages: [],
+    notifyPrivateRecipientsChangedTimestamp: undefined,
     reactions: {},
     nbUnreadMessages: 0,
     privateMessageRecipient: undefined,
     lobbyMessageRecipient: undefined,
-    isLobbyChatActive: false
+    isLobbyChatActive: false,
+    focusedTab: ChatTabs.CHAT,
+    isResizing: false,
+    width: {
+        current: CHAT_SIZE,
+        userSet: null
+    }
 };
 
 export interface IChatState {
+    focusedTab: ChatTabs;
+    groupChatWithPermissions: boolean;
     isLobbyChatActive: boolean;
     isOpen: boolean;
-    isPollsTabFocused: boolean;
+    isResizing: boolean;
     lastReadMessage?: IMessage;
     lobbyMessageRecipient?: {
         id: string;
@@ -39,7 +54,12 @@ export interface IChatState {
     } | ILocalParticipant;
     messages: IMessage[];
     nbUnreadMessages: number;
-    privateMessageRecipient?: IParticipant;
+    notifyPrivateRecipientsChangedTimestamp?: number;
+    privateMessageRecipient?: IParticipant | IVisitorChatParticipant;
+    width: {
+        current: number;
+        userSet: number | null;
+    };
 }
 
 ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, action): IChatState => {
@@ -48,6 +68,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         const newMessage: IMessage = {
             displayName: action.displayName,
             error: action.error,
+            isFromVisitor: Boolean(action.isFromVisitor),
             participantId: action.participantId,
             isReaction: action.isReaction,
             messageId: action.messageId,
@@ -57,6 +78,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             privateMessage: action.privateMessage,
             lobbyChat: action.lobbyChat,
             recipient: action.recipient,
+            sentToVisitor: Boolean(action.sentToVisitor),
             timestamp: action.timestamp
         };
 
@@ -75,7 +97,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             ...state,
             lastReadMessage:
                 action.hasRead ? newMessage : state.lastReadMessage,
-            nbUnreadMessages: state.isPollsTabFocused ? state.nbUnreadMessages + 1 : state.nbUnreadMessages,
+            nbUnreadMessages: state.focusedTab !== ChatTabs.CHAT ? state.nbUnreadMessages + 1 : state.nbUnreadMessages,
             messages
         };
     }
@@ -167,13 +189,6 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             isLobbyChatActive: false
         };
 
-    case SET_IS_POLL_TAB_FOCUSED: {
-        return {
-            ...state,
-            isPollsTabFocused: action.isPollsTabFocused,
-            nbUnreadMessages: 0
-        }; }
-
     case SET_LOBBY_CHAT_RECIPIENT:
         return {
             ...state,
@@ -202,6 +217,58 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             isOpen: state.isOpen && state.isLobbyChatActive ? false : state.isOpen,
             isLobbyChatActive: false,
             lobbyMessageRecipient: undefined
+        };
+    case UPDATE_CONFERENCE_METADATA: {
+        const { metadata } = action;
+
+        if (metadata?.permissions) {
+            return {
+                ...state,
+                groupChatWithPermissions: Boolean(metadata.permissions.groupChatRestricted)
+            };
+        }
+
+        break;
+    }
+    case SET_FOCUSED_TAB:
+        return {
+            ...state,
+            focusedTab: action.tabId,
+            nbUnreadMessages: action.tabId === ChatTabs.CHAT ? 0 : state.nbUnreadMessages
+        };
+
+    case SET_CHAT_WIDTH: {
+        return {
+            ...state,
+            width: {
+                ...state.width,
+                current: action.width
+            }
+        };
+    }
+
+    case SET_USER_CHAT_WIDTH: {
+        const { width } = action;
+
+        return {
+            ...state,
+            width: {
+                current: width,
+                userSet: width
+            }
+        };
+    }
+
+    case SET_CHAT_IS_RESIZING: {
+        return {
+            ...state,
+            isResizing: action.resizing
+        };
+    }
+    case NOTIFY_PRIVATE_RECIPIENTS_CHANGED:
+        return {
+            ...state,
+            notifyPrivateRecipientsChangedTimestamp: action.payload
         };
     }
 

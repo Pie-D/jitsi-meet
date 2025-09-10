@@ -72,7 +72,7 @@ module:hook('jitsi-endpoint-message-received', function(event)
 
     if string.len(event.raw_message) >= POLL_PAYLOAD_LIMIT then
         module:log('error', 'Poll payload too large, discarding. Sender: %s to:%s', stanza.attr.from, stanza.attr.to);
-        return nil;
+        return true;
     end
 
     if data.type == "new-poll" then
@@ -86,13 +86,20 @@ module:hook('jitsi-endpoint-message-received', function(event)
 
         if room.polls.count >= POLLS_LIMIT then
             module:log("error", "Too many polls created in %s", room.jid)
-            return
+            return true;
         end
 
         if room.polls.by_id[data.pollId] ~= nil then
             module:log("error", "Poll already exists: %s", data.pollId);
             origin.send(st.error_reply(stanza, 'cancel', 'not-allowed', 'Poll already exists'));
             return true;
+        end
+
+        if room.jitsiMetadata and room.jitsiMetadata.permissions
+            and room.jitsiMetadata.permissions.pollCreationRestricted
+            and not is_feature_allowed('create-polls', origin.jitsi_meet_context_features) then
+                origin.send(st.error_reply(stanza, 'cancel', 'not-allowed', 'Creation of polls not allowed for user'));
+                return true;
         end
 
         local answers = {}

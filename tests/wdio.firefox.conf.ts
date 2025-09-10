@@ -19,49 +19,31 @@ if (process.env.HEADLESS === 'true') {
     ffArgs.push('--headless');
 }
 
-const ffExcludes = [
-    'specs/2way/iFrameParticipantsPresence.spec.ts', // FF does not support uploading files (uploadFile)
-
-    // FF does not support setting a file as mic input, no dominant speaker events
-    'specs/3way/activeSpeaker.spec.ts',
-    'specs/4way/desktopSharing.spec.ts'
-];
-
 const mergedConfig = merge(defaultConfig, {
-    ffExcludes,
+    exclude: [
+        'specs/iframe/*.spec.ts', // FF does not support uploading files (uploadFile)
+
+        // FF does not support setting a file as mic input, no dominant speaker events
+        'specs/3way/activeSpeaker.spec.ts',
+        'specs/3way/startMuted.spec.ts', // bad audio levels
+        'specs/4way/desktopSharing.spec.ts',
+        'specs/4way/lastN.spec.ts',
+
+        // when unmuting a participant, we see the presence in debug logs immediately,
+        // but for 15 seconds it is not received/processed by the client
+        // (also the menu disappears after clicking one of the moderation options, does not happen manually)
+        'specs/3way/audioVideoModeration.spec.ts'
+    ],
     capabilities: {
-        participant1: {
+        p1: {
             capabilities: {
                 browserName: 'firefox',
+                browserVersion: process.env.BROWSER_FF_BETA ? 'beta' : undefined,
                 'moz:firefoxOptions': {
                     args: ffArgs,
                     prefs: ffPreferences
                 },
                 acceptInsecureCerts: process.env.ALLOW_INSECURE_CERTS === 'true'
-            }
-        },
-        participant2: {
-            capabilities: {
-                'wdio:exclude': [
-                    ...defaultConfig.capabilities.participant2.capabilities['wdio:exclude'],
-                    ...ffExcludes
-                ]
-            }
-        },
-        participant3: {
-            capabilities: {
-                'wdio:exclude': [
-                    ...defaultConfig.capabilities.participant3.capabilities['wdio:exclude'],
-                    ...ffExcludes
-                ]
-            }
-        },
-        participant4: {
-            capabilities: {
-                'wdio:exclude': [
-                    ...defaultConfig.capabilities.participant4.capabilities['wdio:exclude'],
-                    ...ffExcludes
-                ]
             }
         }
     }
@@ -69,6 +51,6 @@ const mergedConfig = merge(defaultConfig, {
 
 // Remove the chrome options from the first participant
 // @ts-ignore
-mergedConfig.capabilities.participant1.capabilities['goog:chromeOptions'] = undefined;
+mergedConfig.capabilities.p1.capabilities['goog:chromeOptions'] = undefined;
 
 export const config = mergedConfig;

@@ -1,15 +1,16 @@
 import { SET_AUDIO_ONLY } from '../../../react/features/base/audio-only/actionTypes';
-import type { Participant } from '../../helpers/Participant';
 import {
+    checkForScreensharingTile,
     ensureFourParticipants,
     ensureOneParticipant,
     ensureThreeParticipants,
-    ensureTwoParticipants
+    ensureTwoParticipants,
+    hangupAllParticipants
 } from '../../helpers/participants';
 
 describe('Desktop sharing', () => {
     it('start', async () => {
-        await ensureTwoParticipants(ctx, {
+        await ensureTwoParticipants({
             configOverwrite: {
                 p2p: {
                     enabled: true
@@ -26,7 +27,7 @@ describe('Desktop sharing', () => {
         // Check if a local screen share tile is created on p2.
         await checkForScreensharingTile(p2, p2);
 
-        expect(await p2.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p2.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
     });
 
     it('stop', async () => {
@@ -47,7 +48,7 @@ describe('Desktop sharing', () => {
     it('p2p to jvb switch', async () => {
         await ctx.p2.getToolbar().clickDesktopSharingButton();
 
-        await ensureThreeParticipants(ctx);
+        await ensureThreeParticipants();
         const { p1, p2, p3 } = ctx;
 
         // Check if a remote screen share tile is created on all participants.
@@ -55,7 +56,7 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p2, p2);
         await checkForScreensharingTile(p2, p2);
 
-        expect(await p3.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p3.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
     });
 
     /**
@@ -71,7 +72,7 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p2, p2);
 
         // The video should be playing.
-        expect(await p1.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p1.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
 
         // Start desktop share on p1.
         await p1.getToolbar().clickDesktopSharingButton();
@@ -80,13 +81,13 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p1, p1);
         await checkForScreensharingTile(p1, p2);
 
-        await ensureThreeParticipants(ctx);
+        await ensureThreeParticipants();
 
         await checkForScreensharingTile(p1, p3);
         await checkForScreensharingTile(p2, p3);
 
         // The large video should be playing on p3.
-        expect(await p3.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p3.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
     });
 
     /**
@@ -111,13 +112,13 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p2, p1);
 
         // Add p3 back to the conference and check if p1 and p2's shares are visible on p3.
-        await ensureThreeParticipants(ctx);
+        await ensureThreeParticipants();
 
         await checkForScreensharingTile(p1, p3);
         await checkForScreensharingTile(p2, p3);
 
         // The large video should be playing on p3.
-        expect(await p3.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p3.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
     });
 
     /**
@@ -126,9 +127,9 @@ describe('Desktop sharing', () => {
      *  The call switches to jvb and then back to p2p.
      */
     it('screen sharing toggle before others join', async () => {
-        await Promise.all([ ctx.p1.hangup(), ctx.p2.hangup(), ctx.p3.hangup() ]);
+        await hangupAllParticipants();
 
-        await ensureOneParticipant(ctx, {
+        await ensureOneParticipant({
             configOverwrite: {
                 p2p: {
                     enabled: true
@@ -145,7 +146,7 @@ describe('Desktop sharing', () => {
         await p1.getToolbar().clickStopDesktopSharingButton();
 
         // Call switches to jvb.
-        await ensureThreeParticipants(ctx);
+        await ensureThreeParticipants();
         const { p2, p3 } = ctx;
 
         // p1 starts share again when call switches to jvb.
@@ -155,22 +156,22 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p1, p2);
         await checkForScreensharingTile(p1, p3);
 
-        expect(await p2.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
-        expect(await p3.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p2.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p3.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
 
         // p3 leaves the call.
         await p3.hangup();
 
         // Make sure p2 see's p1's share after the call switches back to p2p.
         await checkForScreensharingTile(p1, p2);
-        expect(await p2.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p2.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
 
         // p2 starts share when in p2p.
         await p2.getToolbar().clickDesktopSharingButton();
 
         // Makes sure p2's share is visible on p1.
         await checkForScreensharingTile(p2, p1);
-        expect(await p1.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p1.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
     });
 
     /**
@@ -178,22 +179,24 @@ describe('Desktop sharing', () => {
      * where only a screen share can be received. A bug fixed in jvb 0c5dd91b where the video was not received.
      */
     it('audio only and non dominant screen share', async () => {
-        await Promise.all([ ctx.p1.hangup(), ctx.p2.hangup(), ctx.p3.hangup() ]);
+        await hangupAllParticipants();
 
-        await ensureOneParticipant(ctx);
+        await ensureOneParticipant();
         const { p1 } = ctx;
 
         // a workaround to directly set audio only mode without going through the rest of the settings in the UI
-        await p1.driver.execute(type => {
-            APP.store.dispatch({
+        await p1.execute(type => {
+            APP?.store?.dispatch({
                 type,
                 audioOnly: true
             });
-            APP.conference.onToggleAudioOnly();
+            APP?.conference?.onToggleAudioOnly();
         }, SET_AUDIO_ONLY);
         await p1.getToolbar().clickAudioMuteButton();
 
-        await ensureThreeParticipants(ctx, { skipInMeetingChecks: true });
+        await ensureThreeParticipants({
+            skipInMeetingChecks: true
+        });
         const { p2, p3 } = ctx;
 
         await p3.getToolbar().clickAudioMuteButton();
@@ -203,7 +206,7 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p3, p2);
 
         // the video should be playing
-        await p1.driver.waitUntil(() => p1.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived()), {
+        await p1.driver.waitUntil(() => p1.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived()), {
             timeout: 5_000,
             timeoutMsg: 'expected remote screen share to be on large'
         });
@@ -215,9 +218,9 @@ describe('Desktop sharing', () => {
      * A problem fixed in jitsi-meet 3657c19e and d6ab0a72.
      */
     it('audio only and dominant screen share', async () => {
-        await Promise.all([ ctx.p1.hangup(), ctx.p2.hangup(), ctx.p3.hangup() ]);
+        await hangupAllParticipants();
 
-        await ensureOneParticipant(ctx, {
+        await ensureOneParticipant({
             configOverwrite: {
                 startWithAudioMuted: true,
                 startWithVideoMuted: true
@@ -226,21 +229,21 @@ describe('Desktop sharing', () => {
         const { p1 } = ctx;
 
         // a workaround to directly set audio only mode without going through the rest of the settings in the UI
-        await p1.driver.execute(type => {
-            APP.store.dispatch({
+        await p1.execute(type => {
+            APP?.store?.dispatch({
                 type,
                 audioOnly: true
             });
-            APP.conference.onToggleAudioOnly();
+            APP?.conference?.onToggleAudioOnly();
         }, SET_AUDIO_ONLY);
 
-        await ensureTwoParticipants(ctx, {
-            skipInMeetingChecks: true,
+        await ensureTwoParticipants({
             configOverwrite: {
                 startWithAudioMuted: true
-            }
+            },
+            skipInMeetingChecks: true
         });
-        await ensureThreeParticipants(ctx, {
+        await ensureThreeParticipants({
             skipInMeetingChecks: true
         });
         const { p2, p3 } = ctx;
@@ -254,7 +257,7 @@ describe('Desktop sharing', () => {
         expect(await p1.getLargeVideo().getResource()).toBe(`${await p3.getEndpointId()}-v1`);
 
         // the video should be playing
-        await p1.driver.waitUntil(() => p1.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived()), {
+        await p1.driver.waitUntil(() => p1.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived()), {
             timeout: 5_000,
             timeoutMsg: 'expected remote screen share to be on large'
         });
@@ -264,9 +267,9 @@ describe('Desktop sharing', () => {
      * Test screensharing with lastN. We add p4 with lastN=2 and verify that it receives the expected streams.
      */
     it('with lastN', async () => {
-        await Promise.all([ ctx.p1.hangup(), ctx.p2.hangup(), ctx.p3.hangup() ]);
+        await hangupAllParticipants();
 
-        await ensureThreeParticipants(ctx);
+        await ensureThreeParticipants();
         const { p1, p2, p3 } = ctx;
 
         await p3.getToolbar().clickDesktopSharingButton();
@@ -274,7 +277,7 @@ describe('Desktop sharing', () => {
         await p1.getToolbar().clickAudioMuteButton();
         await p3.getToolbar().clickAudioMuteButton();
 
-        await ensureFourParticipants(ctx, {
+        await ensureFourParticipants({
             configOverwrite: {
                 channelLastN: 2,
                 startWithAudioMuted: true
@@ -291,7 +294,7 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p3, p4);
 
         // And the video should be playing
-        expect(await p4.driver.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        expect(await p4.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
 
         const p1EndpointId = await p1.getEndpointId();
         const p2EndpointId = await p2.getEndpointId();
@@ -311,12 +314,3 @@ describe('Desktop sharing', () => {
     });
 });
 
-/**
- * Check if a screensharing tile is displayed on the observer.
- */
-async function checkForScreensharingTile(sharer: Participant, observer: Participant, reverse = false) {
-    await observer.driver.$(`//span[@id='participant_${await sharer.getEndpointId()}-v1']`).waitForDisplayed({
-        timeout: 3_000,
-        reverse
-    });
-}

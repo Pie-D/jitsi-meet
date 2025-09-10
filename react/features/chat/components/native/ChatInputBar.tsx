@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { WithTranslation } from 'react-i18next';
-import { Platform, View, ViewStyle } from 'react-native';
+import { Platform, TextStyle, View, ViewStyle } from 'react-native';
+import { Text } from 'react-native-paper';
 import { connect } from 'react-redux';
 
 import { IReduxState, IStore } from '../../../app/types';
@@ -10,17 +11,21 @@ import { ASPECT_RATIO_WIDE } from '../../../base/responsive-ui/constants';
 import IconButton from '../../../base/ui/components/native/IconButton';
 import Input from '../../../base/ui/components/native/Input';
 import { BUTTON_TYPES } from '../../../base/ui/constants.native';
-import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
-import { v4 as uuidV4 } from 'uuid';
-import { CMEET_ENV } from "../../ENV";
-import { LocalStorageHandle } from '../../LocalStorageHandler';
-import { addMessage } from '../../actions.web';
-import { MESSAGE_TYPE_REMOTE } from '../../constants';
+import { isSendGroupChatDisabled } from '../../functions';
+
 import styles from './styles';
 
-
 interface IProps extends WithTranslation {
+
+    /**
+     * Whether sending group chat messages is disabled.
+     */
+    _isSendGroupChatDisabled: boolean;
+
+    /**
+     * The id of the message recipient, if any.
+     */
+    _privateMessageRecipientId?: string;
 
     /**
      * Application's aspect ratio.
@@ -154,13 +159,25 @@ class ChatInputBar extends Component<IProps, IState> {
      *
      * @inheritdoc
      */
-    render() {
+    override render() {
         let inputBarStyles;
 
         if (this.props.aspectRatio === ASPECT_RATIO_WIDE) {
             inputBarStyles = styles.inputBarWide;
         } else {
             inputBarStyles = styles.inputBarNarrow;
+        }
+
+        if (this.props._isSendGroupChatDisabled && !this.props._privateMessageRecipientId) {
+            return (
+                <View
+                    id = 'no-messages-message'
+                    style = { styles.disabledSendWrapper as ViewStyle }>
+                    <Text style = { styles.emptyComponentText as TextStyle }>
+                        { this.props.t('chat.disabled') }
+                    </Text>
+                </View>
+            );
         }
 
         return (
@@ -225,10 +242,19 @@ class ChatInputBar extends Component<IProps, IState> {
      * @returns {void}
      */
     _onSubmit() {
+        const {
+            _isSendGroupChatDisabled,
+            _privateMessageRecipientId,
+            onSend
+        } = this.props;
+
+        if (_isSendGroupChatDisabled && !_privateMessageRecipientId) {
+            return;
+        }
+
         const message = this.state.message.trim();
 
-        message && this.props.onSend(message);
-        this._onSendChatCMeet(message)
+        message && onSend(message);
         this.setState({
             message: '',
             showSend: false
@@ -245,8 +271,12 @@ class ChatInputBar extends Component<IProps, IState> {
  */
 function _mapStateToProps(state: IReduxState) {
     const { aspectRatio } = state['features/base/responsive-ui'];
+    const { privateMessageRecipient } = state['features/chat'];
+    const isGroupChatDisabled = isSendGroupChatDisabled(state);
 
     return {
+        _isSendGroupChatDisabled: isGroupChatDisabled,
+        _privateMessageRecipientId: privateMessageRecipient?.id,
         aspectRatio
     };
 }

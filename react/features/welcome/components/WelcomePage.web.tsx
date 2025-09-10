@@ -139,7 +139,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @inheritdoc
      * @returns {void}
      */
-    componentDidMount() {
+    override componentDidMount() {
         super.componentDidMount();
 
         document.body.classList.add("welcome-page");
@@ -170,7 +170,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @inheritdoc
      * @returns {void}
      */
-    componentWillUnmount() {
+    override componentWillUnmount() {
         super.componentWillUnmount();
 
         document.body.classList.remove("welcome-page");
@@ -182,7 +182,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      * @inheritdoc
      * @returns {ReactElement|null}
      */
-    render() {
+    override render() {
         const { _moderatedRoomServiceUrl, t } = this.props;
         const { DEFAULT_WELCOME_PAGE_LOGO_URL, DISPLAY_WELCOME_FOOTER } = interfaceConfig;
         const showAdditionalCard = this._shouldShowAdditionalCard();
@@ -285,7 +285,7 @@ class WelcomePage extends AbstractWelcomePage<IProps> {
      *
      * @inheritdoc
      */
-    _doRenderInsecureRoomNameWarning() {
+    override _doRenderInsecureRoomNameWarning() {
         return (
             <div className="insecure-room-name-warning">
                 <Icon src={IconWarning} />
