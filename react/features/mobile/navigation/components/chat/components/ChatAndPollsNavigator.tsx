@@ -24,12 +24,9 @@ const ChatAndPolls = () => {
     const clientWidth = useSelector(getClientWidth);
     const dispatch = useDispatch();
     const { isPollsTabFocused } = useSelector((state: IReduxState) => state['features/chat']);
-    const initialRouteName = isPollsTabFocused
-        ? screen.conference.chatandpolls.tab.polls
-        : screen.conference.chatandpolls.tab.chat;
+    const initialRouteName = screen.conference.chatandpolls.tab.chat; // Always default to chat since Polls is removed
 
     return (
-        // @ts-ignore
         <ChatTab.Navigator
             backBehavior = 'none'
             initialLayout = {{
@@ -46,17 +43,6 @@ const ChatAndPolls = () => {
                     }
                 }}
                 name = { screen.conference.chatandpolls.tab.chat } />
-                
-            //Hide Polls tab for now
-           { /*<ChatTab.Screen
-                component = { PollsPane }
-                listeners = {{
-                    tabPress: () => {
-                        dispatch(setIsPollsTabFocused(true));
-                        dispatch(resetNbUnreadPollsMessages);
-                    }
-                }}
-                name = { screen.conference.chatandpolls.tab.polls } />*/}
         </ChatTab.Navigator>
     );
 };

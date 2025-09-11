@@ -41,8 +41,9 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
     async _handleClick() {
         const { dispatch, _toggled, _conference } = this.props;
         if(!_toggled) {
+            console.log('SaveSpeechToTextButton clicked', _conference);
             const token = _conference?.connection.token;
-            
+
             if (!token) {
                 return null;
             }
@@ -91,7 +92,7 @@ function _mapStateToProps(state: IReduxState) {
     return {
         _toggled: state['features/saveSpeechToText'].isOpen,
         _conference: state['features/base/conference'].conference,
-        visible: isOwner 
+        visible: isOwner
     };
 }
 
