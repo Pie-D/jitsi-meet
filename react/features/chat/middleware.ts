@@ -54,7 +54,6 @@ import {
 } from './constants';
 import { getUnreadCount } from './functions';
 import { INCOMING_MSG_SOUND_FILE } from './sounds';
-
 /**
  * Timeout for when to show the privacy notice after a private message was received.
  *
@@ -352,6 +351,11 @@ function _onConferenceMessageReceived(store: IStore,
             displayName?: string; isGuest?: boolean; message: string; messageId?: string;
             participantId: string; privateMessage: boolean; timestamp: number; }
 ) {
+    // Check if history is loaded from state
+    const state = store.getState();
+    if (!state['features/chat'].isHistoryLoaded) {
+        return;
+    }
 
     const isGif = isGifEnabled(store.getState()) && isGifMessage(message);
 

@@ -71,6 +71,7 @@ import ToggleCameraButton from './components/web/ToggleCameraButton';
 import VideoSettingsButton from './components/web/VideoSettingsButton';
 import { isButtonEnabled, isDesktopShareButtonDisabled } from './functions.web';
 import { ICustomToolbarButton, IToolboxButton, ToolbarButton } from './types';
+import { useSaveSpeechToTextButton } from '../saveSpeechToText/hook';
 
 
 const microphone = {
@@ -292,6 +293,7 @@ export function useToolboxButtons(
     const feedback = useFeedbackButton();
     const _download = useDownloadButton();
     const _help = useHelpButton();
+    const saveSpeechToText = useSaveSpeechToTextButton();
 
     const buttons: { [key in ToolbarButton]?: IToolboxButton; } = {
         microphone,
@@ -324,7 +326,8 @@ export function useToolboxButtons(
         embedmeeting: embed,
         feedback,
         download: _download,
-        help: _help
+        help: _help,
+        saveSpeechToText
     };
     const buttonKeys = Object.keys(buttons) as ToolbarButton[];
 

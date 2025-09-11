@@ -27,8 +27,8 @@ import {
     conferenceJoinInProgress,
     conferenceJoined,
     conferenceLeft,
-    conferenceRoomOwnerSet,
     conferencePropertiesChanged,
+    conferenceRoomOwnerSet,
     conferenceSubjectChanged,
     conferenceTimestampChanged,
     conferenceUniqueIdSet,
@@ -138,6 +138,7 @@ import {
     isUserInteractionRequiredForUnmute
 } from './react/features/base/tracks/functions';
 import { downloadJSON } from './react/features/base/util/downloadJSON';
+import { startGstStream } from './react/features/base/util/gstStreamUtils';
 import { getJitsiMeetGlobalNSConnectionTimes } from './react/features/base/util/helpers';
 import { openLeaveReasonDialog } from './react/features/conference/actions.web';
 import { showDesktopPicker } from './react/features/desktop-picker/actions';
@@ -167,6 +168,9 @@ import { createRnnoiseProcessor } from './react/features/stream-effects/rnnoise'
 import { handleToggleVideoMuted } from './react/features/toolbox/actions.any';
 import { transcriberJoined, transcriberLeft } from './react/features/transcribing/actions';
 import { muteLocal } from './react/features/video-menu/actions.any';
+import { setRoomIdOnChange, startConference } from './rocketchat';
+import { toast } from 'react-toastify';
+import i18next from 'i18next';
 
 const logger = Logger.getLogger(__filename);
 let room;
@@ -257,10 +261,51 @@ class ConferenceConnector {
         this._resolve = resolve;
         this._reject = reject;
         this.reconnectTimeout = null;
+        this.accessToken = this._getTokenFromXMPP();
+        this._passwordTried = false
+
+        document.addEventListener('rocketChatRoomIdReady', event => {
+            console.log(`Received event: rocketChatRoomIdReady - ${event.detail.roomId}`);
+            const rocketChatRoomId = event.detail.roomId;
+
+            startConference(APP.store, rocketChatRoomId, this._conference.roomName);
+        });
+
+        document.addEventListener('rocketChatRoomIdChanged', event => {
+            console.log(`Received event: rocketChatRoomIdChanged - ${event.detail.roomId}`);
+            const newRocketChatRoomId = event.detail.roomId;
+
+            setRoomIdOnChange(newRocketChatRoomId);
+        });
+
         room.on(JitsiConferenceEvents.CONFERENCE_JOINED,
             this._handleConferenceJoined.bind(this));
         room.on(JitsiConferenceEvents.CONFERENCE_FAILED,
             this._onConferenceFailed.bind(this));
+
+        // logger.info(APP.store.getState['features/base/conference'].gstStreamConnected);
+        // startGstStream(this.accessToken, this._conference.roomName);
+    }
+
+    /**
+     *
+     */
+    _getTokenFromXMPP() {
+        const token = this._conference._room.connection.token;
+
+        if (!token) {
+            return null;
+        }
+
+        const parts = token.split('.');
+
+        if (parts.length !== 3) {
+            throw new Error('Invalid JWT token format');
+        }
+
+        const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+
+        return decoded?.context?.token || null;
     }
 
     /**
@@ -291,6 +336,17 @@ class ConferenceConnector {
                 descriptionKey: 'dialog.reservationErrorMsg',
                 titleKey: 'dialog.reservationError'
             }));
+            break;
+        }
+
+        case JitsiConferenceErrors.PASSWORD_REQUIRED: {
+            if (!this._passwordTried) {
+                this._passwordTried = true;
+        
+            } else {
+                const message = i18next.t('dialog.incorrectRoomLockPassword');
+                toast.error(message)
+            }
             break;
         }
 
@@ -1489,7 +1545,7 @@ export default {
                 room.sessionId = room.getMeetingUniqueId();
                 APP.store.dispatch(conferenceUniqueIdSet(room, ...args));
             });
-            room.on(
+        room.on(
                 JitsiConferenceEvents.CONFERENCE_ROOM_OWNER_SET,
                 (...args) => {
                     // logger.info('Room owner: ', room.getRoomOwner());
@@ -1500,6 +1556,7 @@ export default {
                     APP.store.dispatch(conferenceRoomOwnerSet(room, ...args));
                     console.info(APP.store.getState());
                 });
+
         // we want to ignore this event in case of tokenAuthUrl config
         // we are deprecating this and at some point will get rid of it
         if (!config.tokenAuthUrl) {

@@ -153,7 +153,8 @@ export const TOOLBAR_BUTTONS: ToolbarButton[] = [
     'tileview',
     'toggle-camera',
     'videoquality',
-    'whiteboard'
+    'whiteboard',
+    'saveSpeechToText'
 ];
 
 /**

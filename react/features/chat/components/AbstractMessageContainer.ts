@@ -8,6 +8,7 @@ export interface IProps {
      * The messages array to render.
      */
     messages: IMessage[];
+    loadMoreMessages?: () => Promise<void>;
 }
 
 /**

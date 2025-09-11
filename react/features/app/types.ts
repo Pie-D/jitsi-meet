@@ -82,6 +82,7 @@ import { IVirtualBackground } from '../virtual-background/reducer';
 import { IVisitorsState } from '../visitors/reducer';
 import { IWebHid } from '../web-hid/reducer';
 import { IWhiteboardState } from '../whiteboard/reducer';
+import { ISaveSpeechToTextState } from '../saveSpeechToText/reducer';
 
 export interface IStore {
     dispatch: ThunkDispatch<IReduxState, void, AnyAction>;
@@ -174,6 +175,7 @@ export interface IReduxState {
     'features/visitors': IVisitorsState;
     'features/web-hid': IWebHid;
     'features/whiteboard': IWhiteboardState;
+    'features/saveSpeechToText': ISaveSpeechToTextState;
 }
 
 export interface IReloadNowOptions {

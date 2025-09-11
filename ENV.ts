@@ -7,6 +7,16 @@ export interface Environment {
     IOS_LINK: string;
     ANDROID_LINK: string;
     LOGO_LINK: string;
+    ROCKET_CHAT_API_URL: string;
+    ROCKET_CHAT_TOKEN: string;
+    ROCKET_CHAT_USER_ID: string;
+    ROCKET_CHAT_WS_URL: string;
+    CMEET_URL: string;
+    CMEET_WS_URL: string;
+    GST_STREAM_URL: string;
+    XMPP_DOMAIN: string;
+    DOMAIN: string;
+    GST_STREAM_WS: string;
 }
 
 export const env: Environment = {
@@ -23,4 +33,15 @@ export const env: Environment = {
     IOS_LINK: "https://apps.apple.com/us/app/c-meet/id6599835526",
     ANDROID_LINK: "https://play.google.com/store/apps/details?id=com.cmcati.cmeetglobal",
     LOGO_LINK: "https://sec.cmcati.vn/c-meet",
+    ROCKET_CHAT_API_URL: "https://sec.cmcati.vn/rocket-chat-dev/api/v1",
+    ROCKET_CHAT_TOKEN: "YwWR7cr472LoKKXN3ewFO4OH7gbXmojGVG099Di1YYC",
+    ROCKET_CHAT_USER_ID: "Rhv7CJxS7u6xaHXas",
+    ROCKET_CHAT_WS_URL: "wss://sec.cmcati.vn/rocket-chat-dev/websocket",
+    CMEET_URL: "https://cmeet.cmcati.vn/cmeet-server-manager",
+    CMEET_WS_URL: "https://cmeet.cmcati.vn/cmeet-server-socket",
+    GST_STREAM_URL: "https://meet-dev.cmcati.vn/api/gst-meet/whip-connect",
+    XMPP_DOMAIN: "meet.jitsi",
+    DOMAIN: "meet-dev.cmcati.vn",
+    GST_STREAM_WS: "https://meet-dev.cmcati.vn/ws"
+    // XMPP_DOMAIN: "xmpp.meet.jitsi",
 };

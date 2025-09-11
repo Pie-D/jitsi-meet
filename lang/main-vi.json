@@ -1284,7 +1284,9 @@
             "videoblur": "Chuyển đổi làm mờ video",
             "videomute": "Bật/Tắt tiếng và hình",
             "videomuteGUMPending": "Đang kết nối camera của bạn",
-            "videounmute": "Bật camera"
+            "videounmute": "Bật camera",
+            "saveSpeechToText": "Lưu bóc băng",
+            "saveSpeechToTextHiden": "Dừng bóc băng"
         },
         "addPeople": "Thêm người vào cuộc gọi của bạn",
         "audioOnlyOff": "Tắt chế độ băng thông thấp",
@@ -1381,7 +1383,9 @@
         "videoSettings": "Cài đặt hình ảnh",
         "videomute": "Bật/Tắt camera",
         "videomuteGUMPending": "Đang kết nối camera của bạn",
-        "videounmute": "Bắt đầu camera"
+        "videounmute": "Bắt đầu camera",
+        "saveSpeechToText": "Lưu bóc băng",
+        "saveSpeechToTextHiden": "Dừng bóc băng"
     },
     "transcribing": {
         "ccButtonTooltip": "Chạy/Dừng phụ đề",
