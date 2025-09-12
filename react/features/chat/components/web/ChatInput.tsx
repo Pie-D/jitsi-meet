@@ -184,7 +184,7 @@ class ChatInput extends Component<IProps, IState> {
         document.addEventListener("timeSheetEnd", this.handleTimeSheetEnd as EventListener);
     }
 
-    componentWillUnmount() {
+    override componentWillUnmount() {
         document.removeEventListener("timeSheetEnd", this.handleTimeSheetEnd as EventListener);
     }
 

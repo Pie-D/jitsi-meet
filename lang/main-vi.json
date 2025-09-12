@@ -31,6 +31,10 @@
         "title": "Mời người tham dự cuộc họp này",
         "yahooEmail": "Email Yahoo"
     },
+    "closedCaptionsTab": {
+        "emptyState": "Phụ đề sẽ khả dụng sau khi người điều hành bắt đầu",
+        "startClosedCaptionsButton": "Bắt đầu phụ đề"
+    },
     "audioDevices": {
         "bluetooth": "Bluetooth",
         "car": "Âm thanh xe hơi",
@@ -119,6 +123,7 @@
         "messageTo": "Tin nhắn riêng tới {{recipient}}",
         "messagebox": "Nhập nội dung tin nhắn",
         "newMessages": "Tin nhắn mới",
+        "everyone": "Mọi người",
         "nickname": {
             "popover": "Chọn một biệt danh",
             "title": "Nhập biệt danh để sử dụng chat",
@@ -131,6 +136,8 @@
         "systemDisplayName": "Hệ thống",
         "tabs": {
             "chat": "Chat",
+            "closedCaptions": "Phụ đề",
+            "fileSharing": "Tệp",
             "polls": "Thăm dò ý kiến"
         },
         "title": "Cuộc hội thoại",
@@ -1193,9 +1200,11 @@
     "termsView": {
         "title": "Điều kiện"
     },
+    
     "toggleTopPanelLabel": "Chuyển đổi bảng trên cùng",
     "toolbar": {
         "Settings": "Cài đặt",
+        "closedCaptions": "Bật phụ đề",
         "accessibilityLabel": {
             "Settings": "Mở cài đặt",
             "audioOnly": "Chuyển đổi chế độ chỉ âm thanh",
@@ -1391,13 +1400,16 @@
         "expandedLabel": "Phiên âm đang bật",
         "failedToStart": "Khởi chạy phiên âm thất bại",
         "labelToolTip": "Cuộc họp đang được phiên âm",
+        "openClosedCaptions": "Bật phụ đề",
+        "original": "Bản gốc",
         "sourceLanguageDesc": "Hiện tại ngôn ngữ của cuộc họp được đặt là <b>{{sourceLanguage}}</b>. <br/> Bạn có thể thay đổi nó từ",
         "sourceLanguageHere": "đây",
         "start": "Bắt đầu hiển thị phụ đề",
         "stop": "Dừng hiển thị phụ đề",
         "subtitles": "Phụ đề",
         "subtitlesOff": "Tắt",
-        "tr": "TR"
+        "tr": "TR",
+        "translateTo": "Dịch sang"
     },
     "unpinParticipant": "{{participantName}} - Bỏ ghim",
     "userMedia": {

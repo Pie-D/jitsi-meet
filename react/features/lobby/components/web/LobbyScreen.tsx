@@ -128,6 +128,8 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
                 </div>
                 <MessageContainer
                     messages = { _lobbyChatMessages }
+                    // Không phân trang nên truyền hàm no-op để thỏa kiểu
+                    loadMoreMessages = { async () => {} }
                     ref = { this._messageContainerRef } />
                 <ChatInput onSend = { this._onSendMessage } />
             </div>

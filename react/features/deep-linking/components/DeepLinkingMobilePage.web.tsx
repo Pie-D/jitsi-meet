@@ -16,7 +16,7 @@ import Button from '../../base/ui/components/web/Button';
 import DialInSummary from '../../invite/components/dial-in-summary/web/DialInSummary';
 import { openWebApp } from '../actions';
 import { _TNS } from '../constants';
-import { generateDeepLinkingURL } from '../functions';
+import { generateDeepLinkingURL } from '../functions.web';
 import { env } from '../../../../ENV';
 
 const PADDINGS = {
@@ -105,11 +105,9 @@ const DeepLinkingMobilePage: React.FC<WithTranslation> = ({ t }) => {
     const { classes: styles } = useStyles();
 
     const generateDownloadURL = useCallback(() => {
-        return (Platform.OS == 'ios') ? env.IOS_LINK : env.ANDROID_LINK;
-        const { downloadLink, dynamicLink, appScheme }
-            = (deeplinkingCfg?.[Platform.OS as keyof typeof deeplinkingCfg] || {}) as IDeeplinkingMobileConfig;
-
-        return downloadLink;
+        // Ưu tiên link cấu hình, fallback sang ENV
+        const mobileCfg = (deeplinkingCfg?.[Platform.OS as keyof typeof deeplinkingCfg] || {}) as IDeeplinkingMobileConfig;
+        return mobileCfg?.downloadLink || ((Platform.OS === 'ios') ? env.IOS_LINK : env.ANDROID_LINK);
     }, [ deeplinkingCfg ]);
 
     const onDownloadApp = useCallback(() => {
