@@ -127,7 +127,8 @@
         "nickname": {
             "popover": "Chọn một biệt danh",
             "title": "Nhập biệt danh để sử dụng chat",
-            "titleWithPolls": "Nhập biệt danh để sử dụng chat và cuộc thăm dò"
+            "titleWithPolls": "Nhập biệt danh để sử dụng chat và cuộc thăm dò",
+            "titleWithPollsAndCC": "Nhập bí danh để trò chuyện, thăm dò ý kiến ​​và phụ đề"
         },
         "noMessagesMessage": "Chưa có tin nhắn nào trong cuộc họp. Bắt đầu một cuộc trò chuyện ở đây!",
         "privateNotice": "Tin nhắn riêng tới {{recipient}}",
@@ -1408,6 +1409,7 @@
         "stop": "Dừng hiển thị phụ đề",
         "subtitles": "Phụ đề",
         "subtitlesOff": "Tắt",
+        "failed": "Tính năng đang bảo trì",
         "tr": "TR",
         "translateTo": "Dịch sang"
     },
