@@ -33,7 +33,26 @@ export default class JitsiMeetLogStorage {
      * <tt>false</tt> otherwise.
      */
     isReady() {
-        return JitsiMeetJS.rtcstats.isTraceAvailable();
+        // Prefer feature detection to support newer rtcstats clients where
+        // isTraceAvailable may not exist.
+        // @ts-ignore
+        const rtcstats = JitsiMeetJS?.rtcstats;
+
+        if (!rtcstats) {
+            return false;
+        }
+
+        // Backwards compatibility with older lib-jitsi-meet exposing isTraceAvailable.
+        // @ts-ignore
+        if (typeof rtcstats.isTraceAvailable === 'function') {
+            // @ts-ignore
+            return rtcstats.isTraceAvailable();
+        }
+
+        // Fallback: consider ready if rtcstats is enabled and the client exposes sendStatsEntry.
+        const hasSendStatsEntry = typeof (rtcstats as any).sendStatsEntry === 'function';
+
+        return hasSendStatsEntry && isRTCStatsEnabled(this.getState);
     }
 
     /**
