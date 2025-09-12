@@ -120,7 +120,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
 
     _poller: any = null;
 
-    state: IState = {
+    override state: IState = {
         screenShareAudio: false,
         selectedSource: {},
         selectedTab: DEFAULT_TAB_TYPE,
@@ -155,7 +155,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
      * @inheritdoc
      * @returns {void}
      */
-    componentDidMount() {
+    override componentDidMount() {
         this._startPolling();
     }
 
@@ -164,7 +164,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
      *
      * @inheritdoc
      */
-    componentWillUnmount() {
+    override componentWillUnmount() {
         this._stopPolling();
     }
 
@@ -174,7 +174,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
      *
      * @inheritdoc
      */
-    render() {
+    override render() {
         const { selectedTab, selectedSource, sources, types } = this.state;
 
         return (
@@ -275,7 +275,7 @@ class DesktopPicker extends PureComponent<IProps, IState> {
         const { sources } = this.state;
 
         // @ts-ignore
-        const source = sources.screen.concat(sources.window).find(s => s.id === id);
+        const source = (sources?.screen ?? []).concat(sources?.window ?? []).find(s => s.id === id);
 
         this.props.onSourceChoose(id, type, screenShareAudio, source);
         this.props.dispatch(hideDialog());

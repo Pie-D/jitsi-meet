@@ -132,14 +132,6 @@ export function submitMoreTab(newState: any) {
         const state = getState();
         const currentState = getMoreTabProps(state);
 
-        const showPrejoinPage = newState.showPrejoinPage;
-
-        if (showPrejoinPage !== currentState.showPrejoinPage) {
-            dispatch(updateSettings({
-                userSelectedSkipPrejoin: !showPrejoinPage
-            }));
-        }
-
         if (newState.maxStageParticipants !== currentState.maxStageParticipants) {
             dispatch(updateSettings({ maxStageParticipants: Number(newState.maxStageParticipants) }));
         }
@@ -154,6 +146,10 @@ export function submitMoreTab(newState: any) {
             const { conference } = getConferenceState(state);
 
             conference?.setTranscriptionLanguage(newState.currentLanguage);
+        }
+
+        if (newState.showSubtitlesOnStage !== currentState.showSubtitlesOnStage) {
+            dispatch(updateSettings({ showSubtitlesOnStage: newState.showSubtitlesOnStage }));
         }
     };
 }
@@ -188,6 +184,17 @@ export function submitModeratorTab(newState: any) {
             || newState.startVideoMuted !== currentState.startVideoMuted) {
             dispatch(setStartMutedPolicy(
                 newState.startAudioMuted, newState.startVideoMuted));
+        }
+
+        if (newState.chatWithPermissionsEnabled !== currentState.chatWithPermissionsEnabled) {
+            const { conference } = getState()['features/base/conference'];
+
+            const currentPermissions = conference?.getMetadataHandler().getMetadata().permissions || {};
+
+            conference?.getMetadataHandler().setMetadata('permissions', {
+                ...currentPermissions,
+                groupChatRestricted: newState.chatWithPermissionsEnabled
+            });
         }
     };
 }

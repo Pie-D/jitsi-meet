@@ -34,7 +34,7 @@ Description: Configuration for web serving of C-Meet
 
 Package: jitsi-meet-prosody
 Architecture: all
-Depends: openssl, prosody (>= 0.11.7) | prosody-trunk | prosody-0.12 | prosody-0.11, lua-sec, lua-basexx, lua-luaossl, lua-cjson, lua-inspect
+Depends: openssl, prosody (>= 0.12.0) | prosody-trunk | prosody-0.12 | prosody-13.0, lua-sec, lua-basexx, lua-luaossl, lua-cjson, lua-inspect
 Replaces: jitsi-meet-tokens
 Description: Prosody configuration for C-Meet
  C-Meet is a WebRTC JavaScript application that uses Jitsi

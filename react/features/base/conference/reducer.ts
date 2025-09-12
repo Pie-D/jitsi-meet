@@ -58,6 +58,19 @@ const DEFAULT_STATE = {
 };
 
 export interface IConferenceMetadata {
+    files: {
+        [fileId: string]: {
+            authorParticipantJid: string;
+            authorParticipantName: string;
+            conferenceFullName: string;
+            fileId: string;
+            fileName: string;
+            fileSize: number;
+            fileType: string;
+            progress?: number;
+            timestamp: number;
+        };
+    };
     recording?: {
         isTranscribingEnabled: boolean;
     };
@@ -92,6 +105,7 @@ export interface IJitsiConference {
     end: Function;
     getBreakoutRooms: Function;
     getConnection: Function;
+    getFileSharing: Function;
     getLocalParticipantProperty: Function;
     getLocalTracks: Function;
     getMeetingUniqueId: Function;
@@ -101,6 +115,7 @@ export interface IJitsiConference {
     getParticipantCount: Function;
     getParticipants: Function;
     getRole: Function;
+    getShortTermCredentials: Function;
     getSpeakerStats: () => ISpeakerStats;
     getSsrcByTrack: Function;
     getTranscriptionStatus: Function;
@@ -112,8 +127,6 @@ export interface IJitsiConference {
     isLobbySupported: Function;
     isP2PActive: Function;
     isSIPCallingSupported: Function;
-    isStartAudioMuted: Function;
-    isStartVideoMuted: Function;
     join: Function;
     joinLobby: Function;
     kickParticipant: Function;

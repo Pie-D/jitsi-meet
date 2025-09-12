@@ -7,6 +7,7 @@ import { isEmpty, mergeWith, pick } from 'lodash-es';
 
 import { IReduxState } from '../../app/types';
 import { getLocalParticipant } from '../participants/functions';
+import { isEmbedded } from '../util/embedUtils';
 import { parseURLParams } from '../util/parseURLParams';
 
 import { IConfig } from './configType';
@@ -193,6 +194,13 @@ export function overrideConfigJSON(config: IConfig, interfaceConfig: any, json: 
  * that are whitelisted.
  */
 export function getWhitelistedJSON(configName: 'interfaceConfig' | 'config', configJSON: any): Object {
+    // Disable whitelisting in dev mode.
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        logger.warn('Whitelisting is disabled in dev mode, accepting any overrides');
+
+        return configJSON;
+    }
+
     if (configName === 'interfaceConfig') {
         return pick(configJSON, INTERFACE_CONFIG_WHITELIST);
     } else if (configName === 'config') {
@@ -328,7 +336,7 @@ export function setConfigFromURLParams(
 
     overrideConfigJSON(config, interfaceConfig, json);
 
-    // Print warning about depricated URL params
+    // Print warning about deprecated URL params
     if ('interfaceConfig.SUPPORT_URL' in params) {
         logger.warn('Using SUPPORT_URL interfaceConfig URL overwrite is deprecated.'
             + ' Please use supportUrl from advanced branding!');
@@ -365,11 +373,12 @@ export function setConfigFromURLParams(
             + ' overwrite is deprecated. Please use liveStreaming from advanced branding!');
     }
 
-    if ('config.customToolbarButtons' in params) {
-        logger.warn('Using customToolbarButtons config URL overwrite is deprecated.'
-            + ' Please use liveStreaming from advanced branding!');
+    // When not in an iframe, start without media if the pre-join page is not enabled.
+    if (!isEmbedded()
+            && 'config.prejoinConfig.enabled' in params && config.prejoinConfig?.enabled === false) {
+        logger.warn('Using prejoinConfig.enabled config URL overwrite implies starting without media.');
+        config.disableInitialGUM = true;
     }
-
 }
 
 /* eslint-enable max-params */

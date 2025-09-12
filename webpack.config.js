@@ -63,24 +63,31 @@ function getBundleAnalyzerPlugin(analyzeBundle, name) {
  * target, undefined; otherwise, the path to the local file to be served.
  */
 function devServerProxyBypass({ path }) {
-    if (path.startsWith('/css/')
-            || path.startsWith('/doc/')
-            || path.startsWith('/fonts/')
-            || path.startsWith('/images/')
-            || path.startsWith('/lang/')
-            || path.startsWith('/sounds/')
-            || path.startsWith('/static/')
-            || path.endsWith('.wasm')) {
+    let tpath = path;
 
-        return path;
+    if (tpath.startsWith('/v1/_cdn/')) {
+        // The CDN is not available in the dev server, so we need to bypass it.
+        tpath = tpath.replace(/\/v1\/_cdn\/[^/]+\//, '/');
     }
 
-    if (path.startsWith('/libs/')) {
-        if (path.endsWith('.min.js') && !fs.existsSync(join(process.cwd(), path))) {
-            return path.replace('.min.js', '.js');
+    if (tpath.startsWith('/css/')
+            || tpath.startsWith('/doc/')
+            || tpath.startsWith('/fonts/')
+            || tpath.startsWith('/images/')
+            || tpath.startsWith('/lang/')
+            || tpath.startsWith('/sounds/')
+            || tpath.startsWith('/static/')
+            || tpath.endsWith('.wasm')) {
+
+        return tpath;
+    }
+
+    if (tpath.startsWith('/libs/')) {
+        if (tpath.endsWith('.min.js') && !fs.existsSync(join(process.cwd(), tpath))) {
+            return tpath.replace('.min.js', '.js');
         }
 
-        return path;
+        return tpath;
     }
 }
 
@@ -197,7 +204,8 @@ function getConfig(options = {}) {
         ].filter(Boolean),
         resolve: {
             alias: {
-                'focus-visible': 'focus-visible/dist/focus-visible.min.js'
+                'focus-visible': 'focus-visible/dist/focus-visible.min.js',
+                '@giphy/js-analytics': resolve(__dirname, 'giphy-analytics-stub.js')
             },
             aliasFields: [
                 'browser'
@@ -280,7 +288,7 @@ module.exports = (_env, argv) => {
     };
 
     return [
-        Object.assign({}, config, {
+        { ...config,
             entry: {
                 'app.bundle': './app.js'
             },
@@ -288,6 +296,9 @@ module.exports = (_env, argv) => {
             plugins: [
                 ...config.plugins,
                 ...getBundleAnalyzerPlugin(analyzeBundle, 'app'),
+                new webpack.DefinePlugin({
+                    '__DEV__': !isProduction
+                }),
                 new webpack.IgnorePlugin({
                     resourceRegExp: /^canvas$/,
                     contextRegExp: /resemblejs$/
@@ -301,10 +312,8 @@ module.exports = (_env, argv) => {
                 })
             ],
 
-            performance: getPerformanceHints(perfHintOptions, 5 * 1024 * 1024)
-
-        }),
-        Object.assign({}, config, {
+            performance: getPerformanceHints(perfHintOptions, 5 * 1024 * 1024) },
+        { ...config,
             entry: {
                 'alwaysontop': './react/features/always-on-top/index.tsx'
             },
@@ -312,9 +321,8 @@ module.exports = (_env, argv) => {
                 ...config.plugins,
                 ...getBundleAnalyzerPlugin(analyzeBundle, 'alwaysontop')
             ],
-            performance: getPerformanceHints(perfHintOptions, 800 * 1024)
-        }),
-        Object.assign({}, config, {
+            performance: getPerformanceHints(perfHintOptions, 800 * 1024) },
+        { ...config,
             entry: {
                 'close3': './static/close3.js'
             },
@@ -322,24 +330,21 @@ module.exports = (_env, argv) => {
                 ...config.plugins,
                 ...getBundleAnalyzerPlugin(analyzeBundle, 'close3')
             ],
-            performance: getPerformanceHints(perfHintOptions, 128 * 1024)
-        }),
+            performance: getPerformanceHints(perfHintOptions, 128 * 1024) },
 
-        Object.assign({}, config, {
+        { ...config,
             entry: {
                 'external_api': './modules/API/external/index.js'
             },
-            output: Object.assign({}, config.output, {
+            output: { ...config.output,
                 library: 'JitsiMeetExternalAPI',
-                libraryTarget: 'umd'
-            }),
+                libraryTarget: 'umd' },
             plugins: [
                 ...config.plugins,
                 ...getBundleAnalyzerPlugin(analyzeBundle, 'external_api')
             ],
-            performance: getPerformanceHints(perfHintOptions, 95 * 1024)
-        }),
-        Object.assign({}, config, {
+            performance: getPerformanceHints(perfHintOptions, 95 * 1024) },
+        { ...config,
             entry: {
                 'face-landmarks-worker': './react/features/face-landmarks/faceLandmarksWorker.ts'
             },
@@ -347,10 +352,8 @@ module.exports = (_env, argv) => {
                 ...config.plugins,
                 ...getBundleAnalyzerPlugin(analyzeBundle, 'face-landmarks-worker')
             ],
-            performance: getPerformanceHints(perfHintOptions, 1024 * 1024 * 2)
-        }),
-        Object.assign({}, config, {
-            /**
+            performance: getPerformanceHints(perfHintOptions, 1024 * 1024 * 2) },
+        { ...config, /**
              * The NoiseSuppressorWorklet is loaded in an audio worklet which doesn't have the same
              * context as a normal window, (e.g. self/window is not defined).
              * While running a production build webpack's boilerplate code doesn't introduce any
@@ -380,10 +383,9 @@ module.exports = (_env, argv) => {
                 ...config.output,
 
                 globalObject: 'AudioWorkletGlobalScope'
-            }
-        }),
+            } },
 
-        Object.assign({}, config, {
+        { ...config,
             entry: {
                 'screenshot-capture-worker': './react/features/screenshot-capture/worker.ts'
             },
@@ -391,7 +393,6 @@ module.exports = (_env, argv) => {
                 ...config.plugins,
                 ...getBundleAnalyzerPlugin(analyzeBundle, 'screenshot-capture-worker')
             ],
-            performance: getPerformanceHints(perfHintOptions, 30 * 1024)
-        })
+            performance: getPerformanceHints(perfHintOptions, 30 * 1024) }
     ];
 };

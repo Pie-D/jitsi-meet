@@ -205,7 +205,7 @@ class AbstractStartRecordingDialog extends Component<IProps, IState> {
      * @inheritdoc
      * @returns {void}
      */
-    componentDidMount() {
+    override componentDidMount() {
         if (typeof this.props._token !== 'undefined') {
             this._onTokenUpdated();
         }
@@ -217,7 +217,7 @@ class AbstractStartRecordingDialog extends Component<IProps, IState> {
      * @inheritdoc
      * @returns {void}
      */
-    componentDidUpdate(prevProps: IProps) {
+    override componentDidUpdate(prevProps: IProps) {
         if (this.props._token !== prevProps._token) {
             this._onTokenUpdated();
         }
@@ -415,7 +415,7 @@ class AbstractStartRecordingDialog extends Component<IProps, IState> {
 
         if (this.state.selectedRecordingService === RECORDING_TYPES.JITSI_REC_SERVICE
                 && this.state.shouldRecordTranscription) {
-            dispatch(setRequestingSubtitles(true, _displaySubtitles, _subtitlesLanguage));
+            dispatch(setRequestingSubtitles(true, _displaySubtitles, _subtitlesLanguage, true));
         }
 
         _conference?.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {

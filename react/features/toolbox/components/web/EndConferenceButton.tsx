@@ -53,6 +53,7 @@ export const EndConferenceButton = (props: IProps) => {
 
         dispatch(endConference());
     }, [ dispatch ]);
+        console.log(_isOwner);
     return (<>
         { !_isInBreakoutRoom && _isLocalParticipantModerator && _isOwner && <HangupContextMenuItem
             accessibilityLabel = { t('toolbar.accessibilityLabel.endConference') }
