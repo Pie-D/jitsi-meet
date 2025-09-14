@@ -414,7 +414,7 @@ function _addChatMsgListener(conference: IJitsiConference, store: IStore) {
 
     conference.on(
         JitsiConferenceEvents.CONFERENCE_ERROR, (errorType: string, error: Error) => {
-            errorType === JitsiConferenceErrors.CHAT_ERROR && _handleChatError(store, error);
+//             errorType === JitsiConferenceErrors.CHAT_ERROR && _handleChatError(store, error);
         });
 }
 
