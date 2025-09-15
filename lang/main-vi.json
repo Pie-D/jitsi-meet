@@ -1130,7 +1130,8 @@
         "startVideoMuted": "Mọi người bắt đầu đều bị ẩn",
         "talkWhileMuted": "Nói chuyện trong khi tắt tiếng",
         "title": "Cài đặt",
-        "video": "Hình ảnh"
+        "video": "Hình ảnh",
+        "showSubtitlesOnStage": "Hiển thị phụ đề ở chế độ xem chính"
     },
     "settingsView": {
         "advanced": "Nâng cao",
@@ -1205,7 +1206,8 @@
     "toggleTopPanelLabel": "Chuyển đổi bảng trên cùng",
     "toolbar": {
         "Settings": "Cài đặt",
-        "closedCaptions": "Bật phụ đề",
+        "closedCaptions": "Phụ đề",
+        "reactionLove": "Gửi phản ứng cười",
         "accessibilityLabel": {
             "Settings": "Mở cài đặt",
             "audioOnly": "Chuyển đổi chế độ chỉ âm thanh",
