@@ -73,8 +73,8 @@ describe('Participants presence', () => {
             p2.getEndpointId()
         ]);
 
-        await p1.switchToAPI();
-        await p2.switchToAPI();
+        await p1.switchToMainFrame();
+        await p2.switchToMainFrame();
 
         expect(await p1.getIframeAPI().getEventResult('isModerator')).toBe(true);
         expect(await p2.getIframeAPI().getEventResult('isModerator')).toBe(false);
@@ -100,11 +100,6 @@ describe('Participants presence', () => {
             expect(event.data.filter(d => d.participantId === p1EpId
                 || d.participantId === p2EpId).length).toBe(2);
         }
-
-        // we will use it later
-        // TODO figure out why adding those just before grantModerator and we miss the events
-        await p1.getIframeAPI().addEventListener('participantRoleChanged');
-        await p2.getIframeAPI().addEventListener('participantRoleChanged');
     });
 
     it('participants info',
@@ -153,7 +148,7 @@ describe('Participants presence', () => {
     it('participants pane', async () => {
         const { p1 } = ctx;
 
-        await p1.switchToAPI();
+        await p1.switchToMainFrame();
 
         expect(await p1.getIframeAPI().isParticipantsPaneOpen()).toBe(false);
 
@@ -172,6 +167,9 @@ describe('Participants presence', () => {
         const { p1, p2, webhooksProxy } = ctx;
         const p2EpId = await p2.getEndpointId();
 
+        await p1.getIframeAPI().clearEventResults('participantRoleChanged');
+        await p2.getIframeAPI().clearEventResults('participantRoleChanged');
+
         await p1.getIframeAPI().executeCommand('grantModerator', p2EpId);
 
         await p2.driver.waitUntil(() => p2.getIframeAPI().getEventResult('isModerator'), {
@@ -179,12 +177,25 @@ describe('Participants presence', () => {
             timeoutMsg: 'Moderator role not granted'
         });
 
-        const event1 = await p1.getIframeAPI().getEventResult('participantRoleChanged');
+        type RoleChangedEvent = {
+            id: string;
+            role: string;
+        };
+
+        const event1: RoleChangedEvent = await p1.driver.waitUntil(
+            () => p1.getIframeAPI().getEventResult('participantRoleChanged'), {
+                timeout: 3000,
+                timeoutMsg: 'Role was not update on p1 side'
+            });
 
         expect(event1?.id).toBe(p2EpId);
         expect(event1?.role).toBe('moderator');
 
-        const event2 = await p2.getIframeAPI().getEventResult('participantRoleChanged');
+        const event2: RoleChangedEvent = await p2.driver.waitUntil(
+            () => p2.getIframeAPI().getEventResult('participantRoleChanged'), {
+                timeout: 3000,
+                timeoutMsg: 'Role was not update on p2 side'
+            });
 
         expect(event2?.id).toBe(p2EpId);
         expect(event2?.role).toBe('moderator');
@@ -214,8 +225,9 @@ describe('Participants presence', () => {
 
     it('kick participant', async () => {
         // we want to join second participant with token, so we can check info in webhook
+        await ctx.p2.getIframeAPI().clearEventResults('videoConferenceLeft');
         await ctx.p2.getIframeAPI().addEventListener('videoConferenceLeft');
-        await ctx.p2.switchToAPI();
+        await ctx.p2.switchToMainFrame();
         await ctx.p2.getIframeAPI().executeCommand('hangup');
         await ctx.p2.driver.waitUntil(() =>
             ctx.p2.getIframeAPI().getEventResult('videoConferenceLeft'), {
@@ -237,8 +249,8 @@ describe('Participants presence', () => {
         const p1DisplayName = await p1.getLocalDisplayName();
         const p2DisplayName = await p2.getLocalDisplayName();
 
-        await p1.switchToAPI();
-        await p2.switchToAPI();
+        await p1.switchToMainFrame();
+        await p2.switchToMainFrame();
 
         const roomsInfo = (await p1.getIframeAPI().getRoomsInfo()).rooms[0];
 
@@ -336,7 +348,7 @@ describe('Participants presence', () => {
             expect(event.data.name).toBe(p2.name);
         }
 
-        await p1.switchToAPI();
+        await p1.switchToMainFrame();
 
         const event = await p1.driver.waitUntil(() => p1.getIframeAPI().getEventResult('participantJoined'), {
             timeout: 2000,
@@ -370,7 +382,7 @@ describe('Participants presence', () => {
 
         await p1.getIframeAPI().executeCommand('overwriteNames', newNames);
 
-        await p1.switchInPage();
+        await p1.switchToIFrame();
 
         expect(await p1.getLocalDisplayName()).toBe(newP1Name);
 
@@ -381,8 +393,8 @@ describe('Participants presence', () => {
     it('hangup', async () => {
         const { p1, p2, roomName } = ctx;
 
-        await p1.switchToAPI();
-        await p2.switchToAPI();
+        await p1.switchToMainFrame();
+        await p2.switchToMainFrame();
 
         await p2.getIframeAPI().clearEventResults('videoConferenceLeft');
         await p2.getIframeAPI().addEventListener('videoConferenceLeft');
@@ -412,7 +424,7 @@ describe('Participants presence', () => {
     it('dispose conference', async () => {
         const { p1, roomName, webhooksProxy } = ctx;
 
-        await p1.switchToAPI();
+        await p1.switchToMainFrame();
 
         await p1.getIframeAPI().clearEventResults('videoConferenceLeft');
         await p1.getIframeAPI().addEventListener('videoConferenceLeft');
