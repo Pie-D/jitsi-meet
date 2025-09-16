@@ -20,14 +20,14 @@ interface IProps extends AbstractButtonProps {
 }
 
 class SaveSpeechToTextButton extends AbstractButton<IProps>{
-    accessibilityLabel = 'toolbar.accessibilityLabel.saveSpeechToText';
-    toggledAccessibilityLabel = 'toolbar.accessibilityLabel.saveSpeechToTextHiden';
-    icon = IconSaveSpeechToText;
-    label = 'toolbar.saveSpeechToText';
-    toggledIcon = IconSaveSpeechToTextHiden;
-    toggledLabel = 'toolbar.saveSpeechToTextHiden';
-    toggledTooltip = 'toolbar.saveSpeechToTextHiden';
-    tooltip = 'toolbar.saveSpeechToText';
+    override accessibilityLabel = 'toolbar.accessibilityLabel.saveSpeechToText';
+    override toggledAccessibilityLabel = 'toolbar.accessibilityLabel.saveSpeechToTextHiden';
+    override icon = IconSaveSpeechToText;
+    override label = 'toolbar.saveSpeechToText';
+    override toggledIcon = IconSaveSpeechToTextHiden;
+    override toggledLabel = 'toolbar.saveSpeechToTextHiden';
+    override toggledTooltip = 'toolbar.saveSpeechToTextHiden';
+    override tooltip = 'toolbar.saveSpeechToText';
     stompClient: any;
 
     constructor(props: IProps) {
@@ -38,7 +38,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
         };
     }
 
-    async _handleClick() {
+    override async _handleClick() {
         const { dispatch, _toggled, _conference } = this.props;
         if(!_toggled) {
             console.log('SaveSpeechToTextButton clicked', _conference);
@@ -82,7 +82,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
         dispatch(setOverflowMenuVisible(false));
     }
 
-    _isToggled() {
+    override _isToggled() {
         return this.props._toggled;
     }
 }

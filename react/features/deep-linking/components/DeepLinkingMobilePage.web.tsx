@@ -12,12 +12,11 @@ import { IDeeplinkingConfig, IDeeplinkingMobileConfig } from '../../base/config/
 import { isSupportedMobileBrowser } from '../../base/environment/environment';
 import { translate } from '../../base/i18n/functions';
 import Platform from '../../base/react/Platform.web';
-import { withPixelLineHeight } from '../../base/styles/functions.web';
 import Button from '../../base/ui/components/web/Button';
 import DialInSummary from '../../invite/components/dial-in-summary/web/DialInSummary';
 import { openWebApp } from '../actions';
 import { _TNS } from '../constants';
-import { generateDeepLinkingURL } from '../functions';
+import { generateDeepLinkingURL } from '../functions.web';
 import { env } from '../../../../ENV';
 
 const PADDINGS = {
@@ -51,10 +50,10 @@ const useStyles = makeStyles()((theme: Theme) => {
             marginTop: 24,
             textAlign: 'center',
             marginBottom: 32,
-            ...withPixelLineHeight(theme.typography.heading5)
+            ...theme.typography.heading5
         },
         roomNameLabel: {
-            ...withPixelLineHeight(theme.typography.bodyLongRegularLarge)
+            ...theme.typography.bodyLongRegularLarge
         },
         joinMeetWrapper: {
             marginTop: 24,
@@ -63,7 +62,7 @@ const useStyles = makeStyles()((theme: Theme) => {
         labelDescription: {
             textAlign: 'center',
             marginTop: 16,
-            ...withPixelLineHeight(theme.typography.bodyShortRegularLarge)
+            ...theme.typography.bodyShortRegularLarge
         },
         linkWrapper: {
             display: 'flex',
@@ -74,7 +73,7 @@ const useStyles = makeStyles()((theme: Theme) => {
         },
         linkLabel: {
             color: theme.palette.link01,
-            ...withPixelLineHeight(theme.typography.bodyLongBoldLarge)
+            ...theme.typography.bodyLongBoldLarge
         },
         supportedBrowserContent: {
             marginTop: 16,
@@ -84,7 +83,7 @@ const useStyles = makeStyles()((theme: Theme) => {
             justifyContent: 'center'
         },
         labelOr: {
-            ...withPixelLineHeight(theme.typography.bodyShortRegularLarge)
+            ...theme.typography.bodyShortRegularLarge
         },
         separator: {
             marginTop: '32px',
@@ -106,30 +105,9 @@ const DeepLinkingMobilePage: React.FC<WithTranslation> = ({ t }) => {
     const { classes: styles } = useStyles();
 
     const generateDownloadURL = useCallback(() => {
-        return (Platform.OS == 'ios') ? env.IOS_LINK : env.ANDROID_LINK;
-        const { downloadLink, dynamicLink, appScheme }
-            = (deeplinkingCfg?.[Platform.OS as keyof typeof deeplinkingCfg] || {}) as IDeeplinkingMobileConfig;
-
-        if (downloadLink && typeof dynamicLink === 'undefined') {
-            return downloadLink;
-        }
-
-        const {
-            apn,
-            appCode,
-            customDomain,
-            ibi,
-            isi
-        } = dynamicLink || {};
-
-        const domain = customDomain ?? `https://${appCode}.app.goo.gl`;
-
-        return `${domain}/?link=${
-            encodeURIComponent(window.location.href)}&apn=${
-            apn}&ibi=${
-            ibi}&isi=${
-            isi}&ius=${
-            appScheme}&efr=1`;
+        // Ưu tiên link cấu hình, fallback sang ENV
+        const mobileCfg = (deeplinkingCfg?.[Platform.OS as keyof typeof deeplinkingCfg] || {}) as IDeeplinkingMobileConfig;
+        return mobileCfg?.downloadLink || ((Platform.OS === 'ios') ? env.IOS_LINK : env.ANDROID_LINK);
     }, [ deeplinkingCfg ]);
 
     const onDownloadApp = useCallback(() => {

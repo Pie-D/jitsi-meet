@@ -31,7 +31,7 @@ class ChatMessage extends Component<IChatMessageProps> {
      *
      * @inheritdoc
      */
-    render() {
+    override render() {
         const { gifEnabled, message, knocking } = this.props;
         const localMessage = message.messageType === MESSAGE_TYPE_LOCAL;
         const { privateMessage, lobbyChat } = message;
@@ -122,15 +122,17 @@ class ChatMessage extends Component<IChatMessageProps> {
      * @returns {React.ReactElement<*> | null}
      */
     _renderDisplayName() {
-        const { message, showDisplayName } = this.props;
+        const { message, showDisplayName, t } = this.props;
 
         if (!showDisplayName) {
             return null;
         }
 
+        const { displayName, isFromVisitor } = message;
+
         return (
             <Text style = { styles.senderDisplayName }>
-                { message.displayName }
+                { `${displayName}${isFromVisitor ? ` ${t('visitors.chatIndicator')}` : ''}` }
             </Text>
         );
     }

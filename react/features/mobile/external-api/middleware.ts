@@ -298,17 +298,20 @@ externalAPIEnabled && MiddlewareRegistry.register(store => next => action => {
             timestamp
         } = action.sessionData;
 
+        const getId = (obj: any) => typeof obj === 'object' ? obj.getId() : obj;
+        const getError = (err: any) => typeof err === 'object' ? String(err) : err;
+
         sendEvent(
             store,
             RECORDING_STATUS_CHANGED,
             /* data */ {
-                error,
+                error: getError(error),
                 id,
-                initiator,
+                initiator: getId(initiator),
                 liveStreamViewURL,
                 mode,
                 status,
-                terminator,
+                terminator: getId(terminator),
                 timestamp
             });
         break;
@@ -585,7 +588,7 @@ function _registerForNativeEvents(store: IStore) {
         }
 
         if (transcription) {
-            store.dispatch(setRequestingSubtitles(true, false, null));
+            store.dispatch(setRequestingSubtitles(true, false, null, true));
             conference.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
                 isTranscribingEnabled: true
             });
