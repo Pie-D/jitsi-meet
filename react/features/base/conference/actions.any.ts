@@ -513,7 +513,7 @@ export function conferenceUniqueIdSet(conference: IJitsiConference) {
     };
 }
 export function conferenceRoomOwnerSet(conference: IJitsiConference) {
-    console.log("dht", conference)
+    // console.log("dht", conference)
     return {
         type: CONFERENCE_ROOM_OWNER_SET,
         conference

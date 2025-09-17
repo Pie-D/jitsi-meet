@@ -51,7 +51,6 @@ interface ILocalRecordingManager {
 const PREFERRED_MEDIA_TYPE = 'video/webm;codecs=vp8,opus';
 
 const VIDEO_BIT_RATE = 2500000; // 2.5Mbps in bits
-const MAX_SIZE = 3221225472; // 1GB in bytes
 
 
 const LocalRecordingManager: ILocalRecordingManager = {
