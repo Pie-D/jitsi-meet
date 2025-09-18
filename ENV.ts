@@ -34,7 +34,7 @@ export const env: Environment = {
     ANDROID_LINK: "https://play.google.com/store/apps/details?id=com.cmcati.cmeetglobal",
     LOGO_LINK: "https://sec.cmcati.vn/c-meet",
     ROCKET_CHAT_API_URL: "https://sec.cmcati.vn/rocket-chat/api/v1",
-    ROCKET_CHAT_TOKEN: "h42xZDZaMZ003x9pQRzpfm-FKZCKrWbsfgseoP2mNNh",
+    ROCKET_CHAT_TOKEN: "NYP7Dyr5VWVNwl0GQ-WMuY27JY8j0DKbTLdqfYWqbyh",
     ROCKET_CHAT_USER_ID: "DAcDiHYEn7cLqyBoB",
     ROCKET_CHAT_WS_URL: "wss://sec.cmcati.vn/rocket-chat/websocket",
     CMEET_URL: "https://sec.cmcati.vn/cmeet-server-manager",
@@ -42,6 +42,6 @@ export const env: Environment = {
     GST_STREAM_URL: "https://meet.cmcati.vn/api/gst-meet/whip-connect",
     XMPP_DOMAIN: "meet.jitsi",
     DOMAIN: "meet.cmcati.vn",
-    GST_STREAM_WS: "https://meet.cmcati.vn/ws"
+    GST_STREAM_WS: "https://meet.cmcati.vn/ws",
     // XMPP_DOMAIN: "xmpp.meet.jitsi",
 };
