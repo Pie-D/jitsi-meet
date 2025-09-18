@@ -34,7 +34,7 @@ export const env: Environment = {
     ANDROID_LINK: "https://play.google.com/store/apps/details?id=com.cmcati.cmeetglobal",
     LOGO_LINK: "https://sec.cmcati.vn/c-meet",
     ROCKET_CHAT_API_URL: "https://sec.cmcati.vn/rocket-chat-dev/api/v1",
-    ROCKET_CHAT_TOKEN: "YwWR7cr472LoKKXN3ewFO4OH7gbXmojGVG099Di1YYC",
+    ROCKET_CHAT_TOKEN: "gjVAxXcAalHXS1XsBuWrB3SqzFvOMcollzSCqMnFphm",
     ROCKET_CHAT_USER_ID: "Rhv7CJxS7u6xaHXas",
     ROCKET_CHAT_WS_URL: "wss://sec.cmcati.vn/rocket-chat-dev/websocket",
     CMEET_URL: "https://cmeet.cmcati.vn/cmeet-server-manager",
