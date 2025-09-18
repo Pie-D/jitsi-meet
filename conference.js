@@ -171,7 +171,7 @@ import { setRoomIdOnChange, startConference } from './rocketchat';
 import { toast } from 'react-toastify';
 import i18next from 'i18next';
 
-const logger = Logger.getLogger(__filename);
+const logger = Logger.getLogger('app:conference-web');
 let room;
 
 /*
