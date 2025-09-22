@@ -10,6 +10,7 @@ import ChatMessageGroup from './ChatMessageGroup';
 import styles from './styles';
 
 interface IProps {
+    loadMoreMessages?: () => Promise<void>;
     messages: IMessage[];
     t: Function;
 }
@@ -24,6 +25,11 @@ class MessageContainer extends Component<IProps, any> {
     };
 
     /**
+     * Flag to prevent concurrent load more calls.
+     */
+    private _isLoadingMore: boolean = false;
+
+    /**
      * Instantiates a new instance of the component.
      *
      * @inheritdoc
@@ -35,6 +41,7 @@ class MessageContainer extends Component<IProps, any> {
         this._renderListEmptyComponent = this._renderListEmptyComponent.bind(this);
         this._renderMessageGroup = this._renderMessageGroup.bind(this);
         this._getMessagesGroupedBySender = this._getMessagesGroupedBySender.bind(this);
+        this._onEndReached = this._onEndReached.bind(this);
     }
 
     /**
@@ -56,6 +63,9 @@ class MessageContainer extends Component<IProps, any> {
                 inverted = { Boolean(data.length) }
                 keyExtractor = { this._keyExtractor }
                 keyboardShouldPersistTaps = 'handled'
+                maintainVisibleContentPosition = {{ minIndexForVisible: 1 }}
+                onEndReached = { this._onEndReached }
+                onEndReachedThreshold = { 0.2 }
                 renderItem = { this._renderMessageGroup } />
         );
     }
@@ -111,6 +121,28 @@ class MessageContainer extends Component<IProps, any> {
      */
     _getMessagesGroupedBySender() {
         return groupMessagesBySender(this.props.messages);
+    }
+
+    /**
+     * Handler invoked when the list is scrolled close to the start (top) due to inverted list.
+     * Triggers loading older messages and prevents concurrent requests.
+     *
+     * @returns {void}
+     */
+    async _onEndReached() {
+        if (this._isLoadingMore || !this.props.loadMoreMessages) {
+            return;
+        }
+
+        this._isLoadingMore = true;
+        try {
+            await this.props.loadMoreMessages();
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error('Failed to load more messages (native):', e);
+        } finally {
+            this._isLoadingMore = false;
+        }
     }
 }
 

@@ -11,8 +11,8 @@ import ChatMessageGroup from './ChatMessageGroup';
 import NewMessagesButton from './NewMessagesButton';
 
 interface IProps {
-    messages: IMessage[];
     loadMoreMessages: () => Promise<void>;
+    messages: IMessage[];
 }
 
 interface IState {

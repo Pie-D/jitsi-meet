@@ -35,7 +35,34 @@ class ChatMessage extends Component<IChatMessageProps> {
     override render() {
         const { gifEnabled, message, knocking } = this.props;
         const localMessage = message.messageType === MESSAGE_TYPE_LOCAL;
+        const isSystemMessage = message.messageType === 'system';
         const { privateMessage, lobbyChat } = message;
+
+        if (isSystemMessage) {
+            const messageText = getMessageText(this.props.message);
+
+            return (
+                <View
+                    id = { message.messageId }
+                    style = { styles.messageWrapper as ViewStyle }>
+                    <View style = { [ styles.detailsWrapper as ViewStyle ] }>
+                        <View style = { [ styles.messageBubble as ViewStyle, styles.systemMessageBubble as ViewStyle ] }>
+                            <View style = { [ styles.textWrapper as ViewStyle, styles.systemTextRow as ViewStyle ] }>
+                                <View style = { styles.systemMessageSign as ViewStyle } />
+                                <View style = { styles.systemContentColumn as ViewStyle }>
+                                    <Text style = { styles.systemMessageTitle }>
+                                        { 'Tin nhắn hệ thống' }
+                                    </Text>
+                                    <Text style = { styles.systemChatMessage }>
+                                        { messageText }
+                                    </Text>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            );
+        }
 
         // Style arrays that need to be updated in various scenarios, such as
         // error messages or others.

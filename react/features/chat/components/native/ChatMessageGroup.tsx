@@ -64,18 +64,22 @@ export default class ChatMessageGroup extends Component<IProps> {
      * @returns {React$Element<*>}
      */
     _renderMessage({ index, item: message }: { index: number; item: IMessage; }) {
+        const isSystemMessage = this.props.messages[0].messageType === 'system';
+
         return (
             <ChatMessage
                 message = { message }
                 showAvatar = {
-                    this.props.messages[0].messageType !== MESSAGE_TYPE_LOCAL
+                    !isSystemMessage
+                        && this.props.messages[0].messageType !== MESSAGE_TYPE_LOCAL
                         && index === this.props.messages.length - 1
                 }
                 showDisplayName = {
-                    this.props.messages[0].messageType === MESSAGE_TYPE_REMOTE
+                    !isSystemMessage
+                        && this.props.messages[0].messageType === MESSAGE_TYPE_REMOTE
                         && index === this.props.messages.length - 1
                 }
-                showTimestamp = { index === 0 } />
+                showTimestamp = { !isSystemMessage && index === 0 } />
         );
     }
 }
