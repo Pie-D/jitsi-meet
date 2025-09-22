@@ -15,6 +15,9 @@ import MessageContainer from './MessageContainer';
 import MessageRecipient from './MessageRecipient';
 import styles from './styles';
 
+const RocketChat = require('../../../../../rocketchat');
+const MessageContainerAny: any = MessageContainer;
+
 interface IProps extends AbstractProps {
 
     /**
@@ -47,6 +50,8 @@ class Chat extends Component<IProps> {
         this._onSendMessage = this._onSendMessage.bind(this);
     }
 
+    syncRocketChatMessages: () => Promise<void> = RocketChat.syncRocketChatMessages;
+
     /**
      * Implements React's {@link Component#render()}.
      *
@@ -54,6 +59,14 @@ class Chat extends Component<IProps> {
      */
     override render() {
         const { _messages, route } = this.props;
+        const loadMoreMessages = async () => {
+            try {
+                await this.syncRocketChatMessages();
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error(e);
+            }
+        };
         const privateMessageRecipient = route?.params?.privateMessageRecipient;
 
         return (
@@ -67,8 +80,9 @@ class Chat extends Component<IProps> {
                 hasBottomTextInput = { true }
                 hasExtraHeaderHeight = { true }
                 style = { styles.chatContainer }>
-                {/* @ts-ignore */}
-                <MessageContainer messages = { _messages } />
+                <MessageContainerAny
+                    loadMoreMessages = { loadMoreMessages }
+                    messages = { _messages } />
                 <MessageRecipient privateMessageRecipient = { privateMessageRecipient } />
             </JitsiScreen>
         );
@@ -101,7 +115,7 @@ class Chat extends Component<IProps> {
  */
 function _mapStateToProps(state: IReduxState, _ownProps: any) {
     const { messages, nbUnreadMessages } = state['features/chat'];
-    
+
     return {
         _messages: messages,
         _nbUnreadMessages: nbUnreadMessages
