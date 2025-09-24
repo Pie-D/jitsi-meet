@@ -44,6 +44,10 @@ public class BroadcastAction {
         OVERWRITE_CONFIG("org.jitsi.meet.OVERWRITE_CONFIG"),
         SEND_CAMERA_FACING_MODE_MESSAGE("org.jitsi.meet.SEND_CAMERA_FACING_MODE_MESSAGE");
 
+        // Custom actions
+        ADD_CHAT_MESSAGE("org.jitsi.meet.ADD_CHAT_MESSAGE");
+        SYNC_ROCKETCHAT_MESSAGES("org.jitsi.meet.SYNC_ROCKETCHAT_MESSAGES");
+
         private final String action;
 
         Type(String action) {
