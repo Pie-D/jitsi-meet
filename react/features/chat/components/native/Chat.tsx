@@ -73,19 +73,19 @@ class Chat extends Component<IProps> {
 
         return (
             <JitsiScreen
-                disableForcedKeyboardDismiss={true}
+                disableForcedKeyboardDismiss = { true }
 
                 /* eslint-disable react/jsx-no-bind */
-                footerComponent={() =>
-                    <ChatInputBar onSend={this._onSendMessage} />
+                footerComponent = { () =>
+                    <ChatInputBar onSend = { this._onSendMessage } />
                 }
-                hasBottomTextInput={true}
-                hasExtraHeaderHeight={true}
-                style={styles.chatContainer}>
+                hasBottomTextInput = { true }
+                hasExtraHeaderHeight = { true }
+                style = { styles.chatContainer }>
                 <MessageContainerAny
-                    loadMoreMessages={loadMoreMessages}
-                    messages={_messages} />
-                <MessageRecipient privateMessageRecipient={privateMessageRecipient} />
+                    loadMoreMessages = { loadMoreMessages }
+                    messages = { _messages } />
+                <MessageRecipient privateMessageRecipient = { privateMessageRecipient } />
             </JitsiScreen>
         );
     }
@@ -134,19 +134,19 @@ export default translate(connect(_mapStateToProps)((props: IProps) => {
         navigation?.setOptions({
             tabBarLabel: () => (
                 <TabBarLabelCounter
-                    activeUnreadNr={unreadMessagesNr}
-                    isFocused={isFocused}
-                    label={t('chat.tabs.chat')}
-                    nbUnread={_nbUnreadMessages} />
+                    activeUnreadNr = { unreadMessagesNr }
+                    isFocused = { isFocused }
+                    label = { t('chat.tabs.chat') }
+                    nbUnread = { _nbUnreadMessages } />
             )
         });
 
         return () => {
             isFocused && dispatch(closeChat());
         };
-    }, [isFocused, _nbUnreadMessages]);
+    }, [ isFocused, _nbUnreadMessages ]);
 
     return (
-        <Chat {...props} />
+        <Chat { ...props } />
     );
 }));

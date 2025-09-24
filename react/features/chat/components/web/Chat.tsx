@@ -224,11 +224,11 @@ const Chat = ({
     dispatch,
     t,
 }: IProps) => {
-    const [offset, setOffset] = useState(0);
+    const [ offset, setOffset ] = useState(0);
     const { classes, cx } = useStyles({ _isResizing, width: _width });
-    const [isMouseDown, setIsMouseDown] = useState(false);
-    const [mousePosition, setMousePosition] = useState<number | null>(null);
-    const [dragChatWidth, setDragChatWidth] = useState<number | null>(null);
+    const [ isMouseDown, setIsMouseDown ] = useState(false);
+    const [ mousePosition, setMousePosition ] = useState<number | null>(null);
+    const [ dragChatWidth, setDragChatWidth ] = useState<number | null>(null);
     const maxChatWidth = useSelector(getChatMaxSize);
     const notifyTimestamp = useSelector(
         (state: IReduxState) => state['features/chat'].notifyPrivateRecipientsChangedTimestamp
@@ -257,7 +257,7 @@ const Chat = ({
         });
 
         return o;
-    }, [participants, defaultRemoteDisplayName, t, notifyTimestamp]);
+    }, [ participants, defaultRemoteDisplayName, t, notifyTimestamp ]);
 
     /**
      * Handles mouse down on the drag handle.
@@ -286,7 +286,7 @@ const Chat = ({
 
             console.log('Chat resize: Mouse down', { clientX: e.clientX, initialWidth: _width });
         },
-        [_width, dispatch]
+        [ _width, dispatch ]
     );
 
     /**
@@ -305,7 +305,7 @@ const Chat = ({
 
             console.log('Chat resize: Mouse up');
         }
-    }, [isMouseDown, dispatch]);
+    }, [ isMouseDown, dispatch ]);
 
     /**
      * Handles drag handle mouse move.
@@ -337,7 +337,7 @@ const Chat = ({
                 trailing: false,
             }
         ),
-        [isMouseDown, mousePosition, dragChatWidth, _width, maxChatWidth, dispatch]
+        [ isMouseDown, mousePosition, dragChatWidth, _width, maxChatWidth, dispatch ]
     );
 
     // Set up event listeners when component mounts
@@ -349,7 +349,7 @@ const Chat = ({
             document.removeEventListener('mouseup', onDragMouseUp);
             document.removeEventListener('mousemove', onChatResize);
         };
-    }, [onDragMouseUp, onChatResize]);
+    }, [ onDragMouseUp, onChatResize ]);
 
     /**
      * Sends a text message.
@@ -396,7 +396,7 @@ const Chat = ({
                 onToggleChat();
             }
         },
-        [_isOpen]
+        [ _isOpen ]
     );
 
     /**
@@ -409,7 +409,7 @@ const Chat = ({
         (id: string) => {
             dispatch(setFocusedTab(id as ChatTabs));
         },
-        [dispatch]
+        [ dispatch ]
     );
 
     const onSelectedRecipientChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -434,7 +434,7 @@ const Chat = ({
         } catch (error) {
             console.error(error);
         }
-    }, [offset]);
+    }, [ offset ]);
 
     /**
      * Returns a React Element for showing chat messages and a form to send new
@@ -450,36 +450,35 @@ const Chat = ({
             <>
                 {renderTabs()}
                 <div
-                    aria-labelledby={ChatTabs.CHAT}
-                    className={cx(
+                    aria-labelledby = { ChatTabs.CHAT }
+                    className = { cx(
                         classes.chatPanel,
                         !_isPollsEnabled && !_isCCTabEnabled && !_isFileSharingTabEnabled && classes.chatPanelNoTabs,
                         _focusedTab !== ChatTabs.CHAT && 'hide'
-                    )}
-                    id={`${ChatTabs.CHAT}-panel`}
-                    role='tabpanel'
-                    tabIndex={0}
-                >
-                    <MessageContainer loadMoreMessages={loadMoreMessages} messages={_messages} />
+                    ) }
+                    id = { `${ChatTabs.CHAT}-panel` }
+                    role = 'tabpanel'
+                    tabIndex = { 0 }>
+                    <MessageContainer
+                        loadMoreMessages = { loadMoreMessages }
+                        messages = { _messages } />
                     <MessageRecipient />
                     <Select
-                        containerClassName={cx(classes.privateMessageRecipientsList)}
-                        id='select-chat-recipient'
-                        onChange={onSelectedRecipientChange}
-                        options={options}
-                        value={privateMessageRecipient?.id || OPTION_GROUPCHAT}
-                    />
-                    <ChatInput onSend={handldeMessage} />
+                        containerClassName = { cx(classes.privateMessageRecipientsList) }
+                        id = 'select-chat-recipient'
+                        onChange = { onSelectedRecipientChange }
+                        options = { options }
+                        value = { privateMessageRecipient?.id || OPTION_GROUPCHAT } />
+                    <ChatInput onSend = { handldeMessage } />
                 </div>
                 {_isPollsEnabled && (
                     <>
                         <div
-                            aria-labelledby={ChatTabs.POLLS}
-                            className={cx(classes.pollsPanel, _focusedTab !== ChatTabs.POLLS && 'hide')}
-                            id={`${ChatTabs.POLLS}-panel`}
-                            role='tabpanel'
-                            tabIndex={1}
-                        >
+                            aria-labelledby = { ChatTabs.POLLS }
+                            className = { cx(classes.pollsPanel, _focusedTab !== ChatTabs.POLLS && 'hide') }
+                            id = { `${ChatTabs.POLLS}-panel` }
+                            role = 'tabpanel'
+                            tabIndex = { 1 }>
                             <PollsPane />
                         </div>
                         <KeyboardAvoider />
@@ -487,23 +486,21 @@ const Chat = ({
                 )}
                 {_isCCTabEnabled && (
                     <div
-                        aria-labelledby={ChatTabs.CLOSED_CAPTIONS}
-                        className={cx(classes.chatPanel, _focusedTab !== ChatTabs.CLOSED_CAPTIONS && 'hide')}
-                        id={`${ChatTabs.CLOSED_CAPTIONS}-panel`}
-                        role='tabpanel'
-                        tabIndex={2}
-                    >
+                        aria-labelledby = { ChatTabs.CLOSED_CAPTIONS }
+                        className = { cx(classes.chatPanel, _focusedTab !== ChatTabs.CLOSED_CAPTIONS && 'hide') }
+                        id = { `${ChatTabs.CLOSED_CAPTIONS}-panel` }
+                        role = 'tabpanel'
+                        tabIndex = { 2 }>
                         <ClosedCaptionsTab />
                     </div>
                 )}
                 {_isFileSharingTabEnabled && (
                     <div
-                        aria-labelledby={ChatTabs.FILE_SHARING}
-                        className={cx(classes.chatPanel, _focusedTab !== ChatTabs.FILE_SHARING && 'hide')}
-                        id={`${ChatTabs.FILE_SHARING}-panel`}
-                        role='tabpanel'
-                        tabIndex={3}
-                    >
+                        aria-labelledby = { ChatTabs.FILE_SHARING }
+                        className = { cx(classes.chatPanel, _focusedTab !== ChatTabs.FILE_SHARING && 'hide') }
+                        id = { `${ChatTabs.FILE_SHARING}-panel` }
+                        role = 'tabpanel'
+                        tabIndex = { 3 }>
                         <FileSharing />
                     </div>
                 )}
@@ -569,7 +566,7 @@ const Chat = ({
 
         return (
             <Tabs
-                accessibilityLabel={
+                accessibilityLabel = {
                     _isPollsEnabled || _isCCTabEnabled || _isFileSharingTabEnabled
                         ? t('chat.titleWithFeatures', {
                             features: [
@@ -582,35 +579,37 @@ const Chat = ({
                         })
                         : t('chat.title')
                 }
-                onChange={onChangeTab}
-                selected={_focusedTab}
-                tabs={tabs}
-            />
+                onChange = { onChangeTab }
+                selected = { _focusedTab }
+                tabs = { tabs } />
         );
     }
 
     return _isOpen ? (
-        <div className={classes.container} id='sideToolbarContainer' onKeyDown={onEscClick}>
+        <div
+            className = { classes.container }
+            id = 'sideToolbarContainer'
+            onKeyDown = { onEscClick }>
             <ChatHeader
-                className={cx('chat-header', classes.chatHeader)}
-                isCCTabEnabled={_isCCTabEnabled}
-                isPollsEnabled={_isPollsEnabled}
-                onCancel={onToggleChat}
-            />
+                className = { cx('chat-header', classes.chatHeader) }
+                isCCTabEnabled = { _isCCTabEnabled }
+                isPollsEnabled = { _isPollsEnabled }
+                onCancel = { onToggleChat } />
             {_showNamePrompt ? (
-                <DisplayNameForm isCCTabEnabled={_isCCTabEnabled} isPollsEnabled={_isPollsEnabled} />
+                <DisplayNameForm
+                    isCCTabEnabled = { _isCCTabEnabled }
+                    isPollsEnabled = { _isPollsEnabled } />
             ) : (
                 renderChat()
             )}
             <div
-                className={cx(
+                className = { cx(
                     classes.dragHandleContainer,
                     (isMouseDown || _isResizing) && 'visible',
                     'dragHandleContainer'
-                )}
-                onMouseDown={onDragHandleMouseDown}
-            >
-                <div className={cx(classes.dragHandle, 'dragHandle')} />
+                ) }
+                onMouseDown = { onDragHandleMouseDown }>
+                <div className = { cx(classes.dragHandle, 'dragHandle') } />
             </div>
         </div>
     ) : null;
