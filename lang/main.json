@@ -791,6 +791,7 @@
     "me": "me",
     "notify": {
         "OldElectronAPPTitle": "Security vulnerability!",
+        "allowAction": "Allow",
         "allowAll": "Allow All",
         "allowAudio": "Allow Audio",
         "allowDesktop": "Allow screen sharing",
@@ -1377,7 +1378,9 @@
             "videoblur": "Toggle video blur",
             "videomute": "Stop camera",
             "videomuteGUMPending": "Connecting your camera",
-            "videounmute": "Start camera"
+            "videounmute": "Start camera",
+            "saveSpeechToText": "Save speech",
+            "saveSpeechToTextHiden": "Stop speech"
         },
         "addPeople": "Add people to your call",
         "advancedAudioSettings": {
@@ -1492,7 +1495,9 @@
         "videoSettings": "Video settings",
         "videomute": "Stop camera",
         "videomuteGUMPending": "Connecting your camera",
-        "videounmute": "Start camera"
+        "videounmute": "Start camera",
+        "saveSpeechToText": "Save speech",
+        "saveSpeechToTextHiden": "Stop speech"
     },
     "transcribing": {
         "ccButtonTooltip": "Start / Stop subtitles",
