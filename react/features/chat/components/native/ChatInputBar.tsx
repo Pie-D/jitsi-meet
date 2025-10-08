@@ -145,7 +145,8 @@ class ChatInputBar extends Component<IProps, IState> {
                     onChange = { this._onChangeText }
                     onFocus = { this._onFocused(true) }
                     onSubmitEditing = { this._onSubmit }
-                    placeholder = { this.props.t('chat.fieldPlaceHolder') }
+                    // placeholder = { this.props.t('chat.fieldPlaceHolder') }
+                    placeholder = 'Nhập tin nhắn...'
                     returnKeyType = 'send'
                     value = { this.state.message } />
                 <IconButton
