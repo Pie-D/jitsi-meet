@@ -422,7 +422,7 @@ function _addChatMsgListener(conference: IJitsiConference, store: IStore) {
 
     conference.on(
         JitsiConferenceEvents.CONFERENCE_ERROR, (errorType: string, error: Error) => {
-//             errorType === JitsiConferenceErrors.CHAT_ERROR && _handleChatError(store, error);
+            errorType === JitsiConferenceErrors.CHAT_ERROR && _handleChatError(store, error);
         });
 }
 
@@ -438,7 +438,6 @@ function _onConferenceMessageReceived(store: IStore,
             displayName?: string; isFromVisitor?: boolean; message: string; messageId?: string;
             participantId: string; privateMessage: boolean; source?: string; timestamp: number; }
 ) {
-    // Check if history is loaded from state
     const state = store.getState();
     if (!state['features/chat'].isHistoryLoaded) {
         return;
@@ -684,8 +683,9 @@ function _persistSentPrivateMessage({ dispatch, getState }: IStore, recipient: I
         message: string, isLobbyPrivateMessage = false) {
     const state = getState();
     const localParticipant = getLocalParticipant(state);
-
+    console.log('Local participant:', localParticipant?.id);
     if (!localParticipant?.id) {
+        console.warn('Unable to persist sent private message, no local participant id found!');
         return;
     }
     const displayName = getParticipantDisplayName(state, localParticipant.id);
@@ -697,7 +697,7 @@ function _persistSentPrivateMessage({ dispatch, getState }: IStore, recipient: I
             : (isLobbyPrivateMessage
                 ? lobbyMessageRecipient?.name
                 : getParticipantDisplayName(getState, recipient?.id));
-
+    const messageId = `local-${localParticipant.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     dispatch(addMessage({
         displayName,
         hasRead: true,
@@ -708,7 +708,8 @@ function _persistSentPrivateMessage({ dispatch, getState }: IStore, recipient: I
         lobbyChat: isLobbyPrivateMessage,
         recipient: recipientName,
         sentToVisitor: recipient.isVisitor,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        messageId
     }));
 }
 
@@ -749,6 +750,11 @@ function _shouldSendPrivateMessageTo(state: IReduxState, action: AnyAction) {
     }
 
     if (lastMessage.privateMessage) {
+        if (!lastMessage.participantId) {
+            // this is a system message we can ignore
+            return undefined;
+        }
+
         // We show the notice if the last received message was private.
         return {
             id: lastMessage.participantId,

@@ -71,7 +71,9 @@ export interface IChatState {
 ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, action): IChatState => {
     switch (action.type) {
     case ADD_MESSAGE: {
-        if (state.shownMessages.has(action.messageId)) {
+        const messageId = action.messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        if (state.shownMessages.has(messageId)) {
             return state;
         }
 
@@ -82,7 +84,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             isFromVisitor: Boolean(action.isFromVisitor),
             participantId: action.participantId,
             isReaction: action.isReaction,
-            messageId: action.messageId,
+            messageId: messageId,
             messageType: action.messageType,
             message: action.message,
             reactions: action.reactions,
@@ -93,7 +95,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             timestamp: action.timestamp
         };
 
-        state.shownMessages.add(action.messageId);
+        state.shownMessages.add(messageId);
 
         // React native, unlike web, needs a reverse sorted message list.
         const messages = navigator.product === 'ReactNative'
