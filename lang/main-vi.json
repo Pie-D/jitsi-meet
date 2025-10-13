@@ -359,7 +359,7 @@
         "kickParticipantDialog": "Bạn có chắc muốn đuổi người này ra?",
         "kickParticipantTitle": "Tắt tiếng của người tham dự này?",
         "kickSystemTitle": "Ối! Bạn bị đuổi khỏi cuộc họp rồi",
-        "kickTitle": "Ôi! {{Participant Display Name}} đã đuổi bạn ra khỏi cuộc họp",
+        "kickTitle": "Ôi! {{participantDisplayName}} đã đuổi bạn ra khỏi cuộc họp",
         "learnMore": "tìm hiểu thêm",
         "linkMeeting": "Liên kết cuộc họp",
         "linkMeetingTitle": "Liên kết cuộc họp với Salesforce",
