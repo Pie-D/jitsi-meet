@@ -8,6 +8,7 @@ import { setSaveSpeechToTextOpen } from '../../actionTypes';
 import { startGstStream, stopGstStream } from '../../../base/util/gstStreamUtils';
 import { IJitsiConference } from '../../../base/conference/reducer';
 // import { isLocalRoomOwner } from '../../../base/participants/functions';
+import { isLocalParticipantModerator } from '../../../base/participants/functions';
 import { getWhipLink } from '../../../base/util/cMeetUtils';
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
@@ -87,11 +88,12 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 }
 
 function _mapStateToProps(state: IReduxState) {
-    // const isOwner = isLocalRoomOwner(state);
+    // const isOwner = isParticipantModerator(state);
+    const isOwner = isLocalParticipantModerator(state);
     return {
         _toggled: state['features/saveSpeechToText'].isOpen,
         _conference: state['features/base/conference'].conference,
-        // visible: isOwner 
+        visible: isOwner 
     };
 }
 

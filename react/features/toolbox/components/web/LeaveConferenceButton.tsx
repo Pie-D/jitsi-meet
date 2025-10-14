@@ -9,6 +9,7 @@ import { BUTTON_TYPES } from '../../../base/ui/constants.web';
 
 import { HangupContextMenuItem } from './HangupContextMenuItem';
 // import { isLocalRoomOwner } from '../../../base/participants/functions';
+import { isLocalParticipantModerator } from '../../../base/participants/functions';
 import { stopGstStream } from '../../../base/util/gstStreamUtils';
 import { IReduxState } from '../../../app/types';
 
@@ -43,11 +44,12 @@ export const LeaveConferenceButton = (props: IProps) => {
 
     const onLeaveConference = useCallback(() => {
         // const isOwner = isLocalRoomOwner(state);
+        const isOwner = isLocalParticipantModerator(state);
         const _conference = state['features/base/conference'].conference;
         const roomId = _conference?.room?.cmeetMeetingId;
 
-        // if (isOwner && roomId) {
-        if (roomId) {
+        if (isOwner && roomId) {
+        // if (roomId) {
             stopGstStream(roomId);
         }
         
