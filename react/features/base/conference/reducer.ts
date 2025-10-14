@@ -18,7 +18,7 @@ import {
     CONFERENCE_LOCAL_SUBJECT_CHANGED,
     CONFERENCE_PROPERTIES_CHANGED,
     CONFERENCE_SUBJECT_CHANGED,
-    CONFERENCE_ROOM_OWNER_SET,
+    // CONFERENCE_ROOM_OWNER_SET,
     CONFERENCE_TIMESTAMP_CHANGED,
     CONFERENCE_WILL_JOIN,
     CONFERENCE_WILL_LEAVE,
@@ -203,7 +203,7 @@ export interface IConferenceState {
     startReactionsMuted?: boolean;
     startVideoMutedPolicy?: boolean;
     subject?: string;
-    roomOwner?: string;
+    // roomOwner?: string;
     gstStreamConnected?: boolean;
 }
 
@@ -216,7 +216,7 @@ export interface IJitsiConferenceRoom {
             logout: Function;
         };
     };
-    roomOwner?: string;
+    // roomOwner?: string;
     cmeetMeetingId: string;
 }
 
@@ -246,8 +246,8 @@ ReducerRegistry.register<IConferenceState>('features/base/conference',
         case DISCONNECT_GST_STREAM:
             return set(state, 'gstStreamConnected', false);
 
-        case CONFERENCE_ROOM_OWNER_SET:
-            return set(state, 'roomOwner', action.roomOwner);
+        // case CONFERENCE_ROOM_OWNER_SET:
+        //     return set(state, 'roomOwner', action.roomOwner);
         case CONFERENCE_SUBJECT_CHANGED:
             return set(state, 'subject', action.subject);
 
