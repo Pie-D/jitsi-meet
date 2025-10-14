@@ -1,98 +1,57 @@
 /* eslint-disable require-jsdoc */
-import { env } from '../../../ENV';
-import { startConference } from '../../../rocketchat';
+import { initRocketChat, sendMessageToRocketChat, stopRocketChat, syncRocketChatMessages } from '../../../rocketchat/index';
 import { CONFERENCE_FAILED, CONFERENCE_JOINED, CONFERENCE_LEFT } from '../base/conference/actionTypes';
 import { getRoomName } from '../base/conference/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
+import { SEND_MESSAGE } from '../chat/actionTypes';
 
-import { setRocketChatConnectionStatus, setRocketChatStatus } from './actions';
-
-/**
- * Middleware for Rocket.Chat integration.
- */
-MiddlewareRegistry.register(store => next => action => {
+MiddlewareRegistry.register(store => next => async action => {
     const result = next(action);
 
     switch (action.type) {
-    case CONFERENCE_JOINED:
-        _handleConferenceJoined(store, action);
+    case CONFERENCE_JOINED: {
+        const state: any = store.getState();
+        const roomName = getRoomName(state);
+
+        const xmpp = state['features/base/conference']?.conference?.xmpp
+            || state['features/base/conference']?.xmpp || undefined;
+
+        initRocketChat(store, xmpp, roomName)
+            .then(instance => {
+                if (instance) {
+                    return syncRocketChatMessages(0, 30);
+                }
+            })
+            .catch(error => {
+                console.error('Failed to init RocketChat:', error);
+            });
         break;
+    }
+
     case CONFERENCE_LEFT:
     case CONFERENCE_FAILED:
-        _handleConferenceLeft(store, action);
+        stopRocketChat();
         break;
+
+    case SEND_MESSAGE: {
+        const currentState = store.getState();
+        const chatState = currentState['features/chat'] || {};
+        const { privateMessageRecipient, isLobbyChatActive, lobbyMessageRecipient } = chatState;
+
+        if (privateMessageRecipient || (isLobbyChatActive && lobbyMessageRecipient)) {
+            break;
+        }
+
+        if (action.message) {
+            try {
+                await sendMessageToRocketChat(action.message);
+            } catch {
+                console.error('Failed to send message to Rocket.Chat');
+            }
+        }
+        break;
+    }
     }
 
     return result;
 });
-
-/**
- * Handle conference joined event.
- *
- * @param {Object} store - The Redux store.
- * @param {Object} _action - The Redux action.
- * @returns {void}
- */
-function _handleConferenceJoined(store: any, _action: any) {
-    const state = store.getState();
-    const roomName = getRoomName(state);
-
-    // Check if Rocket.Chat is enabled
-    if (!env.ROCKET_CHAT_API_URL || !env.ROCKET_CHAT_WS_URL) {
-        store.dispatch(setRocketChatStatus(false));
-
-        return;
-    }
-
-    // Set Rocket.Chat status as enabled
-    store.dispatch(setRocketChatStatus(true));
-
-    // Check if Rocket.Chat room ID exists before initializing
-    (async () => {
-        try {
-            // Create config object
-            const config = {
-                cmeetApiUrl: env.CMEET_URL
-            };
-
-            // Check if room ID exists
-            const rocketchatModule = require('../../../rocketchat');
-            const roomIdResult = await rocketchatModule.Utils.getRocketChatRoomId(config, roomName);
-
-            if (roomIdResult.success && roomIdResult.data) {
-                // Room ID exists, initialize Rocket.Chat integration
-                startConference(store, roomName || 'default-room')
-                    .then(success => {
-                        store.dispatch(setRocketChatConnectionStatus(success));
-                    })
-                    .catch(() => {
-                        store.dispatch(setRocketChatConnectionStatus(false));
-                    });
-            } else {
-                // No room ID found, disable Rocket.Chat integration
-                store.dispatch(setRocketChatConnectionStatus(false));
-            }
-        } catch (error) {
-            // Error checking room ID, disable Rocket.Chat integration
-            store.dispatch(setRocketChatConnectionStatus(false));
-        }
-    })();
-}
-
-/**
- * Handle conference left/failed event.
- *
- * @param {Object} store - The Redux store.
- * @param {Object} _action - The Redux action.
- * @returns {void}
- */
-function _handleConferenceLeft(store: any, _action: any) {
-    // Update connection status
-    store.dispatch(setRocketChatConnectionStatus(false));
-
-    // Clean up Rocket.Chat integration
-    const { default: rocketChatInstance } = require('../../../rocketchat');
-
-    rocketChatInstance.destroy();
-}
-

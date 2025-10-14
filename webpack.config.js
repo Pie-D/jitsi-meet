@@ -267,7 +267,12 @@ function getDevServerConfig() {
         static: {
             directory: process.cwd(),
             watch: {
-                ignored: file => file.endsWith('.log')
+                ignored: [
+                    '**/node_modules/**',
+                    '**/build/**',
+                    '**/dist/**',
+                    '**/*.log'
+                ]
             }
         }
     };

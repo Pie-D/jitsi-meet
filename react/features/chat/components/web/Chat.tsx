@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { connect, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
-import { sendMessageToRocketChat, syncRocketChatMessages } from '../../../../../rocketchat';
+import { sendMessageToRocketChat, syncRocketChatMessages } from '../../../../../rocketchat/index';
 import { IReduxState } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
 import { IconInfo, IconMessage, IconShareDoc, IconSubtitles } from '../../../base/icons/svg';
@@ -449,8 +449,9 @@ const Chat = ({
         const newOffset = offset + 30;
 
         try {
-            await syncRocketChatMessages(newOffset);
+            await syncRocketChatMessages(newOffset, 30);
             setOffset(newOffset);
+            console.log(`Loaded more Rocket.Chat messages, offset: ${newOffset}`);
         } catch (error) {
             console.warn('Failed to load more Rocket.Chat messages:', error);
         }

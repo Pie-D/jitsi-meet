@@ -1,5 +1,5 @@
 {
-  "name": "@jitsi/rocketchat-integration",
+  "name": "@jitsi/rocketchat",
   "version": "1.0.0",
   "description": "Unified Rocket.Chat integration for Jitsi Meet",
   "main": "RocketChat.js",
@@ -13,8 +13,7 @@
   "keywords": [
     "jitsi",
     "rocketchat",
-    "chat",
-    "integration"
+    "chat"
   ],
   "author": "Jitsi Team",
   "license": "Apache-2.0",

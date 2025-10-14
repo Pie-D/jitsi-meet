@@ -603,6 +603,9 @@ function _handleReceivedMessage({ dispatch, getState }: IStore,
     const timestampToDate = timestamp ? new Date(timestamp) : new Date();
     const millisecondsTimestamp = timestampToDate.getTime();
 
+    const normalizedMessageId = messageId
+        || `${participantId || 'unknown'}-${millisecondsTimestamp}-${Math.random().toString(36).slice(2)}`;
+
     // skip message notifications on join (the messages having timestamp - coming from the history)
     const shouldShowNotification = userSelectedNotifications?.['notify.chatMessages']
         && !hasRead && !isReaction && (!timestamp || lobbyChat);
@@ -616,7 +619,7 @@ function _handleReceivedMessage({ dispatch, getState }: IStore,
         lobbyChat,
         recipient: getParticipantDisplayName(state, localParticipant?.id ?? ''),
         timestamp: millisecondsTimestamp,
-        messageId,
+        messageId: normalizedMessageId,
         isReaction,
         isFromVisitor,
         isFromGuest: source === 'guest'

@@ -232,8 +232,6 @@ const ChatMessage = ({
     const [ isReactionsOpen, setIsReactionsOpen ] = useState(false);
     const systemMessageTitle = 'Tin nhắn hệ thống';
 
-    const isRocketChatMessage = message.messageId?.startsWith('rocket_');
-
     const handleMouseEnter = useCallback(() => {
         setIsHovered(true);
     }, []);
@@ -369,7 +367,7 @@ const ChatMessage = ({
             onMouseLeave = { handleMouseLeave }
             tabIndex = { -1 }>
             <div className = { classes.sideBySideContainer }>
-                {message.messageType === 'system' || isRocketChatMessage ? (
+                {message.messageType === 'system' ? (
                     <div
                         className = { cx(
                             'chatmessage',
@@ -386,7 +384,7 @@ const ChatMessage = ({
                                 <div className = { classes.systemMessageSign } />
                                 <div style = {{ display: 'flex', flexDirection: 'column' }}>
                                     <span className = { classes.messageSystemTitle }>
-                                        {isRocketChatMessage ? 'Rocket.Chat' : systemMessageTitle}
+                                        {systemMessageTitle}
                                     </span>
                                     <Message text = { getMessageText(message) } />
                                 </div>
