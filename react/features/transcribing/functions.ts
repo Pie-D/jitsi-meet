@@ -79,6 +79,6 @@ export function canAddTranscriber(state: IReduxState) {
     const { transcription } = state['features/base/config'];
     const isTranscribingAllowed = isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false);
 
-    // return Boolean(transcription?.enabled) && isTranscribingAllowed;
-    return true;
+    return Boolean(transcription?.enabled) && isTranscribingAllowed;
+    // return true;
 }
