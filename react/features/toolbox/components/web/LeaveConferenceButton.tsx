@@ -44,11 +44,12 @@ export const LeaveConferenceButton = (props: IProps) => {
 
     const onLeaveConference = useCallback(() => {
         // const isOwner = isLocalRoomOwner(state);
+        const isOwner = isLocalParticipantModerator(state);
         const _conference = state['features/base/conference'].conference;
         const roomId = _conference?.room?.cmeetMeetingId;
 
-        // if (isOwner && roomId) {
-        if (roomId) {
+        if (isOwner && roomId) {
+        // if (roomId) {
             stopGstStream(roomId);
         }
         
