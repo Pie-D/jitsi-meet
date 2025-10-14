@@ -68,7 +68,7 @@ import {
     SET_START_MUTED_POLICY,
     SET_START_REACTIONS_MUTED,
     UPDATE_CONFERENCE_METADATA,
-    CONFERENCE_ROOM_OWNER_SET
+    // CONFERENCE_ROOM_OWNER_SET
 } from './actionTypes';
 import { setupVisitorStartupMedia } from './actions';
 import {
@@ -127,9 +127,9 @@ function _addConferenceListeners(conference: IJitsiConference, dispatch: IStore[
     conference.on(
         JitsiConferenceEvents.CONFERENCE_JOIN_IN_PROGRESS,
         (..._args: any[]) => dispatch(conferenceJoinInProgress(conference)));
-    conference.on(
-            JitsiConferenceEvents.CONFERENCE_ROOM_OWNER_SET,
-            (..._args: any[]) => dispatch(conferenceRoomOwnerSet(conference)));
+    // conference.on(
+    //         JitsiConferenceEvents.CONFERENCE_ROOM_OWNER_SET,
+    //         (..._args: any[]) => dispatch(conferenceRoomOwnerSet(conference)));
     conference.on(
         JitsiConferenceEvents.CONFERENCE_LEFT,
         (..._args: any[]) => {
@@ -512,13 +512,13 @@ export function conferenceUniqueIdSet(conference: IJitsiConference) {
         conference
     };
 }
-export function conferenceRoomOwnerSet(conference: IJitsiConference) {
-    console.log("dht", conference)
-    return {
-        type: CONFERENCE_ROOM_OWNER_SET,
-        conference
-    }
-}
+// export function conferenceRoomOwnerSet(conference: IJitsiConference) {
+//     console.log("dht", conference)
+//     return {
+//         type: CONFERENCE_ROOM_OWNER_SET,
+//         conference
+//     }
+// }
 /**
  * Adds any existing local tracks to a specific conference before the conference
  * is joined. Then signals the intention of the application to have the local
