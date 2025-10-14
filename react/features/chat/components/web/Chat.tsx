@@ -75,14 +75,19 @@ interface IProps extends AbstractProps {
     _isResizing: boolean;
 
     /**
-     * Number of unread poll messages.
-     */
-    _nbUnreadPolls: number;
-
-    /**
      * Whether or not to block chat access with a nickname input form.
      */
     _showNamePrompt: boolean;
+
+    /**
+     * Number of unread file sharing messages.
+     */
+    _unreadFilesCount: number;
+
+    /**
+     * Number of unread poll messages.
+     */
+    _unreadPollsCount: number;
 
     /**
      * The current width of the chat panel.
@@ -217,8 +222,9 @@ const Chat = ({
     _focusedTab,
     _isResizing,
     _messages,
-    _nbUnreadMessages,
-    _nbUnreadPolls,
+    _unreadMessagesCount,
+    _unreadPollsCount,
+    _unreadFilesCount,
     _showNamePrompt,
     _width,
     dispatch,
@@ -519,7 +525,8 @@ const Chat = ({
         let tabs = [
             {
                 accessibilityLabel: t('chat.tabs.chat'),
-                countBadge: _focusedTab !== ChatTabs.CHAT && _nbUnreadMessages > 0 ? _nbUnreadMessages : undefined,
+                countBadge:
+                    _focusedTab !== ChatTabs.CHAT && _unreadMessagesCount > 0 ? _unreadMessagesCount : undefined,
                 id: ChatTabs.CHAT,
                 controlsId: `${ChatTabs.CHAT}-panel`,
                 icon: IconMessage,
@@ -530,7 +537,7 @@ const Chat = ({
         if (_isPollsEnabled) {
             tabs.push({
                 accessibilityLabel: t('chat.tabs.polls'),
-                countBadge: _focusedTab !== ChatTabs.POLLS && _nbUnreadPolls > 0 ? _nbUnreadPolls : undefined,
+                countBadge: _focusedTab !== ChatTabs.POLLS && _unreadPollsCount > 0 ? _unreadPollsCount : undefined,
                 id: ChatTabs.POLLS,
                 controlsId: `${ChatTabs.POLLS}-panel`,
                 icon: IconInfo,
@@ -552,7 +559,7 @@ const Chat = ({
         if (_isFileSharingTabEnabled) {
             tabs.push({
                 accessibilityLabel: t('chat.tabs.fileSharing'),
-                countBadge: undefined,
+                countBadge: _focusedTab !== ChatTabs.FILE_SHARING && _unreadFilesCount > 0 ? _unreadFilesCount : undefined,
                 id: ChatTabs.FILE_SHARING,
                 controlsId: `${ChatTabs.FILE_SHARING}-panel`,
                 icon: IconShareDoc,
@@ -629,16 +636,17 @@ const Chat = ({
  *     _isCCTabEnabled: boolean,
  *     _focusedTab: string,
  *     _messages: Array<Object>,
- *     _nbUnreadMessages: number,
- *     _nbUnreadPolls: number,
+ *     _unreadMessagesCount: number,
+ *     _unreadPollsCount: number,
+ *     _unreadFilesCount: number,
  *     _showNamePrompt: boolean,
  *     _width: number,
  *     _isResizing: boolean
  * }}
  */
 function _mapStateToProps(state: IReduxState, _ownProps: any) {
-    const { isOpen, focusedTab, messages, nbUnreadMessages, width, isResizing } = state['features/chat'];
-    const { nbUnreadPolls } = state['features/polls'];
+    const { isOpen, focusedTab, messages, unreadMessagesCount, unreadFilesCount, width, isResizing } = state['features/chat'];
+    const { unreadPollsCount } = state['features/polls'];
     const _localParticipant = getLocalParticipant(state);
 
     return {
@@ -649,8 +657,9 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
         _isFileSharingTabEnabled: isFileSharingEnabled(state),
         _focusedTab: focusedTab,
         _messages: messages,
-        _nbUnreadMessages: nbUnreadMessages,
-        _nbUnreadPolls: nbUnreadPolls,
+        _unreadMessagesCount: unreadMessagesCount,
+        _unreadPollsCount: unreadPollsCount,
+        _unreadFilesCount: unreadFilesCount,
         _showNamePrompt: !_localParticipant?.name,
         _width: width?.current || CHAT_SIZE,
         _isResizing: isResizing,

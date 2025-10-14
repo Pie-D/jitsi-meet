@@ -1,6 +1,7 @@
 import { UPDATE_CONFERENCE_METADATA } from '../base/conference/actionTypes';
 import { ILocalParticipant, IParticipant } from '../base/participants/types';
 import ReducerRegistry from '../base/redux/ReducerRegistry';
+import { ADD_FILE, _FILE_LIST_RECEIVED } from '../file-sharing/actionTypes';
 import { IVisitorChatParticipant } from '../visitors/types';
 
 import {
@@ -31,7 +32,8 @@ const DEFAULT_STATE = {
     messages: [],
     notifyPrivateRecipientsChangedTimestamp: undefined,
     reactions: {},
-    nbUnreadMessages: 0,
+    unreadMessagesCount: 0,
+    unreadFilesCount: 0,
     privateMessageRecipient: undefined,
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
@@ -62,6 +64,8 @@ export interface IChatState {
     isHistoryLoaded: boolean;
     notifyPrivateRecipientsChangedTimestamp?: number;
     privateMessageRecipient?: IParticipant | IVisitorChatParticipant;
+    unreadFilesCount: number;
+    unreadMessagesCount: number;
     width: {
         current: number;
         userSet: number | null;
@@ -112,7 +116,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             ...state,
             lastReadMessage:
                 action.hasRead ? newMessage : state.lastReadMessage,
-            nbUnreadMessages: state.focusedTab !== ChatTabs.CHAT ? state.nbUnreadMessages + 1 : state.nbUnreadMessages,
+            unreadMessagesCount: state.focusedTab !== ChatTabs.CHAT ? state.unreadMessagesCount + 1 : state.unreadMessagesCount,
             messages
         };
     }
@@ -264,7 +268,8 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         return {
             ...state,
             focusedTab: action.tabId,
-            nbUnreadMessages: action.tabId === ChatTabs.CHAT ? 0 : state.nbUnreadMessages
+            unreadMessagesCount: action.tabId === ChatTabs.CHAT ? 0 : state.unreadMessagesCount,
+            unreadFilesCount: action.tabId === ChatTabs.FILE_SHARING ? 0 : state.unreadFilesCount
         };
 
     case SET_CHAT_WIDTH: {
@@ -300,6 +305,23 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             ...state,
             notifyPrivateRecipientsChangedTimestamp: action.payload
         };
+
+    case ADD_FILE:
+        return {
+            ...state,
+            unreadFilesCount: action.shouldIncrementUnread ? state.unreadFilesCount + 1 : state.unreadFilesCount
+        };
+
+    case _FILE_LIST_RECEIVED: {
+        const remoteFilesCount = Object.values(action.files).filter(
+            (file: any) => file.authorParticipantId !== action.localParticipantId
+        ).length;
+
+        return {
+            ...state,
+            unreadFilesCount: remoteFilesCount
+        };
+    }
     }
 
     return state;

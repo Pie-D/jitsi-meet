@@ -1,5 +1,5 @@
 import { setTestProperties } from '../../helpers/TestProperties';
-import { joinMuc, generateJaasToken as t } from '../helpers/jaas';
+import { joinJaasMuc, generateJaasToken as t } from '../../helpers/jaas';
 
 setTestProperties(__filename, {
     useJaas: true,
@@ -8,13 +8,13 @@ setTestProperties(__filename, {
 
 // This test is separate from passcode.spec.ts, because it needs to use a different room name, and webhooksProxy is only
 // setup for the default room name.
-describe('Setting passcode through settings provisioning', () => {
+describe('Setting invalid passcode through settings provisioning', () => {
     it('With an invalid passcode', async () => {
         ctx.webhooksProxy.defaultMeetingSettings = {
             passcode: 'passcode-must-be-digits-only'
         };
 
-        const p = await joinMuc({ token: t({ room: ctx.roomName }) }, { roomName: ctx.roomName });
+        const p = await joinJaasMuc({ token: t({ room: ctx.roomName }) }, { roomName: ctx.roomName });
 
         // The settings provisioning contains an invalid passcode, the expected result is that the room is not
         // configured to require a passcode.

@@ -723,6 +723,8 @@ var config = {
     //     autoKnock: false,
     //     // Enables the lobby chat. Replaces `enableLobbyChat`.
     //     enableChat: true,
+    //     // Shows the hangup button in the lobby screen.
+    //     showHangUp: true,
     // },
 
     // Configs for the security related UI elements.
@@ -803,7 +805,9 @@ var config = {
     //     // By setting preCallTestEnabled, you enable the pre-call test in the prejoin page.
     //     // ICE server credentials need to be provided over the preCallTestICEUrl
     //     preCallTestEnabled: false,
-    //     preCallTestICEUrl: ''
+    //     preCallTestICEUrl: '',
+    //     // Shows the hangup button in the lobby screen.
+    //     showHangUp: true,
     // },
 
     // When 'true', the user cannot edit the display name.

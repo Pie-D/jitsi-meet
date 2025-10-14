@@ -212,8 +212,7 @@ export const config: WebdriverIO.MultiremoteConfig = {
         globalAny.ctx.testProperties = testProperties;
 
         if (testProperties.useJaas && !testsConfig.jaas.enabled) {
-            console.warn(`JaaS is not configured, skipping ${testName}.`);
-            globalAny.ctx.skipSuiteTests = true;
+            globalAny.ctx.skipSuiteTests = 'JaaS is not configured';
 
             return;
         }
@@ -242,11 +241,18 @@ export const config: WebdriverIO.MultiremoteConfig = {
         globalAny.ctx.roomName = generateRoomName(testName);
         console.log(`Using room name: ${globalAny.ctx.roomName}`);
 
-        // If we are running the iFrameApi tests, we need to mark it as such and if needed to create the proxy
-        // and connect to it.
         if (testProperties.useWebhookProxy && testsConfig.webhooksProxy.enabled && !globalAny.ctx.webhooksProxy) {
-            // Note this prevents iframe and jaas test from running together.
-            const tenant = testsConfig.jaas.enabled ? testsConfig.jaas.tenant : testsConfig.iframe.tenant;
+            const tenant = testsConfig.jaas.tenant;
+
+            if (!testProperties.useJaas) {
+                throw new Error('The test tries to use WebhookProxy without JaaS.');
+            }
+            if (!tenant) {
+                console.log(`Can not configure WebhookProxy, missing tenant in config. Skipping ${testName}.`);
+                globalAny.ctx.skipSuiteTests = 'WebHookProxy is required but not configured (missing tenant)';
+
+                return;
+            }
 
             globalAny.ctx.webhooksProxy = new WebhookProxy(
                 `${testsConfig.webhooksProxy.url}?tenant=${tenant}&room=${globalAny.ctx.roomName}`,
@@ -257,7 +263,7 @@ export const config: WebdriverIO.MultiremoteConfig = {
 
         if (testProperties.useWebhookProxy && !globalAny.ctx.webhooksProxy) {
             console.warn(`WebhookProxy is not available, skipping ${testName}`);
-            globalAny.ctx.skipSuiteTests = true;
+            globalAny.ctx.skipSuiteTests = 'WebhooksProxy is not required but not available';
         }
     },
 
@@ -305,7 +311,31 @@ export const config: WebdriverIO.MultiremoteConfig = {
      * @param {Object} context - The context object.
      */
     beforeTest(test, context) {
+        // Use the directory under 'tests/specs' as the parent suite
+        const dirMatch = test.file.match(/.*\/tests\/specs\/([^\/]+)\//);
+        const dir = dirMatch ? dirMatch[1] : false;
+        const fileMatch = test.file.match(/.*\/tests\/specs\/(.*)/);
+        const file = fileMatch ? fileMatch[1] : false;
+
+        if (ctx.testProperties.description) {
+            AllureReporter.addDescription(ctx.testProperties.description, 'text');
+        }
+
+        if (file) {
+            AllureReporter.addLink(`https://github.com/jitsi/jitsi-meet/blob/master/tests/specs/${file}`, 'Code');
+        }
+
+        if (dir) {
+            AllureReporter.addParentSuite(dir);
+        }
+
         if (ctx.skipSuiteTests) {
+            if ((typeof ctx.skipSuiteTests) === 'string') {
+                AllureReporter.addDescription((ctx.testProperties.description || '')
+                    + '\n\nSkipped because: ' + ctx.skipSuiteTests, 'text');
+            }
+            console.log(`Skipping because: ${ctx.skipSuiteTests}`);
+
             context.skip();
 
             return;
