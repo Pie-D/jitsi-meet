@@ -500,7 +500,7 @@
         "stopRecordingWarning": "Bạn có chắc chắn muốn dừng ghi hình không?",
         "stopStreamingWarning": "Bạn có chắc chắn muốn dừng phát trực tuyến?",
         "streamKey": "Mã phát trực tuyến",
-        "thankYou": "Cám ơn bạn đã sử dụng {{appName}}!",
+        "thankYou": "Cảm ơn bạn đã sử dụng {{appName}}!",
         "token": "mã thông báo",
         "tokenAuthFailed": "Rất tiếc, bạn không được phép tham gia cuộc gọi này.",
         "tokenAuthFailedReason": {
@@ -748,7 +748,8 @@
         "notificationTitle": "Phòng chờ",
         "passwordJoinButton": "Tham gia",
         "title": "Phòng chờ",
-        "toggleLabel": "Kích hoạt phòng chờ"
+        "toggleLabel": "Kích hoạt phòng chờ",
+        "waitForModerator": "Cuộc họp vẫn chưa bắt đầu vì chưa có người điều hành nào đến. Nếu bạn muốn trở thành người điều hành, vui lòng đăng nhập. Nếu không, vui lòng đợi."
     },
     "localRecording": {
         "clientState": {

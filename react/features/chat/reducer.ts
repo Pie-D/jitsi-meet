@@ -59,7 +59,7 @@ export interface IChatState {
         name: string;
     } | ILocalParticipant;
     messages: IMessage[];
-    nbUnreadMessages: number;
+    // nbUnreadMessages: number;
     shownMessages: Set<string>;
     isHistoryLoaded: boolean;
     notifyPrivateRecipientsChangedTimestamp?: number;
