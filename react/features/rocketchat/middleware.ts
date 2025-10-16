@@ -2,24 +2,30 @@
 import { initRocketChat, sendMessageToRocketChat, stopRocketChat, syncRocketChatMessages } from '../../../rocketchat/index';
 import { CONFERENCE_FAILED, CONFERENCE_JOINED, CONFERENCE_LEFT } from '../base/conference/actionTypes';
 import { getRoomName } from '../base/conference/functions';
+import { getLocalParticipant } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
-import { SEND_MESSAGE } from '../chat/actionTypes';
+import { ADD_MESSAGE } from '../chat/actionTypes';
+import { addMessage } from '../chat/actions.any';
+import { createMessageId } from '../chat/functions';
+import { IMessage } from '../chat/types';
 
 MiddlewareRegistry.register(store => next => async action => {
     const result = next(action);
+    const state = store.getState();
 
     switch (action.type) {
     case CONFERENCE_JOINED: {
-        const state: any = store.getState();
         const roomName = getRoomName(state);
 
-        const xmpp = state['features/base/conference']?.conference?.xmpp
-            || state['features/base/conference']?.xmpp || undefined;
+        const token = state['features/base/conference']?.conference?.connection?.token
+            || undefined;
 
-        initRocketChat(store, xmpp, roomName)
+        const localParticipant = getLocalParticipant(state);
+
+        initRocketChat(store, token, roomName, localParticipant)
             .then(instance => {
                 if (instance) {
-                    return syncRocketChatMessages(0, 30);
+                    return syncRocketChatMessages(0, 30, (message: IMessage) => store.dispatch(addMessage({ ...message, hasRead: false })));
                 }
             })
             .catch(error => {
@@ -33,18 +39,20 @@ MiddlewareRegistry.register(store => next => async action => {
         stopRocketChat();
         break;
 
-    case SEND_MESSAGE: {
+    case ADD_MESSAGE: {
         const currentState = store.getState();
         const chatState = currentState['features/chat'] || {};
-        const { privateMessageRecipient, isLobbyChatActive, lobbyMessageRecipient } = chatState;
 
-        if (privateMessageRecipient || (isLobbyChatActive && lobbyMessageRecipient)) {
-            break;
-        }
-
-        if (action.message) {
+        if (action.message && action.participantId && action.timestamp) {
             try {
+                const messageId = createMessageId(action.participantId, action.timestamp, action.message);
+
+                if (chatState.shownMessages.has(messageId)) {
+                    return;
+                }
+
                 await sendMessageToRocketChat(action.message);
+                chatState.shownMessages.add(messageId);
             } catch {
                 console.error('Failed to send message to Rocket.Chat');
             }

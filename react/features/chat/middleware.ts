@@ -65,6 +65,7 @@ import {
     MESSAGE_TYPE_SYSTEM
 } from './constants';
 import {
+    createMessageId,
     getDisplayNameSuffix,
     getUnreadCount,
     isSendGroupChatDisabled,
@@ -438,11 +439,6 @@ function _onConferenceMessageReceived(store: IStore,
             displayName?: string; isFromVisitor?: boolean; message: string; messageId?: string;
             participantId: string; privateMessage: boolean; source?: string; timestamp: number; }
 ) {
-    const state = store.getState();
-    if (!state['features/chat'].isHistoryLoaded) {
-        return;
-    }
-
     const isGif = isGifEnabled(store.getState()) && isGifMessage(message);
 
     if (isGif) {
@@ -603,9 +599,6 @@ function _handleReceivedMessage({ dispatch, getState }: IStore,
     const timestampToDate = timestamp ? new Date(timestamp) : new Date();
     const millisecondsTimestamp = timestampToDate.getTime();
 
-    const normalizedMessageId = messageId
-        || `${participantId || 'unknown'}-${millisecondsTimestamp}-${Math.random().toString(36).slice(2)}`;
-
     // skip message notifications on join (the messages having timestamp - coming from the history)
     const shouldShowNotification = userSelectedNotifications?.['notify.chatMessages']
         && !hasRead && !isReaction && (!timestamp || lobbyChat);
@@ -619,7 +612,7 @@ function _handleReceivedMessage({ dispatch, getState }: IStore,
         lobbyChat,
         recipient: getParticipantDisplayName(state, localParticipant?.id ?? ''),
         timestamp: millisecondsTimestamp,
-        messageId: normalizedMessageId,
+        messageId,
         isReaction,
         isFromVisitor,
         isFromGuest: source === 'guest'

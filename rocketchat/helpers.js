@@ -19,8 +19,7 @@ export const Helpers = {
 
         switch (msg.msg) {
         case 'ping':
-            client.publish({ destination: '',
-                body: JSON.stringify({ msg: 'pong' }) });
+            client.send(JSON.stringify({ msg: 'pong' }));
 
             break;
         case 'result':
@@ -49,35 +48,5 @@ export const Helpers = {
 
             break;
         }
-    },
-
-    addMessageToStore(store, message, messageFilter) {
-        const shownMessages = store.getState().features.chat.shownMessages;
-
-        const alreadyShown = shownMessages && typeof shownMessages.has === 'function'
-            ? shownMessages.has(message.messageId)
-            : shownMessages && shownMessages[message.messageId];
-
-        if (alreadyShown || messageFilter.has(message.messageId)) {
-            return;
-        }
-
-        messageFilter.add(message.messageId);
-
-        store.dispatch(addMessage({
-            ...message,
-            hasRead: false
-        }));
-    },
-
-    createMessageFilter() {
-        const shownMessages = new Set();
-
-        return {
-            add: messageId => shownMessages.add(messageId),
-            has: messageId => shownMessages.has(messageId),
-            clear: () => shownMessages.clear(),
-            size: () => shownMessages.size
-        };
     }
 };

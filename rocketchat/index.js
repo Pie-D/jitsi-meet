@@ -7,7 +7,7 @@ const logger = require('./logger').getLogger('RocketChat:Index');
 
 let instance = null;
 
-export async function initRocketChat(store, xmpp, meetingId) {
+export async function initRocketChat(store, xmpp, meetingId, localParticipant) {
     try {
         if (!meetingId) {
             logger.error('Meeting ID is required');
@@ -15,7 +15,7 @@ export async function initRocketChat(store, xmpp, meetingId) {
             return false;
         }
 
-        const rocketChat = new RocketChat(store, meetingId);
+        const rocketChat = new RocketChat(store, meetingId, localParticipant);
         const rocketChatRoomId = await rocketChat.getRocketChatRoomId();
 
         if (!rocketChatRoomId) {
@@ -23,6 +23,8 @@ export async function initRocketChat(store, xmpp, meetingId) {
 
             return false;
         }
+
+        rocketChat.setRocketChatRoomId(rocketChatRoomId);
 
         await rocketChat.loginToRocketChat(xmpp);
         await rocketChat.checkUserInRocketChatRoom();
@@ -45,14 +47,14 @@ export function stopRocketChat() {
     }
 }
 
-export async function syncRocketChatMessages(offset = 0, limit = 30) {
+export async function syncRocketChatMessages(offset = 0, limit = 30, deliverMessage) {
     if (instance) {
-        await instance.loadchat(offset, limit);
+        return await instance.loadchat(offset, limit, deliverMessage);
     }
 }
 
 export async function sendMessageToRocketChat(message) {
     if (instance) {
-        await instance.sendMessage(message);
+        return await instance.sendMessage(message);
     }
 }

@@ -6,7 +6,7 @@ export const ROCKET_CHAT_CONFIG = Object.freeze({
     botUserId: env.ROCKET_CHAT_USER_ID,
     botToken: env.ROCKET_CHAT_TOKEN,
     cmeetApiUrl: env.CMEET_URL,
-    cmeetWsUrl: env.CMEET_WS_URL,
+    cmeetWsUrl: `${env.CMEET_WS_URL}/ws`,
     endpoints: {
         login: `${env.ROCKET_CHAT_API_URL}/login`,
         postMessage: `${env.ROCKET_CHAT_API_URL}/chat.postMessage`,

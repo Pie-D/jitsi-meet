@@ -3,7 +3,6 @@
 
 import { ROCKET_CHAT_CONFIG } from './config.js';
 import { WebSocketConnectionManager } from './connection';
-import { Helpers } from './helpers.js';
 import { ROCKET_CHAT_USER_TYPES } from './types.js';
 import { Utils } from './utils.js';
 
@@ -11,17 +10,22 @@ import { Utils } from './utils.js';
 const logger = require('./logger').getLogger('RocketChat');
 
 export class RocketChat {
-    constructor(store, meetingId) {
+    constructor(store, meetingId, localParticipant) {
         this.store = store;
         this.config = ROCKET_CHAT_CONFIG;
         this.wsManager = new WebSocketConnectionManager();
-        this.messageFilter = Helpers.createMessageFilter();
         this.rocketChatUserId = null;
         this.rocketChatAuthToken = null;
         this.rocketChatType = null;
         this.rocketChatRoomId = null;
         this.cmeetMeetingId = meetingId;
+        this.localParticipant = localParticipant;
         this.isChatDisabled = false;
+        this.userContext = {
+            username: localParticipant.name,
+            userId: localParticipant.id,
+            displayName: localParticipant.name
+        };
     }
 
     async loginToRocketChat(xmpp) {
@@ -50,7 +54,7 @@ export class RocketChat {
                 this.rocketChatAuthToken = data.data.authToken;
                 this.rocketChatType = ROCKET_CHAT_USER_TYPES.USER;
                 this.userContext = {
-                    username: this.tokenCmeet?.context?.user?.name
+                    username: this.tokenCmeet?.context?.user?.username
                 };
 
                 logger.log('Rocket.Chat login successful as user');
@@ -85,15 +89,7 @@ export class RocketChat {
             const url = `${this.config.endpoints.getRoomId}/${this.cmeetMeetingId}`;
             const res = await Utils.makeRequest('GET', url);
 
-            if (!res.ok) {
-                logger.error('Failed to get Rocket.Chat room ID', res);
-
-                return null;
-            }
-
-            const data = await res.json();
-
-            return data?.data || null;
+            return res?.data || null;
         } catch (error) {
             logger.error('Failed to get Rocket.Chat room ID', error);
 
@@ -113,10 +109,10 @@ export class RocketChat {
         const isUserInRocketChatRoom = async () => {
             let username = this.xmpp.participantId;
 
-            if (this.xmpp.displayName && this.xmpp.displayName !== 'Unknown') {
-                username = this.xmpp.displayName;
-            } else if (this.userContext?.username) {
+            if (this.userContext?.username) {
                 username = this.userContext.username;
+            } else if (this.xmpp.displayName && this.xmpp.displayName !== 'Unknown') {
+                username = this.xmpp.displayName;
             }
 
             const url = `${this.config.endpoints.roomMembers}?roomId=${this.rocketChatRoomId}`;
@@ -156,7 +152,7 @@ export class RocketChat {
     }
 
     connectWebSocket() {
-        this.wsManager.connectRocketChat(this.store, this.rocketChatAuthToken, this.rocketChatRoomId, this.userContext?.localParticipantName);
+        this.wsManager.connectRocketChat(this.store, this.rocketChatAuthToken, this.rocketChatRoomId, this.userContext?.username);
         this.wsManager.connectCMeet(this.cmeetMeetingId);
     }
 
@@ -164,17 +160,17 @@ export class RocketChat {
         this.rocketChatRoomId = roomId;
     }
 
-    async loadchat(offset = 0, limit = 30) {
+    async loadchat(offset = 0, limit = 30, deliverMessage) {
         const url = `${this.config.endpoints.roomHistory}?roomId=${this.rocketChatRoomId}&offset=${offset}&limit=${limit}`;
         const res = await Utils.makeRequest('GET', url, null, {
-            'X-User-Id': this.userContext?.userId || this.config.botUserId,
-            'X-Auth-Token': this.userContext?.token || this.config.botToken
+            'X-User-Id': this.rocketChatUserId,
+            'X-Auth-Token': this.rocketChatAuthToken
         });
 
         if (res?.messages?.length) {
-            res.messages.reverse().forEach(msg => {
-                if (Utils.isValidRocketChatMessage(msg)) {
-                    Helpers.addMessageToStore(this.store, Utils.formatMessage(msg, this.userContext.name), this.messageFilter);
+            res.messages.reverse().forEach(message => {
+                if (message.msg) {
+                    deliverMessage(Utils.formatMessage(message, this.userContext?.username));
                 }
             });
 
@@ -192,31 +188,31 @@ export class RocketChat {
                 roomId: `#${this.rocketChatRoomId}`,
                 text: message,
                 customFields: {
-                    participantId: this.userContext?.participantId,
+                    participantId: this.localParticipant.id,
                     fromJitsi: true
                 }
             };
 
-            if (this.userType === ROCKET_CHAT_USER_TYPES.BOT && this.userContext?.displayName) {
-                baseBody.alias = this.userContext.displayName;
+            if (this.rocketChatType === ROCKET_CHAT_USER_TYPES.BOT && this.userContext?.username) {
+                baseBody.alias = this.userContext.username;
             }
 
             const url = `${this.config.endpoints.postMessage}`;
 
-            await Utils.makeRequest('POST', url, baseBody, {
-                'Content-Type': 'application/json',
-                'X-User-Id': this.userContext?.userId || this.config.botUserId,
-                'X-Auth-Token': this.userContext?.token || this.config.botToken
+            const res = await Utils.makeRequest('POST', url, baseBody, {
+                'X-User-Id': this.rocketChatUserId,
+                'X-Auth-Token': this.rocketChatAuthToken
             });
 
-            logger.log(`Sent message to Rocket.Chat: ${message}`);
+            logger.log(`Sent message to Rocket.Chat: ${res.message._id}`);
+
+            return res.message._id;
         } catch (error) {
             logger.error('Failed to send message to Rocket.Chat:', error);
         }
     }
 
     destroy() {
-        this.messageFilter.clear();
         this.wsManager.destroy();
         logger.log('Rocket.Chat module destroyed');
     }

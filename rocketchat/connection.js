@@ -20,53 +20,49 @@ export class WebSocketConnectionManager {
         WebSocketConnectionManager.instance = this;
     }
 
+    // Sử dụng WebSocket vì Rocket.Chat websocket url không tương thích với SockJS
     connectRocketChat(store, authToken, roomId, localParticipantName) {
-        const client = new Client({
-            webSocketFactory: () => new SockJS(ROCKET_CHAT_CONFIG.wsUrl),
-            reconnectDelay: ROCKET_CHAT_CONFIG.wsConfig.reconnectDelay,
-            onConnect: () => {
-                logger.log('[Rocket.Chat] Connected');
+        const ws = new WebSocket(ROCKET_CHAT_CONFIG.wsUrl);
 
-                client.publish({ destination: '',
-                    body: JSON.stringify({
-                        msg: 'connect',
-                        version: '1',
-                        support: [ '1' ]
-                    }) });
+        ws.onopen = () => {
+            logger.log('[Rocket.Chat] Connected');
 
-                client.publish({ destination: '',
-                    body: JSON.stringify({
-                        msg: 'method',
-                        method: 'login',
-                        id: 'login-1',
-                        params: [ { resume: authToken } ]
-                    }) });
+            ws.send(JSON.stringify({
+                msg: 'connect',
+                version: '1',
+                support: [ '1' ]
+            }));
 
-                client.publish({ destination: '',
-                    body: JSON.stringify({
-                        msg: 'sub',
-                        id: 'sub-1',
-                        name: 'stream-room-messages',
-                        params: [ roomId, false ]
-                    }) });
-            },
-            onStompError: frame => {
-                logger.error('[Rocket.Chat] STOMP error:', frame.headers.message);
-            },
-            onWebSocketError: error => {
-                logger.error('[Rocket.Chat] WebSocket error:', error);
-            },
-            onWebSocketClose: () => {
-                logger.warn('[Rocket.Chat] Disconnected, retrying...');
-            }
-        });
+            ws.send(JSON.stringify({
+                msg: 'method',
+                method: 'login',
+                id: 'login-1',
+                params: [ { resume: authToken } ]
+            }));
 
-        client.onUnhandledMessage(message => {
-            Helpers.handleRocketChatMessage(message.data, store, localParticipantName, client);
-        });
+            ws.send(JSON.stringify({
+                msg: 'sub',
+                id: 'sub-1',
+                name: 'stream-room-messages',
+                params: [ roomId, false ]
+            }));
+        };
+        ws.onmessage = event => {
+            Helpers.handleRocketChatMessage(event.data, store, localParticipantName, ws);
+        };
+        ws.onerror = error => {
+            logger.error('[Rocket.Chat] WebSocket error:', error);
+        };
+        ws.onclose = () => {
+            logger.warn('[Rocket.Chat] Disconnected, retrying...');
+            setTimeout(() => {
+                this.connectRocketChat(store, authToken, roomId, localParticipantName);
+            }, ROCKET_CHAT_CONFIG.wsConfig.reconnectDelay);
+        };
 
-        this.wsRocketChat = client;
-        client.activate();
+        this.wsRocketChat = ws;
+
+        return ws;
     }
 
     connectCMeet(meetingId) {

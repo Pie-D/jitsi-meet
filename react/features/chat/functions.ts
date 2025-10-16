@@ -293,3 +293,8 @@ export function getDisplayNameSuffix(message: IMessage): string {
 
     return suffix;
 }
+
+
+export function createMessageId(participantId: string, timestamp: number, message: string) {
+    return `${participantId}-${timestamp}-${message}`;
+}

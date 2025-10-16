@@ -92,8 +92,8 @@ export interface IJitsiConference {
     avModerationReject: Function;
     callUUID?: string;
     connection: {
-        token: string
-    }
+        token: string;
+    };
     createVideoSIPGWSession: Function;
     dial: Function;
     disableAVModeration: Function;
