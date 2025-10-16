@@ -1,5 +1,5 @@
 /* eslint-disable require-jsdoc */
-import { initRocketChat, sendMessageToRocketChat, stopRocketChat, syncRocketChatMessages } from '../../../rocketchat/index';
+import { IRocketChatMessage, IRocketChatParticipant, initRocketChat, sendMessageToRocketChat, stopRocketChat, syncRocketChatMessages } from '../../../rocketchat/index';
 import { CONFERENCE_FAILED, CONFERENCE_JOINED, CONFERENCE_LEFT } from '../base/conference/actionTypes';
 import { getRoomName } from '../base/conference/functions';
 import { getLocalParticipant } from '../base/participants/functions';
@@ -7,7 +7,6 @@ import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { ADD_MESSAGE } from '../chat/actionTypes';
 import { addMessage } from '../chat/actions.any';
 import { createMessageId } from '../chat/functions';
-import { IMessage } from '../chat/types';
 
 MiddlewareRegistry.register(store => next => async action => {
     const result = next(action);
@@ -15,20 +14,19 @@ MiddlewareRegistry.register(store => next => async action => {
 
     switch (action.type) {
     case CONFERENCE_JOINED: {
-        const roomName = getRoomName(state);
+        const roomName = getRoomName(state) || '';
 
-        const token = state['features/base/conference']?.conference?.connection?.token
-            || undefined;
+        const token = state['features/base/conference']?.conference?.connection?.token || '';
 
         const localParticipant = getLocalParticipant(state);
 
-        initRocketChat(store, token, roomName, localParticipant)
-            .then(instance => {
+        initRocketChat(store, token, roomName, localParticipant as IRocketChatParticipant)
+            .then((instance: any) => {
                 if (instance) {
-                    return syncRocketChatMessages(0, 30, (message: IMessage) => store.dispatch(addMessage({ ...message, hasRead: false })));
+                    return syncRocketChatMessages(0, 30, (message: IRocketChatMessage) => store.dispatch(addMessage({ ...message, hasRead: false })));
                 }
             })
-            .catch(error => {
+            .catch((error: any) => {
                 console.error('Failed to init RocketChat:', error);
             });
         break;
