@@ -22,7 +22,8 @@ import { INetInfoState } from '../base/net-info/reducer';
 import { IParticipantsState } from '../base/participants/reducer';
 import { IPreMeetingState } from '../base/premeeting/types';
 import { IResponsiveUIState } from '../base/responsive-ui/reducer';
-import { ISettingsState } from '../base/settings/reducer';
+import { ISettingsState as IBaseSettingsState } from '../base/settings/reducer';
+import { ISettingsState as IFeatureSettingsState } from '../settings/reducer';
 import { ISoundsState } from '../base/sounds/reducer';
 import { ITestingState } from '../base/testing/reducer';
 import { ITooltipState } from '../base/tooltip/reducer';
@@ -114,7 +115,7 @@ export interface IReduxState {
     'features/base/participants': IParticipantsState;
     'features/base/premeeting': IPreMeetingState;
     'features/base/responsive-ui': IResponsiveUIState;
-    'features/base/settings': ISettingsState;
+    'features/base/settings': IBaseSettingsState;
     'features/base/sounds': ISoundsState;
     'features/base/tooltip': ITooltipState;
     'features/base/tracks': ITracksState;
@@ -160,7 +161,7 @@ export interface IReduxState {
     'features/remote-control': IRemoteControlState;
     'features/screen-share': IScreenShareState;
     'features/screenshot-capture': IScreenshotCaptureState;
-    'features/settings': ISettingsState;
+    'features/settings': IFeatureSettingsState;
     'features/share-room': IShareRoomState;
     'features/shared-video': ISharedVideoState;
     'features/speaker-stats': ISpeakerStatsState;

@@ -27,7 +27,8 @@ import {
     SET_AUDIO_SETTINGS,
     SET_AUDIO_SETTINGS_VISIBILITY,
     SET_PREVIEW_AUDIO_TRACK,
-    SET_VIDEO_SETTINGS_VISIBILITY
+    SET_VIDEO_SETTINGS_VISIBILITY,
+    SET_VIEW_SETTINGS_VISIBILITY
 } from './actionTypes';
 import LogoutDialog from './components/web/LogoutDialog';
 import SettingsDialog from './components/web/SettingsDialog';
@@ -119,6 +120,19 @@ function setAudioSettingsVisibility(value: boolean) {
 function setVideoSettingsVisibility(value: boolean) {
     return {
         type: SET_VIDEO_SETTINGS_VISIBILITY,
+        value
+    };
+}
+
+/**
+ * Sets the visibility of the view settings.
+ *
+ * @param {boolean} value - The new value.
+ * @returns {Function}
+ */
+function setViewSettingsVisibility(value: boolean) {
+    return {
+        type: SET_VIEW_SETTINGS_VISIBILITY,
         value
     };
 }
@@ -290,6 +304,19 @@ export function toggleVideoSettings() {
         const value = getState()['features/settings'].videoSettingsVisible;
 
         dispatch(setVideoSettingsVisibility(!value));
+    };
+}
+
+/**
+ * Toggles the visibility of the view settings (tile/stage).
+ *
+ * @returns {void}
+ */
+export function toggleViewSettings() {
+    return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
+        const value = (getState() as any)['features/settings'].viewSettingsVisible;
+
+        dispatch(setViewSettingsVisibility(!value));
     };
 }
 
