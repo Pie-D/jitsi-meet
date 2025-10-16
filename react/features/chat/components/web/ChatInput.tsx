@@ -289,6 +289,7 @@ class ChatInput extends Component<IProps, IState> {
         }
 
         const trimmed = this.state.message.trim();
+
         if (trimmed) {
             onSend(trimmed);
 

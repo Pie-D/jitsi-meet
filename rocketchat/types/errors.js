@@ -1,0 +1,18 @@
+/* eslint-disable require-jsdoc */
+export const ERROR_CODES = {
+    NOT_INITIALIZED: 'ROCKETCHAT_NOT_INITIALIZED',
+    AUTH_FAILED: 'ROCKETCHAT_AUTH_FAILED',
+    CONNECTION_FAILED: 'ROCKETCHAT_CONNECTION_FAILED',
+    INVALID_MESSAGE: 'ROCKETCHAT_INVALID_MESSAGE',
+    API_ERROR: 'ROCKETCHAT_API_ERROR',
+    WEBSOCKET_ERROR: 'ROCKETCHAT_WEBSOCKET_ERROR'
+};
+
+export const ERROR_MESSAGES = {
+    [ERROR_CODES.NOT_INITIALIZED]: 'Rocket.Chat integration not initialized',
+    [ERROR_CODES.AUTH_FAILED]: 'Authentication failed',
+    [ERROR_CODES.CONNECTION_FAILED]: 'Connection failed',
+    [ERROR_CODES.INVALID_MESSAGE]: 'Invalid message format',
+    [ERROR_CODES.API_ERROR]: 'API request failed',
+    [ERROR_CODES.WEBSOCKET_ERROR]: 'WebSocket error occurred'
+};

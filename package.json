@@ -224,6 +224,7 @@
     "postinstall": "patch-package --error-on-fail && jetify",
     "validate": "npm ls",
     "start": "make dev",
+    "dev": "rm -rf node_modules && npm i && make dev",
     "test": "DOTENV_CONFIG_PATH=tests/.env wdio run tests/wdio.conf.ts",
     "test-single": "DOTENV_CONFIG_PATH=tests/.env wdio run tests/wdio.conf.ts --spec",
     "test-ff-single": "DOTENV_CONFIG_PATH=tests/.env wdio run tests/wdio.firefox.conf.ts --spec",
