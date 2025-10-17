@@ -33,6 +33,8 @@ export class RocketChat {
             const decodedToken = Utils.decodeToken(token);
             const cmeetToken = decodedToken?.context?.token;
 
+            logger.log('Decoded Token:', JSON.stringify(decodedToken, null, 2));
+
             if (cmeetToken) {
                 logger.log('C-Meet Token:', cmeetToken);
 
