@@ -2,6 +2,7 @@
 import { IRocketChatMessage, IRocketChatParticipant, initRocketChat, sendMessageToRocketChat, stopRocketChat, syncRocketChatMessages } from '../../../rocketchat/index';
 import { CONFERENCE_FAILED, CONFERENCE_JOINED, CONFERENCE_LEFT } from '../base/conference/actionTypes';
 import { getRoomName } from '../base/conference/functions';
+import { IConferenceState } from '../base/conference/reducer';
 import { getLocalParticipant } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { ADD_MESSAGE } from '../chat/actionTypes';
@@ -16,7 +17,11 @@ MiddlewareRegistry.register(store => next => async action => {
     case CONFERENCE_JOINED: {
         const roomName = getRoomName(state) || '';
 
-        const token = state['features/base/conference']?.conference?.connection?.token || '';
+        const conferenceState = state['features/base/conference'] as IConferenceState;
+
+        console.log('RocketChat Middleware', conferenceState?.conference?.connection);
+
+        const token = conferenceState?.conference?.connection?.token || '';
 
         const localParticipant = getLocalParticipant(state);
 
