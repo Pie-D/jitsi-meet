@@ -7,7 +7,7 @@ const logger = require('./logger').getLogger('RocketChat:Index');
 
 let instance = null;
 
-export async function initRocketChat(store, xmpp, meetingId, localParticipant) {
+export async function initRocketChat(store, token, meetingId, localParticipant) {
     try {
         if (!meetingId) {
             logger.error('Meeting ID is required');
@@ -26,7 +26,7 @@ export async function initRocketChat(store, xmpp, meetingId, localParticipant) {
 
         rocketChat.setRocketChatRoomId(rocketChatRoomId);
 
-        await rocketChat.loginToRocketChat(xmpp);
+        await rocketChat.loginToRocketChat(token);
         await rocketChat.checkUserInRocketChatRoom();
         rocketChat.connectWebSocket();
 

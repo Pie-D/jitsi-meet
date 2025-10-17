@@ -28,19 +28,18 @@ export class RocketChat {
         };
     }
 
-    async loginToRocketChat(xmpp) {
+    async loginToRocketChat(token) {
         try {
-            this.xmpp = xmpp;
-            const token = this.xmpp.token;
+            const decodedToken = Utils.decodeToken(token);
+            const cmeetToken = decodedToken?.context?.token;
 
-            if (token) {
-                this.tokenCmeet = Utils.decodeToken(token)?.context?.token;
-                logger.log('C-Meet Token:', this.tokenCmeet);
+            if (cmeetToken) {
+                logger.log('C-Meet Token:', cmeetToken);
 
                 const url = this.config.endpoints.login;
                 const data = await Utils.makeRequest('POST', url, {
                     serviceName: 'keycloak',
-                    accessToken: token,
+                    accessToken: cmeetToken,
                     expiresIn: 24 * 60 * 60
                 });
 
@@ -54,7 +53,7 @@ export class RocketChat {
                 this.rocketChatAuthToken = data.data.authToken;
                 this.rocketChatType = ROCKET_CHAT_USER_TYPES.USER;
                 this.userContext = {
-                    username: this.tokenCmeet?.context?.user?.username
+                    username: decodedToken?.context?.user?.name
                 };
 
                 logger.log('Rocket.Chat login successful as user');
