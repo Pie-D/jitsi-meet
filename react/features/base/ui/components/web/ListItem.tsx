@@ -77,6 +77,12 @@ interface IProps {
      */
     trigger: string;
 
+    /** Optional HTML draggable attribute for enabling drag & drop. */
+    draggable?: boolean;
+
+    /** Optional drag start handler for DnD. */
+    onDragStart?: (e: React.DragEvent) => void;
+
 }
 
 const useStyles = makeStyles()(theme => {
@@ -200,9 +206,11 @@ const ListItem = ({
     onClick,
     onLongPress,
     onMouseLeave,
+    onDragStart,
     testId,
     textChildren,
-    trigger
+    trigger,
+    draggable
 }: IProps) => {
     const { classes, cx } = useStyles();
     const isMobile = isMobileBrowser();
@@ -251,6 +259,8 @@ const ListItem = ({
             data-testid = { testId }
             id = { id }
             onClick = { onClick }
+            draggable = { draggable }
+            onDragStart = { onDragStart }
             role = 'listitem'
             { ...(isMobile
                 ? {

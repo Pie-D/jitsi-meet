@@ -1691,4 +1691,12 @@
         },
         "screenTitle": "Whiteboard"
     }
+  ,
+  "immersive": {
+    "selectTitle": "Choose immersive layout",
+   "secondTitle": "Sample Library",
+    "start": "Start",
+    "slots": "slots",
+    "description": "This layout will be the same for everyone. Participants can be arranged freely within this view."
+  }
 }
