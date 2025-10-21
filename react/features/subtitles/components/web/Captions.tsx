@@ -42,6 +42,11 @@ interface IProps extends IAbstractCaptionsProps {
     _toolboxVisible: boolean;
 
     /**
+     * Whether to show subtitles on stage (only latest) or in ccTab (all history).
+     */
+    showSubtitlesOnStage?: boolean;
+
+    /**
      * An object containing the CSS classes.
      */
     classes?: Partial<Record<keyof ReturnType<typeof styles>, string>>;
@@ -49,7 +54,7 @@ interface IProps extends IAbstractCaptionsProps {
 
 
 const styles = (theme: Theme, props: IProps) => {
-    const { _isLifted = false, _clientHeight, _shiftUp = false, _toolboxVisible = false } = props;
+    const { _isLifted = false, _clientHeight, _shiftUp = false, _toolboxVisible = false, showSubtitlesOnStage = false } = props;
     const fontSize = calculateSubtitlesFontSize(_clientHeight);
 
     // Normally we would use 0.2 * fontSize in order to cover the background gap from line-height: 1.2 but it seems
@@ -71,30 +76,74 @@ const styles = (theme: Theme, props: IProps) => {
         marginBottom += 30;
     }
 
+    // Styling khác nhau cho showSubtitlesOnStage và ccTab
+    const containerStyles = showSubtitlesOnStage ? {
+        // showSubtitlesOnStage: hiển thị ở dưới màn hình, không scroll
+        bottom: `${bottom}px`,
+        marginBottom: `${marginBottom}px`,
+        fontSize: pixelsToRem(fontSize),
+        left: '50%',
+        maxWidth: '50vw',
+        overflowWrap: 'break-word' as const,
+        pointerEvents: 'none' as const,
+        position: 'absolute' as const,
+        textShadow: `
+            0px 0px 1px rgba(0,0,0,0.3),
+            0px 1px 1px rgba(0,0,0,0.3),
+            1px 0px 1px rgba(0,0,0,0.3),
+            0px 0px 1px rgba(0,0,0,0.3)`,
+        transform: 'translateX(-50%)',
+        zIndex: 7, // The popups are with z-index 8. This z-index has to be lower.
+        lineHeight: 1.2,
+        transition: `bottom ${toCSSTransitionValue(getTransitionParamsForElementsAboveToolbox(_toolboxVisible))}`,
+
+        span: {
+            color: '#fff',
+            background: 'black',
+
+            // without this when the text is wrapped on 2+ lines there will be a gap in the background:
+            padding: `${padding}px 8px`,
+            boxDecorationBreak: 'clone' as const
+        }
+    } : {
+        // ccTab: hiển thị với scroll container
+        bottom: `${bottom}px`,
+        marginBottom: `${marginBottom}px`,
+        fontSize: pixelsToRem(fontSize),
+        left: '50%',
+        maxWidth: '50vw',
+        maxHeight: '40vh', // Giới hạn chiều cao để có thể scroll
+        pointerEvents: 'none' as const,
+        position: 'absolute' as const,
+        transform: 'translateX(-50%)',
+        zIndex: 7,
+        transition: `bottom ${toCSSTransitionValue(getTransitionParamsForElementsAboveToolbox(_toolboxVisible))}`
+    };
+
+    const scrollContainerStyles = showSubtitlesOnStage ? {
+        // showSubtitlesOnStage: không cần scroll container
+        maxHeight: 'auto',
+        overflowY: 'visible' as const,
+        overflowX: 'hidden' as const,
+        padding: '8px',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '4px'
+    } : {
+        // ccTab: cần scroll container
+        maxHeight: '100%',
+        overflowY: 'auto' as const,
+        overflowX: 'hidden' as const,
+        scrollBehavior: 'smooth' as const,
+        padding: '8px',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '4px'
+    };
+
     return {
-        transcriptionSubtitles: {
-            bottom: `${bottom}px`,
-            marginBottom: `${marginBottom}px`,
-            fontSize: pixelsToRem(fontSize),
-            left: '50%',
-            maxWidth: '50vw',
-            maxHeight: '40vh', // Giới hạn chiều cao để có thể scroll
-            pointerEvents: 'none' as const,
-            position: 'absolute' as const,
-            transform: 'translateX(-50%)',
-            zIndex: 7, // The popups are with z-index 8. This z-index has to be lower.
-            transition: `bottom ${toCSSTransitionValue(getTransitionParamsForElementsAboveToolbox(_toolboxVisible))}`
-        },
-        subtitlesScrollContainer: {
-            maxHeight: '100%',
-            overflowY: 'auto' as const,
-            overflowX: 'hidden' as const,
-            scrollBehavior: 'smooth' as const,
-            padding: '8px',
-            display: 'flex',
-            flexDirection: 'column' as const,
-            gap: '4px'
-        },
+        transcriptionSubtitles: containerStyles,
+        subtitlesScrollContainer: scrollContainerStyles,
         subtitleMessage: {
             background: 'rgba(0, 0, 0, 0.8)',
             borderRadius: '4px',
@@ -127,15 +176,15 @@ const styles = (theme: Theme, props: IProps) => {
 const Captions = (props: IProps) => {
     console.log('=== Captions component rendered ===');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const { classes } = withStyles.getClasses(props) as any;
-    const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory } = props;
+    const { classes = {} } = withStyles.getClasses(props) as any || {};
+    const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory, showSubtitlesOnStage } = props;
 
-    // Auto-scroll to bottom when new subtitles are added
+    // Auto-scroll to bottom when new subtitles are added (chỉ cho ccTab)
     useEffect(() => {
-        if (scrollContainerRef.current) {
+        if (scrollContainerRef.current && !showSubtitlesOnStage) {
             scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
         }
-    }, [_subtitlesHistory, _transcripts]);
+    }, [_subtitlesHistory, _transcripts, showSubtitlesOnStage]);
 
     if (!_requestingSubtitles || !_displaySubtitles) {
         return null;
@@ -146,7 +195,8 @@ const Captions = (props: IProps) => {
         _subtitlesHistory: _subtitlesHistory,
         _subtitlesHistoryLength: _subtitlesHistory?.length,
         _transcripts: _transcripts,
-        _transcriptsSize: _transcripts?.size
+        _transcriptsSize: _transcripts?.size,
+        showSubtitlesOnStage: showSubtitlesOnStage
     });
 
     // Chỉ sử dụng subtitlesHistory để hiển thị tuần tự như chat
@@ -160,20 +210,32 @@ const Captions = (props: IProps) => {
 
     const paragraphs: ReactElement[] = [];
 
-    // Xử lý subtitlesHistory, bao gồm cả interim subtitles
-    for (const subtitle of dataToRender) {
-        if (subtitle.isTranscription) {
-            const text = `${subtitle.participantId}: ${subtitle.text}`;
-            paragraphs.push(_renderParagraph(subtitle.id, text, classes));
+    if (showSubtitlesOnStage) {
+        // Chế độ showSubtitlesOnStage: chỉ hiển thị phụ đề mới nhất
+        const latestSubtitle = dataToRender
+            .filter(s => s.isTranscription)
+            .sort((a, b) => b.timestamp - a.timestamp)[0];
+        
+        if (latestSubtitle) {
+            const text = `${latestSubtitle.participantId}: ${latestSubtitle.text}`;
+            paragraphs.push(_renderParagraph(latestSubtitle.id, text, classes));
+        }
+    } else {
+        // Chế độ ccTab: hiển thị tất cả phụ đề tuần tự
+        for (const subtitle of dataToRender) {
+            if (subtitle.isTranscription) {
+                const text = `${subtitle.participantId}: ${subtitle.text}`;
+                paragraphs.push(_renderParagraph(subtitle.id, text, classes));
+            }
         }
     }
 
     return (
-        <div className = { classes.transcriptionSubtitles } >
+        <div className = { classes.transcriptionSubtitles || '' } >
             {/* <LanguageSelector /> */}
             <div 
                 ref = { scrollContainerRef }
-                className = { classes.subtitlesScrollContainer }>
+                className = { classes.subtitlesScrollContainer || '' }>
                 { paragraphs }
             </div>
         </div>
@@ -196,9 +258,36 @@ function _renderParagraph(id: string, text: string, classes: any): ReactElement 
     const speaker = parts.length > 1 ? parts[0] : '';
     const subtitle = parts.length > 1 ? parts.slice(1).join(': ') : text;
 
+    // Fallback styles khi classes undefined để đảm bảo phụ đề luôn hiển thị được
+    const fallbackStyles = {
+        background: 'rgba(0, 0, 0, 0.8)',
+        borderRadius: '4px',
+        padding: '8px',
+        marginBottom: '2px',
+        color: '#fff',
+        lineHeight: 1.2,
+        overflowWrap: 'break-word' as const,
+        textShadow: '0px 0px 1px rgba(0,0,0,0.3), 0px 1px 1px rgba(0,0,0,0.3), 1px 0px 1px rgba(0,0,0,0.3)'
+    };
+
+    const speakerStyles = {
+        fontStyle: 'italic',
+        color: '#ccc',
+        fontWeight: 'bold' as const
+    };
+
     return (
-        <div key = { id } className = { classes.subtitleMessage }>
-            { speaker && <span className={ classes.speakerName }>{ speaker }: </span> }
+        <div 
+            key = { id } 
+            className = { classes?.subtitleMessage || '' }
+            style = { !classes?.subtitleMessage ? fallbackStyles : undefined }>
+            { speaker && (
+                <span 
+                    className={ classes?.speakerName || '' }
+                    style = { !classes?.speakerName ? speakerStyles : undefined }>
+                    { speaker }: 
+                </span> 
+            ) }
             <span>{ subtitle }</span>
         </div>
     );
@@ -214,13 +303,15 @@ function _renderParagraph(id: string, text: string, classes: any): ReactElement 
  */
 function mapStateToProps(state: IReduxState) {
     const { clientHeight } = state['features/base/responsive-ui'];
+    const { showSubtitlesOnStage = false } = state['features/base/settings'];
 
     return {
         ..._abstractMapStateToProps(state),
         _isLifted: shouldDisplayStageParticipantBadge(state),
         _clientHeight: clientHeight,
         _shiftUp: state['features/toolbox'].shiftUp,
-        _toolboxVisible: isToolboxVisible(state)
+        _toolboxVisible: isToolboxVisible(state),
+        showSubtitlesOnStage
     };
 }
 
