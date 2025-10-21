@@ -4,11 +4,11 @@ import { IReduxState } from '../app/types';
 import { TILE_VIEW_ENABLED } from '../base/flags/constants';
 import { getFeatureFlag } from '../base/flags/functions';
 
-import TileViewButton from './components/TileViewButton';
+import TileViewSettingsButton from '../toolbox/components/web/TileViewSettingsButton';
 
 const tileview = {
     key: 'tileview',
-    Content: TileViewButton,
+    Content: TileViewSettingsButton,
     group: 2
 };
 

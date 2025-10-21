@@ -280,3 +280,13 @@ export function getAudioSettingsVisibility(state: IReduxState) {
 export function getVideoSettingsVisibility(state: IReduxState) {
     return state['features/settings'].videoSettingsVisible;
 }
+
+/**
+ * Returns the visibility state of the view settings (tile/stage).
+ *
+ * @param {Object} state - The state of the application.
+ * @returns {boolean}
+ */
+export function getViewSettingsVisibility(state: IReduxState) {
+    return state['features/settings'].viewSettingsVisible;
+}

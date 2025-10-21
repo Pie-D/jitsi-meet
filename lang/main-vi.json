@@ -1490,7 +1490,11 @@
         "stopSubtitles": "Dừng phụ đề",
         "surprised": "Ngạc nhiên",
         "talkWhileMutedPopup": "Đang nói chuyện? Bạn đang tắt tiếng.",
-        "tileViewToggle": "Mở/Đóng xem dạng lưới",
+        "tileViewToggle": "Cài đặt hiển thị",
+        "viewSettings": "Chọn chế độ hiển thị",
+        "speakerView": "Người nói",
+        "galleryView": "Thư viện",
+        "immersiveView": "Chế độ nhập vai",
         "toggleCamera": "Mở/Đóng camera",
         "unmute": "Bỏ tắt tiếng",
         "videoSettings": "Cài đặt hình ảnh",
@@ -1688,4 +1692,12 @@
         },
         "screenTitle": "Bảng trắng"
     }
+  ,
+  "immersive": {
+    "selectTitle": "Chọn chế độ hiển thị nhập vai",
+    "secondTitle": "Thư viện mẫu ",
+    "start": "Bắt đầu",
+    "slots": "ô",
+    "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này"
+  }
 }
