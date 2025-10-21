@@ -32,6 +32,7 @@ import { IUserInteractionState } from '../base/user-interaction/reducer';
 import { IBreakoutRoomsState } from '../breakout-rooms/reducer';
 import { ICalendarSyncState } from '../calendar-sync/reducer';
 import { IChatState } from '../chat/reducer';
+import { IImmersiveState } from '../immersive-view/reducer';
 import { IDeepLinkingState } from '../deep-linking/reducer';
 import { IDropboxState } from '../dropbox/reducer';
 import { IDynamicBrandingState } from '../dynamic-branding/reducer';
@@ -138,6 +139,7 @@ export interface IReduxState {
     'features/gifs': IGifsState;
     'features/google-api': IGoogleApiState;
     'features/invite': IInviteState;
+    'features/immersive-view': IImmersiveState;
     'features/jaas': IJaaSState;
     'features/keyboard-shortcuts': IKeyboardShortcutsState;
     'features/large-video': ILargeVideoState;
