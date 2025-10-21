@@ -208,7 +208,7 @@ export default function ImmersiveView() {
                     }
                 }
 
-                function formatNameOrEmail(input) {
+                function formatNameOrEmail(input: string) : string {
                     if (!input) return "";
 
                     // Nếu là email
@@ -222,7 +222,7 @@ export default function ImmersiveView() {
 
                     const initials = parts
                         .slice(0, -1)
-                        .map((word) => word[0].toUpperCase())
+                        .map((word : string) => word[0].toUpperCase())
                         .join("");
                     const lastName = parts[parts.length - 1];
 
@@ -268,7 +268,7 @@ export default function ImmersiveView() {
                                         zIndex: 1000,
                                     }}
                                 >
-                                    {formatNameOrEmail(p.name)}
+                                    {formatNameOrEmail(p.name || "CMC ATIer")}
                                 </div>
                             )}
                         </div>
