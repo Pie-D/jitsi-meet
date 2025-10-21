@@ -238,6 +238,8 @@ export default [
     'useTurnUdp',
     'videoQuality',
     'visitors.enableMediaOnPromote',
+    'visitors.hideVisitorCountForVisitors',
+    'visitors.showJoinMeetingDialog',
     'watchRTCConfigParams.allowBrowserLogCollection',
     'watchRTCConfigParams.collectionInterval',
     'watchRTCConfigParams.console',
