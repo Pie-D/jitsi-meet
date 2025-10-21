@@ -70,20 +70,20 @@ ReducerRegistry.register<ISubtitlesState>('features/subtitles', (
             ...defaultState
         };
     case STORE_SUBTITLE: {
-        const existingIndex = state.subtitlesHistory.findIndex(
-            subtitle => subtitle.id === action.subtitle.id
-        );
+        // const existingIndex = state.subtitlesHistory.findIndex(
+        //     subtitle => subtitle.id === action.subtitle.id
+        // );
 
-        if (existingIndex >= 0 && state.subtitlesHistory[existingIndex].interim) {
-            const newHistory = [ ...state.subtitlesHistory ];
+        // if (existingIndex >= 0 && state.subtitlesHistory[existingIndex].interim) {
+        //     const newHistory = [ ...state.subtitlesHistory ];
 
-            newHistory[existingIndex] = action.subtitle;
+        //     newHistory[existingIndex] = action.subtitle;
 
-            return {
-                ...state,
-                subtitlesHistory: newHistory
-            };
-        }
+        //     return {
+        //         ...state,
+        //         subtitlesHistory: newHistory
+        //     };
+        // }
 
         return {
             ...state,

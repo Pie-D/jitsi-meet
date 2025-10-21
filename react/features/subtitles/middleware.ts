@@ -243,6 +243,8 @@ function _endpointMessageReceived(store: IStore, next: Function, action: AnyActi
 
             return next(action);
         }
+        // Luôn lưu phụ đề vào history để hiển thị tuần tự
+        dispatch(storeSubtitle(subtitle));
 
         // If the user is not requesting transcriptions just bail.
         // Regex to filter out all possible country codes after language code:
