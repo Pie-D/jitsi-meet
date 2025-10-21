@@ -18,7 +18,7 @@ import {
     type IAbstractCaptionsProps,
     _abstractMapStateToProps
 } from '../AbstractCaptions';
-import LanguageSelector from './LanguageSelector';
+// import LanguageSelector from './LanguageSelector';
 interface IProps extends IAbstractCaptionsProps {
 
     /**
@@ -125,8 +125,10 @@ const styles = (theme: Theme, props: IProps) => {
  * Jigasi as subtitles.
  */
 const Captions = (props: IProps) => {
+    console.log('=== Captions component rendered ===');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const { classes, _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory } = props;
+    const { classes } = withStyles.getClasses(props) as any;
+    const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory } = props;
 
     // Auto-scroll to bottom when new subtitles are added
     useEffect(() => {
@@ -138,6 +140,14 @@ const Captions = (props: IProps) => {
     if (!_requestingSubtitles || !_displaySubtitles) {
         return null;
     }
+
+    // Debug: Log để kiểm tra dữ liệu
+    console.log('Captions debug:', {
+        _subtitlesHistory: _subtitlesHistory,
+        _subtitlesHistoryLength: _subtitlesHistory?.length,
+        _transcripts: _transcripts,
+        _transcriptsSize: _transcripts?.size
+    });
 
     // Chỉ sử dụng subtitlesHistory để hiển thị tuần tự như chat
     const dataToRender = _subtitlesHistory && _subtitlesHistory.length > 0 
@@ -159,11 +169,11 @@ const Captions = (props: IProps) => {
     }
 
     return (
-        <div className = { classes?.transcriptionSubtitles || '' } >
-            <LanguageSelector />
+        <div className = { classes.transcriptionSubtitles } >
+            {/* <LanguageSelector /> */}
             <div 
                 ref = { scrollContainerRef }
-                className = { classes?.subtitlesScrollContainer || '' }>
+                className = { classes.subtitlesScrollContainer }>
                 { paragraphs }
             </div>
         </div>
@@ -187,8 +197,8 @@ function _renderParagraph(id: string, text: string, classes: any): ReactElement 
     const subtitle = parts.length > 1 ? parts.slice(1).join(': ') : text;
 
     return (
-        <div key = { id } className = { classes?.subtitleMessage || '' }>
-            { speaker && <span className={ classes?.speakerName || '' }>{ speaker }: </span> }
+        <div key = { id } className = { classes.subtitleMessage }>
+            { speaker && <span className={ classes.speakerName }>{ speaker }: </span> }
             <span>{ subtitle }</span>
         </div>
     );
