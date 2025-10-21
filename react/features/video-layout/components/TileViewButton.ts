@@ -8,9 +8,9 @@ import { getFeatureFlag } from '../../base/flags/functions';
 import { translate } from '../../base/i18n/functions';
 import { IconTileView } from '../../base/icons/svg';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../base/toolbox/components/AbstractButton';
-import { setOverflowMenuVisible } from '../../toolbox/actions.web.ts';
-import { setTileView } from '../actions.any.ts';
-import { shouldDisplayTileView } from '../functions.any';
+import { setOverflowMenuVisible } from '../../toolbox/actions';
+import { setTileView } from '../actions';
+import { shouldDisplayTileView } from '../functions';
 import logger from '../logger';
 
 /**

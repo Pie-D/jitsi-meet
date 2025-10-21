@@ -9,7 +9,7 @@ import { setToolboxVisible } from '../../../toolbox/actions.web';
 import { useDispatch } from 'react-redux';
 import { getViewSettingsVisibility } from '../../functions.web';
 
-import ViewSettingsContent from './ViewSettingsContent.tsx';
+import ViewSettingsContent from './ViewSettingsContent';
 
 interface IProps {
     children: ReactNode;
