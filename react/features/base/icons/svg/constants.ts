@@ -112,7 +112,10 @@ import { default as IconWifi3Bars } from './wifi-3.svg';
 import { default as IconYahoo } from './yahoo.svg';
 import { default as IconSaveSpeechToText } from './saveSpeechToText.svg';
 import { default as IconSaveSpeechToTextHiden } from './saveSpeechToText-hiden.svg';
-import {default as IconMemberImmersiveView } from './member.svg';
+import { default as IconMemberImmersiveView } from './member.svg';
+import { default as IconLanguageVN } from './VN.svg';
+import { default as IconLanguageEN } from './EN.svg';
+
 import { I } from '@jitsi/excalidraw/types/ga';
 /**
  * Map containing the default icons.
@@ -232,5 +235,7 @@ export const DEFAULT_ICON: Record<string, any> = {
     IconYahoo,
     IconSaveSpeechToText,
     IconSaveSpeechToTextHiden,
-    IconMemberImmersiveView
+    IconMemberImmersiveView,
+    IconLanguageVN,
+    IconLanguageEN
 };

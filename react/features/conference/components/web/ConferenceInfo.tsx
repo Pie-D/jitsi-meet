@@ -16,6 +16,7 @@ import { getConferenceInfo } from "../functions.web";
 
 import ConferenceInfoContainer from "./ConferenceInfoContainer";
 import InsecureRoomNameLabel from "./InsecureRoomNameLabel";
+import LanguageToggleLabel from "./LanguageToggleLabel";
 import RaisedHandsCountLabel from "./RaisedHandsCountLabel";
 import SpeakerStatsLabel from "./SpeakerStatsLabel";
 import SubjectText from "./SubjectText";
@@ -96,6 +97,10 @@ const COMPONENTS: Array<{
     {
         Component: ToggleTopPanelLabel,
         id: "top-panel-toggle",
+    },
+    {
+        Component: LanguageToggleLabel,
+        id: "language-toggle",
     },
 ];
 

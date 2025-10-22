@@ -131,7 +131,7 @@ export function getMoreTabProps(stateful: IStateful) {
         disableHideSelfView: disableSelfViewSettings || disableSelfView,
         hideSelfView: getHideSelfView(state),
         iAmVisitor: iAmVisitor(state),
-        languages: LANGUAGES,
+        languages: LANGUAGES.filter(l => l === 'en' || l === 'vi' ),
         maxStageParticipants: state['features/base/settings'].maxStageParticipants,
         showLanguageSettings: configuredTabs.includes('language'),
         showSubtitlesOnStage: state['features/base/settings'].showSubtitlesOnStage,
