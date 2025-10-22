@@ -8,7 +8,7 @@ import { checkBlurSupport, checkVirtualBackgroundEnabled } from './functions';
 const virtualBackground = {
     key: 'select-background',
     Content: VideoBackgroundButton,
-    group: 3
+    group: 2
 };
 
 /**
