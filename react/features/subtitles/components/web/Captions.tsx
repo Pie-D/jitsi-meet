@@ -81,7 +81,7 @@ const styles = (theme: Theme, props: IProps) => {
         // showSubtitlesOnStage: hiển thị ở dưới màn hình, không scroll
         bottom: `${bottom}px`,
         marginBottom: `${marginBottom}px`,
-        fontSize: pixelsToRem(fontSize),
+        fontSize: `20px`,
         left: '50%',
         maxWidth: '50vw',
         overflowWrap: 'break-word' as const,
@@ -109,7 +109,7 @@ const styles = (theme: Theme, props: IProps) => {
         // ccTab: hiển thị với scroll container
         bottom: `${bottom}px`,
         marginBottom: `${marginBottom}px`,
-        fontSize: pixelsToRem(fontSize),
+        fontSize: `20px`,
         left: '50%',
         maxWidth: '50vw',
         maxHeight: '40vh', // Giới hạn chiều cao để có thể scroll
@@ -145,7 +145,7 @@ const styles = (theme: Theme, props: IProps) => {
         transcriptionSubtitles: containerStyles,
         subtitlesScrollContainer: scrollContainerStyles,
         subtitleMessage: {
-            fontSize: pixelsToRem(fontSize),
+            fontSize: `20px`,
             borderRadius: '4px',
             padding: `${padding}px 8px`,
             marginBottom: '2px',
@@ -373,7 +373,7 @@ function _renderParagraph(id: string, text: string, classes: any): ReactElement 
  */
 function mapStateToProps(state: IReduxState) {
     const { clientHeight } = state['features/base/responsive-ui'];
-    const { showSubtitlesOnStage = false } = state['features/base/settings'];
+    const { showSubtitlesOnStage = true } = state['features/base/settings'];
 
     return {
         ..._abstractMapStateToProps(state),
