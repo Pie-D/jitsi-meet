@@ -173,13 +173,82 @@ const styles = (theme: Theme, props: IProps) => {
  * React {@code Component} which can display speech-to-text results from
  * Jigasi as subtitles.
  */
+// const Captions = (props: IProps) => {
+//     console.log('=== Captions component rendered ===');
+//     const scrollContainerRef = useRef<HTMLDivElement>(null);
+//     const { classes = {} } = withStyles.getClasses(props) as any || {};
+//     const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory, showSubtitlesOnStage } = props;
+
+//     // Auto-scroll to bottom when new subtitles are added (chỉ cho ccTab)
+//     useEffect(() => {
+//         if (scrollContainerRef.current && !showSubtitlesOnStage) {
+//             scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+//         }
+//     }, [_subtitlesHistory, _transcripts, showSubtitlesOnStage]);
+
+//     if (!_requestingSubtitles || !_displaySubtitles) {
+//         return null;
+//     }
+
+//     // Debug: Log để kiểm tra dữ liệu
+//     console.log('Captions debug:', {
+//         _subtitlesHistory: _subtitlesHistory,
+//         _subtitlesHistoryLength: _subtitlesHistory?.length,
+//         _transcripts: _transcripts,
+//         _transcriptsSize: _transcripts?.size,
+//         showSubtitlesOnStage: showSubtitlesOnStage
+//     });
+
+//     // Chỉ sử dụng subtitlesHistory để hiển thị tuần tự như chat
+//     const dataToRender = _subtitlesHistory && _subtitlesHistory.length > 0 
+//         ? _subtitlesHistory 
+//         : null;
+
+//     if (!dataToRender || dataToRender.length === 0) {
+//         return null;
+//     }
+
+//     const paragraphs: ReactElement[] = [];
+
+//     if (showSubtitlesOnStage) {
+//         // Chế độ showSubtitlesOnStage: chỉ hiển thị phụ đề mới nhất
+//         const latestSubtitle = dataToRender
+//             .filter(s => s.isTranscription)
+//             .sort((a, b) => b.timestamp - a.timestamp)[0];
+        
+//         if (latestSubtitle) {
+//             const text = `${latestSubtitle.participantId}: ${latestSubtitle.text}`;
+//             paragraphs.push(_renderParagraph(latestSubtitle.id, text, classes));
+//         }
+//     } else {
+//         // Chế độ ccTab: hiển thị tất cả phụ đề tuần tự
+//         for (const subtitle of dataToRender) {
+//             if (subtitle.isTranscription) {
+//                 const text = `${subtitle.participantId}: ${subtitle.text}`;
+//                 paragraphs.push(_renderParagraph(subtitle.id, text, classes));
+//             }
+//         }
+//     }
+
+//     return (
+//         <div className = { classes.transcriptionSubtitles || '' } >
+//             {/* <LanguageSelector /> */}
+//             <div 
+//                 ref = { scrollContainerRef }
+//                 className = { classes.subtitlesScrollContainer || '' }>
+//                 { paragraphs }
+//             </div>
+//         </div>
+//     );
+// };
 const Captions = (props: IProps) => {
     console.log('=== Captions component rendered ===');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const { classes = {} } = withStyles.getClasses(props) as any || {};
+    const { classes = {} } = props;  // Dùng trực tiếp prop classes từ props
+
     const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory, showSubtitlesOnStage } = props;
 
-    // Auto-scroll to bottom when new subtitles are added (chỉ cho ccTab)
+    // Tự động cuộn xuống dưới khi có phụ đề mới (chỉ cho ccTab)
     useEffect(() => {
         if (scrollContainerRef.current && !showSubtitlesOnStage) {
             scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
@@ -231,12 +300,12 @@ const Captions = (props: IProps) => {
     }
 
     return (
-        <div className = { classes.transcriptionSubtitles || '' } >
+        <div className={classes.transcriptionSubtitles || ''}>
             {/* <LanguageSelector /> */}
             <div 
-                ref = { scrollContainerRef }
-                className = { classes.subtitlesScrollContainer || '' }>
-                { paragraphs }
+                ref={scrollContainerRef}
+                className={classes.subtitlesScrollContainer || ''}>
+                {paragraphs}
             </div>
         </div>
     );
