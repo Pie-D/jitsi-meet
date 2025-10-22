@@ -132,6 +132,16 @@ export function getUnreadCount(state: IReduxState) {
 }
 
 /**
+ * Gets the unread files count.
+ *
+ * @param {IReduxState} state - The redux state.
+ * @returns {number} The number of unread files.
+ */
+export function getUnreadFilesCount(state: IReduxState): number {
+    return state['features/chat']?.unreadFilesCount || 0;
+}
+
+/**
  * Get whether the chat smileys are disabled or not.
  *
  * @param {IReduxState} state - The redux state.
@@ -282,4 +292,14 @@ export function getDisplayNameSuffix(message: IMessage): string {
     }
 
     return suffix;
+}
+
+/**
+ * Checks if a message is a file message by verifying the presence of file metadata.
+ *
+ * @param {IMessage} message - The message to check.
+ * @returns {boolean} True if the message contains file metadata, false otherwise.
+ */
+export function isFileMessage(message: IMessage): boolean {
+    return Boolean(message?.fileMetadata);
 }

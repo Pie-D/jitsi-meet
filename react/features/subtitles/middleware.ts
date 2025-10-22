@@ -229,8 +229,9 @@ function _endpointMessageReceived(store: IStore, next: Function, action: AnyActi
         }
 
         const subtitle: ISubtitle = {
-            id: transcriptMessageID,
+            id: `${transcriptMessageID}-${participantId}-${timestamp}-${text.length}`, // Tạo ID duy nhất dựa trên nội dung
             participantId,
+            participantName: participant.name,
             language: json.language,
             text,
             interim: isInterim,
@@ -238,9 +239,10 @@ function _endpointMessageReceived(store: IStore, next: Function, action: AnyActi
             isTranscription: true
         };
 
-        if (isCCTabEnabled(state)) {
-            dispatch(storeSubtitle(subtitle));
+        // Luôn lưu phụ đề vào history để hiển thị tuần tự
+        dispatch(storeSubtitle(subtitle));
 
+        if (isCCTabEnabled(state)) {
             return next(action);
         }
 

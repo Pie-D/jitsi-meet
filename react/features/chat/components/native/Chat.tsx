@@ -7,7 +7,9 @@ import { IReduxState } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
 import JitsiScreen from '../../../base/modal/components/JitsiScreen';
 import { TabBarLabelCounter } from '../../../mobile/navigation/components/TabBarLabelCounter';
+import { getUnreadPollCount } from '../../../polls/functions';
 import { closeChat, sendMessage } from '../../actions.native';
+import { getUnreadFilesCount } from '../../functions';
 import { IChatProps as AbstractProps } from '../../types';
 
 import ChatInputBar from './ChatInputBar';
@@ -15,7 +17,25 @@ import MessageContainer from './MessageContainer';
 import MessageRecipient from './MessageRecipient';
 import styles from './styles';
 
+const RocketChat = require('../../../../../rocketchat');
+const MessageContainerAny: any = MessageContainer;
+
 interface IProps extends AbstractProps {
+
+    /**
+     * The number of unread file messages.
+     */
+    _unreadFilesCount: number;
+
+    /**
+     * The number of unread messages.
+     */
+    _unreadMessagesCount: number;
+
+    /**
+     * The number of unread polls.
+     */
+    _unreadPollsCount: number;
 
     /**
      * Default prop for navigating between screen components(React Navigation).
@@ -47,6 +67,8 @@ class Chat extends Component<IProps> {
         this._onSendMessage = this._onSendMessage.bind(this);
     }
 
+    syncRocketChatMessages: (offset: number) => Promise<void> = RocketChat.syncRocketChatMessages;
+
     /**
      * Implements React's {@link Component#render()}.
      *
@@ -54,6 +76,16 @@ class Chat extends Component<IProps> {
      */
     override render() {
         const { _messages, route } = this.props;
+        let offset = 0;
+        const loadMoreMessages = async () => {
+            try {
+                await this.syncRocketChatMessages(offset);
+                offset += 30;
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.error(e);
+            }
+        };
         const privateMessageRecipient = route?.params?.privateMessageRecipient;
 
         return (
@@ -67,8 +99,9 @@ class Chat extends Component<IProps> {
                 hasBottomTextInput = { true }
                 hasExtraHeaderHeight = { true }
                 style = { styles.chatContainer }>
-                {/* @ts-ignore */}
-                <MessageContainer messages = { _messages } />
+                <MessageContainerAny
+                    loadMoreMessages = { loadMoreMessages }
+                    messages = { _messages } />
                 <MessageRecipient privateMessageRecipient = { privateMessageRecipient } />
             </JitsiScreen>
         );
@@ -96,21 +129,26 @@ class Chat extends Component<IProps> {
  * @private
  * @returns {{
  *     _messages: Array<Object>,
- *     _nbUnreadMessages: number
+ *     _unreadMessagesCount: number,
+ *     _unreadPollsCount: number,
+ *     _unreadFilesCount: number
  * }}
  */
 function _mapStateToProps(state: IReduxState, _ownProps: any) {
-    const { messages, nbUnreadMessages } = state['features/chat'];
-    
+    const { messages, unreadMessagesCount } = state['features/chat'];
+
     return {
         _messages: messages,
-        _nbUnreadMessages: nbUnreadMessages
+        _unreadMessagesCount: unreadMessagesCount,
+        _unreadPollsCount: getUnreadPollCount(state),
+        _unreadFilesCount: getUnreadFilesCount(state)
     };
 }
 
 export default translate(connect(_mapStateToProps)((props: IProps) => {
-    const { _nbUnreadMessages, dispatch, navigation, t } = props;
-    const unreadMessagesNr = _nbUnreadMessages > 0;
+    const { _unreadMessagesCount, _unreadPollsCount, _unreadFilesCount, dispatch, navigation, t } = props;
+    const totalUnread = _unreadMessagesCount + _unreadPollsCount + _unreadFilesCount;
+    const unreadMessagesNr = totalUnread > 0;
 
     const isFocused = useIsFocused();
 
@@ -121,14 +159,14 @@ export default translate(connect(_mapStateToProps)((props: IProps) => {
                     activeUnreadNr = { unreadMessagesNr }
                     isFocused = { isFocused }
                     label = { t('chat.tabs.chat') }
-                    nbUnread = { _nbUnreadMessages } />
+                    unreadCount = { totalUnread } />
             )
         });
 
         return () => {
             isFocused && dispatch(closeChat());
         };
-    }, [ isFocused, _nbUnreadMessages ]);
+    }, [ isFocused, _unreadMessagesCount, _unreadPollsCount, _unreadFilesCount ]);
 
     return (
         <Chat { ...props } />

@@ -95,6 +95,10 @@ const {
     IconStop,
     IconSubtitles,
     IconTileView,
+    IconGalleryView,
+    IconSpeakerView,
+    IconMultiSpeakerView,
+    IconImmersiveView,
     IconTrash,
     IconUserDeleted,
     IconUsers,
@@ -112,7 +116,8 @@ const {
     IconWifi3Bars,
     IconYahoo,
     IconSaveSpeechToText,
-    IconSaveSpeechToTextHiden
+    IconSaveSpeechToTextHiden,
+    IconMemberImmersiveView
 } = Object.keys(DEFAULT_ICON).reduce((exportedIcons: Record<string, any>, key) => {
     return {
         ...exportedIcons,
@@ -216,6 +221,10 @@ export {
     IconStop,
     IconSubtitles,
     IconTileView,
+    IconGalleryView,
+    IconSpeakerView,
+    IconMultiSpeakerView,
+    IconImmersiveView,
     IconTrash,
     IconUserDeleted,
     IconUsers,
@@ -233,5 +242,6 @@ export {
     IconWifi3Bars,
     IconYahoo,
     IconSaveSpeechToText,
-    IconSaveSpeechToTextHiden
+    IconSaveSpeechToTextHiden,
+    IconMemberImmersiveView
 };

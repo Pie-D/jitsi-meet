@@ -92,6 +92,12 @@ interface IProps extends WithTranslation {
      * The translated "you" text.
      */
     youText?: string;
+
+    /** Enable DnD on participant list items. */
+    draggable?: boolean;
+
+    /** Drag start handler to set transfer data. */
+    onDragStart?: (e: React.DragEvent) => void;
 }
 
 const useStyles = makeStyles()(theme => {
@@ -141,7 +147,9 @@ function ParticipantItem({
     raisedHand,
     t,
     videoMediaState = MEDIA_STATE.NONE,
-    youText
+    youText,
+    draggable,
+    onDragStart
 }: IProps) {
     const onClick = useCallback(
         () => openDrawerForParticipant?.({
@@ -183,6 +191,8 @@ function ParticipantItem({
 
     return (
         <ListItem
+            draggable = { draggable }
+            onDragStart = { onDragStart }
             actions = { children }
             hideActions = { local }
             icon = { icon }

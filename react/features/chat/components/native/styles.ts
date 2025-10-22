@@ -189,6 +189,49 @@ export default {
     },
 
     /**
+     * Vertical sign for system messages.
+     */
+    systemMessageSign: {
+        width: 4,
+        alignSelf: 'stretch',
+        backgroundColor: '#007bff',
+        marginRight: BaseTheme.spacing[2],
+        borderRadius: 2
+    },
+
+    /**
+     * Title for system messages.
+     */
+    systemMessageTitle: {
+        ...BaseTheme.typography.bodyShortBold,
+        fontStyle: 'italic' as const
+    },
+
+    /**
+     * Text style for system messages.
+     */
+    systemChatMessage: {
+        ...BaseTheme.typography.bodyShortRegular,
+        color: BaseTheme.palette.text04
+    },
+
+    /**
+     * Row wrapper for system message text area.
+     */
+    systemTextRow: {
+        flexDirection: 'row',
+        alignItems: 'stretch'
+    },
+
+    /**
+     * Column wrapper for system message content.
+     */
+    systemContentColumn: {
+        flexDirection: 'column',
+        flex: 1
+    },
+
+    /**
      * Wrapper for the name and the message text.
      */
     textWrapper: {

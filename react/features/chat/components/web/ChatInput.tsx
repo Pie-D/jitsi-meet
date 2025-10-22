@@ -1,5 +1,4 @@
 import { v4 as uuidV4 } from "uuid";
-import { CMEET_ENV } from "../../ENV";
 import { LocalStorageHandle } from "../../LocalStorageHandler";
 import { Theme } from '@mui/material';
 import React, { Component, RefObject } from 'react';
@@ -78,7 +77,7 @@ interface IProps extends WithTranslation {
     /**
      * Invoked to send chat messages.
      */
-    dispatch: IStore["dispatch"];
+    dispatch: IStore['dispatch'];
 
     /**
      * Callback to invoke on message send.
@@ -91,6 +90,11 @@ interface IProps extends WithTranslation {
  */
 interface IState {
     /**
+     * Whether or not chat is disabled.
+     */
+    isChatDisabled: boolean;
+
+    /**
      * User provided nickname when the input text is provided in the view.
      */
     message: string;
@@ -99,11 +103,6 @@ interface IState {
      * Whether or not the smiley selector is visible.
      */
     showSmileysPanel: boolean;
-
-    /**
-     * Whether or not chat is disabled.
-     */
-    isChatDisabled: boolean;
 }
 
 /**
@@ -146,13 +145,14 @@ class ChatInput extends Component<IProps, IState> {
         this._toggleSmileysPanel = this._toggleSmileysPanel.bind(this);
         this._oninit();
     }
+
     // oninit method when crete component
     _oninit() {
-        this.user = new LocalStorageHandle("features/base/settings").getByKey();
-        if (this.user.hasOwnProperty("id") || !this.user.id) {
+        this.user = new LocalStorageHandle('features/base/settings').getByKey();
+        if (this.user.hasOwnProperty('id') || !this.user.id) {
             this.user.id = uuidV4();
         }
-        this.meetingId = window.location.href.split("/").at(-1);
+        this.meetingId = window.location.href.split('/').at(-1);
     }
     // handle connect ws server
 
@@ -161,9 +161,11 @@ class ChatInput extends Component<IProps, IState> {
     // method support invalid UUID type
     _isValidUUID(arg: any) {
         const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
         if (arg instanceof Array) {
-            return arg.every((x) => uuidRegex.test(x));
+            return arg.every(x => uuidRegex.test(x));
         }
+
         return uuidRegex.test(arg);
     }
     // method handle message : set field in form (server ws , jitsi chat)
@@ -181,15 +183,16 @@ class ChatInput extends Component<IProps, IState> {
             this._focus();
         }
 
-        document.addEventListener("timeSheetEnd", this.handleTimeSheetEnd as EventListener);
+        document.addEventListener('timeSheetEnd', this.handleTimeSheetEnd as EventListener);
     }
 
     override componentWillUnmount() {
-        document.removeEventListener("timeSheetEnd", this.handleTimeSheetEnd as EventListener);
+        document.removeEventListener('timeSheetEnd', this.handleTimeSheetEnd as EventListener);
     }
 
     handleTimeSheetEnd = (event: Event) => {
-        const customEvent = event as CustomEvent<{ isChatDisabled: boolean }>;
+        const customEvent = event as CustomEvent<{ isChatDisabled: boolean; }>;
+
         this.setState({ isChatDisabled: customEvent.detail?.isChatDisabled ?? false });
     };
 
@@ -213,7 +216,7 @@ class ChatInput extends Component<IProps, IState> {
     override render() {
         const classes = withStyles.getClasses(this.props);
         const hideInput = this.props._isSendGroupChatDisabled && !this.props._privateMessageRecipientId;
-
+        // console.log('hideInput', hideInput, this.props._isSendGroupChatDisabled, this.props._privateMessageRecipientId);
         if (hideInput) {
             return (
                 <div className = { classes.chatDisabled }>
@@ -236,26 +239,24 @@ class ChatInput extends Component<IProps, IState> {
                         </div>
                     )}
                     <Input
-                        className="chat-input"
-                        icon={this.props._areSmileysDisabled ? undefined : IconFaceSmile}
-                        iconClick={this._toggleSmileysPanel}
-                        id="chat-input-messagebox"
-                        maxRows={5}
-                        onChange={this._onMessageChange}
-                        onKeyPress={this._onDetectSubmit}
-                        placeholder={this.props.t("chat.messagebox")}
-                        ref={this._textArea}
-                        textarea={true}
-                        value={this.state.message}
-                        disabled={this.state.isChatDisabled}
-                    />
+                        className = 'chat-input'
+                        disabled = { this.state.isChatDisabled }
+                        icon = { this.props._areSmileysDisabled ? undefined : IconFaceSmile }
+                        iconClick = { this._toggleSmileysPanel }
+                        id = 'chat-input-messagebox'
+                        maxRows = { 5 }
+                        onChange = { this._onMessageChange }
+                        onKeyPress = { this._onDetectSubmit }
+                        placeholder = { this.props.t('chat.messagebox') }
+                        ref = { this._textArea }
+                        textarea = { true }
+                        value = { this.state.message } />
                     <Button
-                        accessibilityLabel={this.props.t("chat.sendButton")}
-                        disabled={!this.state.message.trim() || this.state.isChatDisabled}
-                        icon={IconSend}
-                        onClick={this._onSubmitMessage}
-                        size={isMobileBrowser() ? "large" : "medium"}
-                    />
+                        accessibilityLabel = { this.props.t('chat.sendButton') }
+                        disabled = { !this.state.message.trim() || this.state.isChatDisabled }
+                        icon = { IconSend }
+                        onClick = { this._onSubmitMessage }
+                        size = { isMobileBrowser() ? 'large' : 'medium' } />
                 </div>
             </div>
         );
@@ -339,8 +340,10 @@ class ChatInput extends Component<IProps, IState> {
      */
     _onMessageChange(value: string) {
         const maxLength = 1000;
+
         if (value.length > maxLength) {
             alert(`Tin nhắn không được vượt quá ${maxLength} ký tự!`);
+
             return;
         }
         this.setState({ message: value });

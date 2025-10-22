@@ -1,10 +1,12 @@
 import { WithTranslation } from 'react-i18next';
 
 import { IStore } from '../app/types';
+import { IFileMetadata } from '../file-sharing/types';
 
 export interface IMessage {
     displayName: string;
     error?: Object;
+    fileMetadata?: IFileMetadata;
     isFromGuest?: boolean;
     isFromVisitor?: boolean;
     isReaction: boolean;
@@ -33,7 +35,7 @@ export interface IChatProps extends WithTranslation {
     /**
      * Number of unread chat messages.
      */
-    _nbUnreadMessages: number;
+    _unreadMessagesCount: number;
 
     /**
      * The Redux dispatch function.

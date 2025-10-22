@@ -359,7 +359,7 @@
         "kickParticipantDialog": "Bạn có chắc muốn đuổi người này ra?",
         "kickParticipantTitle": "Tắt tiếng của người tham dự này?",
         "kickSystemTitle": "Ối! Bạn bị đuổi khỏi cuộc họp rồi",
-        "kickTitle": "Ôi! {{Participant Display Name}} đã đuổi bạn ra khỏi cuộc họp",
+        "kickTitle": "Ôi! {{participantDisplayName}} đã đuổi bạn ra khỏi cuộc họp",
         "learnMore": "tìm hiểu thêm",
         "linkMeeting": "Liên kết cuộc họp",
         "linkMeetingTitle": "Liên kết cuộc họp với Salesforce",
@@ -500,7 +500,7 @@
         "stopRecordingWarning": "Bạn có chắc chắn muốn dừng ghi hình không?",
         "stopStreamingWarning": "Bạn có chắc chắn muốn dừng phát trực tuyến?",
         "streamKey": "Mã phát trực tuyến",
-        "thankYou": "Cám ơn bạn đã sử dụng {{appName}}!",
+        "thankYou": "Cảm ơn bạn đã sử dụng {{appName}}!",
         "token": "mã thông báo",
         "tokenAuthFailed": "Rất tiếc, bạn không được phép tham gia cuộc gọi này.",
         "tokenAuthFailedReason": {
@@ -748,7 +748,8 @@
         "notificationTitle": "Phòng chờ",
         "passwordJoinButton": "Tham gia",
         "title": "Phòng chờ",
-        "toggleLabel": "Kích hoạt phòng chờ"
+        "toggleLabel": "Kích hoạt phòng chờ",
+        "waitForModerator": "Cuộc họp vẫn chưa bắt đầu vì chưa có người điều hành nào đến. Nếu bạn muốn trở thành người điều hành, vui lòng đăng nhập. Nếu không, vui lòng đợi."
     },
     "localRecording": {
         "clientState": {
@@ -1489,7 +1490,11 @@
         "stopSubtitles": "Dừng phụ đề",
         "surprised": "Ngạc nhiên",
         "talkWhileMutedPopup": "Đang nói chuyện? Bạn đang tắt tiếng.",
-        "tileViewToggle": "Mở/Đóng xem dạng lưới",
+        "tileViewToggle": "Cài đặt hiển thị",
+        "viewSettings": "Chọn chế độ hiển thị",
+        "speakerView": "Người nói",
+        "galleryView": "Thư viện",
+        "immersiveView": "Chế độ nhập vai",
         "toggleCamera": "Mở/Đóng camera",
         "unmute": "Bỏ tắt tiếng",
         "videoSettings": "Cài đặt hình ảnh",
@@ -1687,4 +1692,12 @@
         },
         "screenTitle": "Bảng trắng"
     }
+  ,
+  "immersive": {
+    "selectTitle": "Chọn chế độ hiển thị nhập vai",
+    "secondTitle": "Thư viện mẫu ",
+    "start": "Bắt đầu",
+    "slots": "ô",
+    "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này"
+  }
 }

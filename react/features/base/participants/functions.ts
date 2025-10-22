@@ -664,7 +664,7 @@ export function isParticipantModerator(participant?: IParticipant) {
 }
 
 // export function isRoomOwner(participant?: IParticipant, roomOwner?: string) {
-//     console.log("dht - id - roomOwner - logic", participant?.id, roomOwner, participant?.id === roomOwner)
+//     // console.log("dht - id - roomOwner - logic", participant?.id, roomOwner, participant?.id === roomOwner)
 //     return participant?.id === roomOwner;
 // }
 /**

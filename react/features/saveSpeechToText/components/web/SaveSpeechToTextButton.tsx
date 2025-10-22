@@ -89,7 +89,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 }
 
 function _mapStateToProps(state: IReduxState) {
-    // const isOwner = isLocalRoomOwner(state);
+    // const isOwner = isParticipantModerator(state);
     const isOwner = isLocalParticipantModerator(state);
     return {
         _toggled: state['features/saveSpeechToText'].isOpen,

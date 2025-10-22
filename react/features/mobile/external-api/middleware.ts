@@ -6,6 +6,7 @@ import { AnyAction } from 'redux';
 
 // @ts-ignore
 import { ENDPOINT_TEXT_MESSAGE_NAME } from '../../../../modules/API/constants';
+import { syncRocketChatMessages } from '../../../../rocketchat';
 import { appNavigate } from '../../app/actions.native';
 import { IStore } from '../../app/types';
 import { APP_WILL_MOUNT, APP_WILL_UNMOUNT } from '../../base/app/actionTypes';
@@ -53,7 +54,7 @@ import { CAMERA_FACING_MODE_MESSAGE } from '../../base/tracks/constants';
 import { getLocalTracks, isLocalTrackMuted } from '../../base/tracks/functions.native';
 import { ITrack } from '../../base/tracks/types';
 import { CLOSE_CHAT, OPEN_CHAT } from '../../chat/actionTypes';
-import { closeChat, openChat, sendMessage, setPrivateMessageRecipient } from '../../chat/actions.native';
+import { addMessage, closeChat, openChat, sendMessage, setPrivateMessageRecipient } from '../../chat/actions.native';
 import { isEnabled as isDropboxEnabled } from '../../dropbox/functions.native';
 import { hideNotification, showNotification } from '../../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE, NOTIFICATION_TYPE } from '../../notifications/constants';
@@ -168,6 +169,7 @@ externalAPIEnabled && MiddlewareRegistry.register(store => next => action => {
     case CONFERENCE_JOINED:
         _sendConferenceEvent(store, action);
         _registerForEndpointTextMessages(store);
+        syncRocketChatMessages(0).catch(e => logger.warn('RocketChat sync failed', e));
         break;
 
     case CONFERENCE_BLURRED:
@@ -651,6 +653,18 @@ function _registerForNativeEvents(store: IStore) {
             facingMode
         });
     });
+
+    eventEmitter.addListener(ExternalAPI.SYNC_ROCKETCHAT_MESSAGES, async ({ offset }: any) => {
+        try {
+            await syncRocketChatMessages(Number(offset) || 0);
+        } catch (e) {
+            logger.warn('RocketChat sync failed', e);
+        }
+    });
+
+    eventEmitter.addListener(ExternalAPI.ADD_CHAT_MESSAGE, (payload: any) => {
+        store.dispatch(addMessage(payload));
+    });
 }
 
 /**
@@ -677,6 +691,8 @@ function _unregisterForNativeEvents() {
     eventEmitter.removeAllListeners(ExternalAPI.STOP_RECORDING);
     eventEmitter.removeAllListeners(ExternalAPI.OVERWRITE_CONFIG);
     eventEmitter.removeAllListeners(ExternalAPI.SEND_CAMERA_FACING_MODE_MESSAGE);
+    eventEmitter.removeAllListeners(ExternalAPI.SYNC_ROCKETCHAT_MESSAGES);
+    eventEmitter.removeAllListeners(ExternalAPI.ADD_CHAT_MESSAGE);
 }
 
 /**

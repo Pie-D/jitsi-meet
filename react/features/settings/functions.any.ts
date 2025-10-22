@@ -151,12 +151,11 @@ export function getModeratorTabProps(stateful: IStateful) {
     const state = toState(stateful);
     const {
         conference,
-        followMeEnabled,
-        followMeRecorderEnabled,
         startAudioMutedPolicy,
         startVideoMutedPolicy,
         startReactionsMuted
     } = state['features/base/conference'];
+    const { followMeEnabled, followMeRecorderEnabled } = state['features/follow-me'];
     const { groupChatWithPermissions } = state['features/chat'];
     const { disableReactionsModeration } = state['features/base/config'];
     const followMeActive = isFollowMeActive(state);
@@ -280,4 +279,14 @@ export function getAudioSettingsVisibility(state: IReduxState) {
  */
 export function getVideoSettingsVisibility(state: IReduxState) {
     return state['features/settings'].videoSettingsVisible;
+}
+
+/**
+ * Returns the visibility state of the view settings (tile/stage).
+ *
+ * @param {Object} state - The state of the application.
+ * @returns {boolean}
+ */
+export function getViewSettingsVisibility(state: IReduxState) {
+    return state['features/settings'].viewSettingsVisible;
 }

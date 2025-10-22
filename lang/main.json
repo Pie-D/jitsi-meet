@@ -114,6 +114,9 @@
         "error": "Error: your message was not sent. Reason: {{error}}",
         "everyone": "Everyone",
         "fieldPlaceHolder": "Aa",
+        "fileAccessibleTitle": "{{user}} uploaded a file",
+        "fileAccessibleTitleMe": "me uploaded a file",
+        "fileDeleted": "A file was deleted",
         "guestsChatIndicator": "(guest)",
         "lobbyChatMessageTo": "Lobby chat message to {{recipient}}",
         "message": "Message",
@@ -280,7 +283,6 @@
         "Submit": "Submit",
         "Understand": "I understand, keep me muted for now",
         "UnderstandAndUnmute": "I understand, please unmute me",
-        "WaitForHostMsg": "The conference has not yet started because no moderators have yet arrived. If you'd like to become a moderator please log-in. Otherwise, please wait.",
         "WaitForHostNoAuthMsg": "The conference has not yet started because no moderators have yet arrived. Please wait.",
         "WaitingForHostButton": "Wait for moderator",
         "WaitingForHostTitle": "Waiting for a moderator…",
@@ -523,6 +525,7 @@
         "tokenAuthFailedWithReasons": "Sorry, you're not allowed to join this call. Possible reasons: {{reason}}",
         "tokenAuthUnsupported": "Token URL is not supported.",
         "transcribing": "Transcribing",
+        "unauthenticatedAccessDisabled": "This call requires authentication. Please login in order to proceed.",
         "unlockRoom": "Remove meeting $t(lockRoomPassword)",
         "user": "User",
         "userIdentifier": "User identifier",
@@ -570,10 +573,12 @@
         "downloadStarted": "File download started",
         "dragAndDrop": "Drag and drop files here or anywhere on screen",
         "fileAlreadyUploaded": "File has already been uploaded to this meeting.",
+        "fileRemovedByOther": "Your file '{{ fileName }}' was removed",
         "fileTooLargeDescription": "Please make sure the file does not exceed {{ maxFileSize }}.",
         "fileTooLargeTitle": "The selected file is too large",
         "fileUploadProgress": "File upload progress",
         "fileUploadedSuccessfully": "File uploaded successfully",
+        "newFileNotification": "{{ participantName }} shared '{{ fileName }}'",
         "removeFile": "Remove",
         "removeFileSuccess": "File removed successfully",
         "uploadFailedDescription": "Please try again.",
@@ -748,7 +753,8 @@
         "notificationTitle": "Lobby",
         "passwordJoinButton": "Join",
         "title": "Lobby",
-        "toggleLabel": "Enable lobby"
+        "toggleLabel": "Enable lobby",
+        "waitForModerator": "The conference has not yet started because no moderators have yet arrived. If you'd like to become a moderator please log-in. Otherwise, please wait."
     },
     "localRecording": {
         "clientState": {
@@ -965,6 +971,9 @@
         "by": "By {{ name }}",
         "closeButton": "Close poll",
         "create": {
+            "accessibilityLabel": {
+                "send": "Send poll"
+            },
             "addOption": "Add option",
             "answerPlaceholder": "Option {{index}}",
             "cancel": "Cancel",
@@ -973,8 +982,7 @@
             "pollQuestion": "Poll Question",
             "questionPlaceholder": "Ask a question",
             "removeOption": "Remove option",
-            "save": "Save",
-            "send": "Send"
+            "save": "Save"
         },
         "errors": {
             "notUniqueOption": "Options must be unique"
@@ -1437,8 +1445,8 @@
         "linkToSalesforce": "Link to Salesforce",
         "lobbyButtonDisable": "Disable lobby mode",
         "lobbyButtonEnable": "Enable lobby mode",
-        "login": "Log-in",
-        "logout": "Log-out",
+        "login": "Log In",
+        "logout": "Log Out",
         "love": "Heart",
         "lowerYourHand": "Lower your hand",
         "moreActions": "More actions",
@@ -1489,7 +1497,11 @@
         "stopSubtitles": "Stop subtitles",
         "surprised": "Surprised",
         "talkWhileMutedPopup": "Trying to speak? You are muted.",
-        "tileViewToggle": "Toggle tile view",
+        "tileViewToggle": "Display settings",
+        "viewSettings": "Select display mode",
+        "speakerView": "Speaker view",
+        "galleryView": "Library view",
+        "immersiveView": "Immersive view",
         "toggleCamera": "Toggle camera",
         "unmute": "Unmute microphone",
         "videoSettings": "Video settings",
@@ -1687,4 +1699,12 @@
         },
         "screenTitle": "Whiteboard"
     }
+  ,
+  "immersive": {
+    "selectTitle": "Choose immersive layout",
+   "secondTitle": "Sample Library",
+    "start": "Start",
+    "slots": "slots",
+    "description": "This layout will be the same for everyone. Participants can be arranged freely within this view."
+  }
 }

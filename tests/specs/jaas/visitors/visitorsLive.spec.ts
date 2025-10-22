@@ -2,7 +2,7 @@ import { expect } from '@wdio/globals';
 
 import { Participant } from '../../../helpers/Participant';
 import { setTestProperties } from '../../../helpers/TestProperties';
-import { joinMuc, generateJaasToken as t } from '../../helpers/jaas';
+import { joinJaasMuc, generateJaasToken as t } from '../../../helpers/jaas';
 
 setTestProperties(__filename, {
     useJaas: true,
@@ -10,7 +10,7 @@ setTestProperties(__filename, {
     usesBrowsers: [ 'p1', 'p2' ]
 });
 
-describe('Visitors', () => {
+describe('Visitors live', () => {
     let visitor: Participant, moderator: Participant;
 
     it('setup', async () => {
@@ -19,7 +19,7 @@ describe('Visitors', () => {
             visitorsLive: false
         };
 
-        moderator = await joinMuc({
+        moderator = await joinJaasMuc({
             name: 'p1',
             token: t({ room: ctx.roomName, displayName: 'Mo de Rator', moderator: true })
         });
@@ -28,11 +28,10 @@ describe('Visitors', () => {
         await moderator.driver.waitUntil(() => moderator.execute(() => APP.conference._room.isVisitorsSupported()), {
             timeout: 2000
         }).catch(e => {
-            console.log(`Skipping test due to error: ${e}`);
-            ctx.skipSuiteTests = true;
+            ctx.skipSuiteTests = `Because isVisitorsSupported() returned an error: ${e}.`;
         });
 
-        visitor = await joinMuc({
+        visitor = await joinJaasMuc({
             name: 'p2',
             token: t({ room: ctx.roomName, displayName: 'Visi Tor', visitor: true })
         }, {

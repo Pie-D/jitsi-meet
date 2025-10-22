@@ -27,7 +27,7 @@ const useStyles = makeStyles()(theme => {
             flexDirection: 'column',
             maxWidth: '100%',
 
-            '&.remote': {
+            '&.remote, &.file': {
                 maxWidth: 'calc(100% - 40px)' // 100% - avatar and margin
             }
         },
@@ -67,10 +67,9 @@ const ChatMessageGroup = ({ className = '', messages }: IProps) => {
         <div className = { clsx(classes.groupContainer, className) }>
             {!isSystemMessage && (
                 <Avatar
-                    className={clsx(classes.avatar, 'avatar')}
-                    participantId={messages[0].participantId}
-                    size={32}
-                />
+                    className = { clsx(classes.avatar, 'avatar') }
+                    participantId = { messages[0].participantId }
+                    size = { 32 } />
             )}
             <div className = { `${classes.messageGroup} chat-message-group ${className}` }>
                 {messages.map((message, i) => (
@@ -78,8 +77,8 @@ const ChatMessageGroup = ({ className = '', messages }: IProps) => {
                         className = { className }
                         key = { i }
                         message = { message }
-                        showDisplayName = { i === 0 }
-                        showTimestamp = { i === messages.length - 1 } />
+                        showDisplayName = { isSystemMessage ? false : i === 0 }
+                        showTimestamp = { isSystemMessage ? false : i === messages.length - 1 } />
                 ))}
             </div>
         </div>

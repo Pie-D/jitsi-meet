@@ -31,6 +31,8 @@ import HangupMenuButton from './HangupMenuButton';
 import { LeaveConferenceButton } from './LeaveConferenceButton';
 import OverflowMenuButton from './OverflowMenuButton';
 import Separator from './Separator';
+import { getViewSettingsVisibility } from '../../../settings/functions.web';
+import { toggleViewSettings } from '../../../settings/actions.web';
 
 /**
  * The type of the React {@code Component} props of {@link Toolbox}.
@@ -89,6 +91,7 @@ export default function Toolbox({
     const reduxToolbarButtons = useSelector((state: IReduxState) => state['features/toolbox'].toolbarButtons);
     const toolbarButtonsToUse = toolbarButtons || reduxToolbarButtons;
     const isDialogVisible = useSelector((state: IReduxState) => Boolean(state['features/base/dialog'].component));
+    const viewSettingsVisible = useSelector(getViewSettingsVisibility);
     const localParticipant = useSelector(getLocalParticipant);
     const transcribing = useSelector(isTranscribing);
     const _isCCTabEnabled = useSelector(isCCTabEnabled);
@@ -160,6 +163,13 @@ export default function Toolbox({
             dispatch(setToolbarHovered(false));
         }
     }, [ dispatch, overflowMenuVisible, isDialogVisible, onSetOverflowVisible ]);
+
+    // Keep toolbox visible while View Settings popover is open (and close it if toolbox somehow hides)
+    useEffect(() => {
+        if (viewSettingsVisible && !toolbarVisible) {
+            dispatch(setToolboxVisible(true));
+        }
+    }, [ dispatch, viewSettingsVisible, toolbarVisible ]);
 
     /**
      * Key handler for overflow/hangup menus.

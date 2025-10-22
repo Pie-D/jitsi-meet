@@ -70,21 +70,32 @@ ReducerRegistry.register<ISubtitlesState>('features/subtitles', (
             ...defaultState
         };
     case STORE_SUBTITLE: {
-        const existingIndex = state.subtitlesHistory.findIndex(
-            subtitle => subtitle.id === action.subtitle.id
+        // Kiểm tra xem subtitle đã tồn tại chưa để tránh duplicate
+        // Sử dụng participantId + text + timestamp để xác định duplicate
+        const existingSubtitleIndex = state.subtitlesHistory.findIndex(subtitle => 
+            subtitle.participantId === action.subtitle.participantId &&
+            subtitle.text === action.subtitle.text &&
+            Math.abs(subtitle.timestamp - action.subtitle.timestamp) < 1000 // Trong vòng 1 giây
         );
-
-        if (existingIndex >= 0 && state.subtitlesHistory[existingIndex].interim) {
-            const newHistory = [ ...state.subtitlesHistory ];
-
-            newHistory[existingIndex] = action.subtitle;
-
-            return {
-                ...state,
-                subtitlesHistory: newHistory
-            };
+        
+        // Nếu đã tồn tại thì không thêm nữa, chỉ cập nhật nếu cần
+        if (existingSubtitleIndex !== -1) {
+            // Có thể cập nhật interim status nếu cần
+            const existingSubtitle = state.subtitlesHistory[existingSubtitleIndex];
+            if (existingSubtitle.interim && !action.subtitle.interim) {
+                // Cập nhật từ interim thành final
+                const updatedSubtitles = [...state.subtitlesHistory];
+                updatedSubtitles[existingSubtitleIndex] = action.subtitle;
+                return {
+                    ...state,
+                    subtitlesHistory: updatedSubtitles
+                };
+            }
+            // Nếu không cần cập nhật thì giữ nguyên
+            return state;
         }
-
+        
+        // Thêm subtitle mới vào cuối mảng để hiển thị tuần tự như chat
         return {
             ...state,
             subtitlesHistory: [

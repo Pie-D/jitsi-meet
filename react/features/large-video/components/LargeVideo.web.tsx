@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
-// @ts-expect-error
+// @ts-ignore
 import VideoLayout from '../../../../modules/UI/videolayout/VideoLayout';
 import { IReduxState, IStore } from '../../app/types';
 import { isDisplayNameVisible } from '../../base/config/functions.web';
@@ -14,7 +14,7 @@ import { setColorAlpha } from '../../base/util/helpers';
 import { isSpotTV } from '../../base/util/spot';
 import StageParticipantNameLabel from '../../display-name/components/web/StageParticipantNameLabel';
 import { FILMSTRIP_BREAKPOINT } from '../../filmstrip/constants';
-import { getVerticalViewMaxWidth, isFilmstripResizable } from '../../filmstrip/functions.web';
+import { getVerticalViewMaxWidth, isFilmstripResizable, isVideoPlayable } from '../../filmstrip/functions.web';
 import SharedVideo from '../../shared-video/components/web/SharedVideo';
 import Captions from '../../subtitles/components/web/Captions';
 import { areClosedCaptionsEnabled } from '../../subtitles/functions.any';
@@ -25,6 +25,9 @@ import { setSeeWhatIsBeingShared } from '../actions.web';
 import { getLargeVideoParticipant } from '../functions';
 
 import ScreenSharePlaceholder from './ScreenSharePlaceholder.web';
+
+// Declare global provided by the legacy UI
+declare const interfaceConfig: any;
 
 
 interface IProps {
@@ -129,6 +132,12 @@ interface IProps {
      * The Redux dispatch function.
      */
     dispatch: IStore['dispatch'];
+
+    /** Whether immersive view is enabled. */
+    _immersiveEnabled?: boolean;
+
+    /** Whether the participant on large video has a playable video track. */
+    _isLargeVideoPlayable?: boolean;
 }
 
 /** .
@@ -206,7 +215,8 @@ class LargeVideo extends Component<IProps> {
             _noAutoPlayVideo,
             _showDominantSpeakerBadge,
             _whiteboardEnabled,
-            _showSubtitles
+            _showSubtitles,
+            _immersiveEnabled
         } = this.props;
         const style = this._getCustomStyles();
         const className = 'videocontainer';
@@ -257,7 +267,7 @@ class LargeVideo extends Component<IProps> {
                 { (!interfaceConfig.DISABLE_TRANSCRIPTION_SUBTITLES && _showSubtitles)
                     && <Captions /> }
                 {
-                    _isDisplayNameVisible
+                    _isDisplayNameVisible && !_immersiveEnabled
                     && (
                         _showDominantSpeakerBadge && <StageParticipantNameLabel />
                     )
@@ -330,6 +340,14 @@ class LargeVideo extends Component<IProps> {
             styles.backgroundSize = 'cover';
         }
 
+        // If we are in speaker/stage view (non-immersive) and the large video has no
+        // playable video (camera off), use the custom background image.
+        if (!this.props._immersiveEnabled && !this.props._isLargeVideoPlayable) {
+            styles.backgroundImage = 'linear-gradient(to bottom, transparent 70%, rgba(0,0,0,0.7)), url(images/template-immersive/cmc-ati2.png)';
+            styles.backgroundSize = 'cover';
+            styles.backgroundRepeat = 'no-repeat';
+            styles.backgroundPosition = 'top';
+        }
         if (_visibleFilmstrip && Number(_verticalFilmstripWidth) >= FILMSTRIP_BREAKPOINT) {
             styles.width = `calc(100% - ${_verticalViewMaxWidth || 0}px)`;
         }
@@ -377,6 +395,9 @@ function _mapStateToProps(state: IReduxState) {
     const videoTrack = getVideoTrackByParticipant(state, largeVideoParticipant);
     const isLocalScreenshareOnLargeVideo = largeVideoParticipant?.id?.includes(localParticipantId ?? '')
         && videoTrack?.videoType === VIDEO_TYPE.DESKTOP;
+    const isPlayable = largeVideoParticipant?.id
+        ? isVideoPlayable(state, largeVideoParticipant.id)
+        : false;
 
     return {
         _backgroundAlpha: state['features/base/config'].backgroundAlpha,
@@ -399,7 +420,9 @@ function _mapStateToProps(state: IReduxState) {
         _verticalFilmstripWidth: verticalFilmstripWidth.current,
         _verticalViewMaxWidth: getVerticalViewMaxWidth(state),
         _visibleFilmstrip: visible,
-        _whiteboardEnabled: isWhiteboardEnabled(state)
+        _whiteboardEnabled: isWhiteboardEnabled(state),
+        _immersiveEnabled: Boolean(state['features/immersive-view']?.enabled),
+        _isLargeVideoPlayable: isPlayable
     };
 }
 

@@ -104,6 +104,10 @@ class ExternalAPIModule extends ReactContextBaseJavaModule {
         constants.put("OVERWRITE_CONFIG", BroadcastAction.Type.OVERWRITE_CONFIG.getAction());
         constants.put("SEND_CAMERA_FACING_MODE_MESSAGE", BroadcastAction.Type.SEND_CAMERA_FACING_MODE_MESSAGE.getAction());
 
+        // Custom actions
+        constants.put("ADD_CHAT_MESSAGE", BroadcastAction.Type.ADD_CHAT_MESSAGE.getAction());
+        constants.put("SYNC_ROCKETCHAT_MESSAGES", BroadcastAction.Type.SYNC_ROCKETCHAT_MESSAGES.getAction());
+
         return constants;
     }
 

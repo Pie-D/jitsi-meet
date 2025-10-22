@@ -18,6 +18,7 @@ export interface ISubtitle extends IGroupableMessage {
     isTranscription?: boolean;
     language?: string;
     participantId: string;
+    participantName?: string; // thêm tên để hiển thị
     text: string;
     timestamp: number;
 }

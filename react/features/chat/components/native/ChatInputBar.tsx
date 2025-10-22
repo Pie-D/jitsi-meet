@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { WithTranslation } from 'react-i18next';
-import { Platform, TextStyle, View, ViewStyle } from 'react-native';
+import { DeviceEventEmitter, Platform, TextStyle, View, ViewStyle } from 'react-native';
 import { Text } from 'react-native-paper';
 import { connect } from 'react-redux';
 
@@ -46,6 +46,11 @@ interface IState {
     addPadding: boolean;
 
     /**
+     * Whether chat input should be disabled (similar to web ChatInput.tsx).
+     */
+    isChatDisabled: boolean;
+
+    /**
      * The value of the input field.
      */
     message: string;
@@ -60,6 +65,8 @@ interface IState {
  * Implements the chat input bar with text field and action(s).
  */
 class ChatInputBar extends Component<IProps, IState> {
+    private _chatDisableSub?: { remove: () => void; };
+
     /**
      * Instantiates a new instance of the component.
      *
@@ -71,12 +78,28 @@ class ChatInputBar extends Component<IProps, IState> {
         this.state = {
             addPadding: false,
             message: '',
-            showSend: false
+            showSend: false,
+            isChatDisabled: false
         };
 
         this._onChangeText = this._onChangeText.bind(this);
         this._onFocused = this._onFocused.bind(this);
         this._onSubmit = this._onSubmit.bind(this);
+    }
+
+    override componentDidMount() {
+        this._chatDisableSub = DeviceEventEmitter.addListener('timeSheetEnd', (payload: any) => {
+            const disabled = payload?.isChatDisabled;
+
+            this.setState({ isChatDisabled: Boolean(disabled) });
+        });
+    }
+
+    override componentWillUnmount() {
+        // @ts-ignore
+        if (this._chatDisableSub?.remove) {
+            this._chatDisableSub.remove();
+        }
     }
 
     /**
@@ -115,17 +138,19 @@ class ChatInputBar extends Component<IProps, IState> {
                 <Input
                     blurOnSubmit = { false }
                     customStyles = {{ container: styles.customInputContainer }}
+                    editable = { !this.state.isChatDisabled }
                     id = 'chat-input-messagebox'
                     multiline = { false }
                     onBlur = { this._onFocused(false) }
                     onChange = { this._onChangeText }
                     onFocus = { this._onFocused(true) }
                     onSubmitEditing = { this._onSubmit }
-                    placeholder = { this.props.t('chat.fieldPlaceHolder') }
+                    // placeholder = { this.props.t('chat.fieldPlaceHolder') }
+                    placeholder = 'Nhập tin nhắn...'
                     returnKeyType = 'send'
                     value = { this.state.message } />
                 <IconButton
-                    disabled = { !this.state.message }
+                    disabled = { !this.state.message.trim() || this.state.isChatDisabled }
                     id = { this.props.t('chat.sendButton') }
                     onPress = { this._onSubmit }
                     src = { IconSend }

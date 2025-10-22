@@ -154,4 +154,16 @@ public class BroadcastIntentHelper {
 
         return intent;
     }
+
+    public static Intent buildSyncRocketChatMessagesIntent(int offset) {
+        Intent intent = new Intent(BroadcastAction.Type.SYNC_ROCKETCHAT_MESSAGES.getAction());
+        intent.putExtra("offset", offset);
+        return intent;
+    }
+
+    public static Intent buildAddChatMessageIntent(Bundle message) {
+        Intent intent = new Intent(BroadcastAction.Type.ADD_CHAT_MESSAGE.getAction());
+        intent.putExtras(message);
+        return intent;
+    }
 }
