@@ -141,7 +141,7 @@ export const CONFERENCE_TIMESTAMP_CHANGED = 'CONFERENCE_TIMESTAMP_CHANGED';
  */
 export const CONFERENCE_UNIQUE_ID_SET = 'CONFERENCE_UNIQUE_ID_SET';
 
-export const CONFERENCE_ROOM_OWNER_SET = 'CONFERENCE_ROOM_OWNER_SET';
+// export const CONFERENCE_ROOM_OWNER_SET = 'CONFERENCE_ROOM_OWNER_SET';
 /**
  * The type of (redux) action which signals that the end-to-end RTT against a specific remote participant has changed.
  *
@@ -276,28 +276,6 @@ export const P2P_STATUS_CHANGED = 'P2P_STATUS_CHANGED';
  * }
  */
 export const SEND_TONES = 'SEND_TONES';
-
-/**
- * The type of (redux) action which updates the current known status of the
- * Follow Me feature.
- *
- * {
- *     type: SET_FOLLOW_ME,
- *     enabled: boolean
- * }
- */
-export const SET_FOLLOW_ME = 'SET_FOLLOW_ME';
-
-/**
- * The type of (redux) action which updates the current known status of the
- * Follow Me feature that is used only by the recorder.
- *
- * {
- *     type: SET_FOLLOW_ME_RECORDER,
- *     enabled: boolean
- * }
- */
-export const SET_FOLLOW_ME_RECORDER = 'SET_FOLLOW_ME_RECORDER';
 
 /**
  * The type of (redux) action which sets the obfuscated room name.

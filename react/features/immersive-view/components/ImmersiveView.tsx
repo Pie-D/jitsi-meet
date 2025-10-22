@@ -208,7 +208,7 @@ export default function ImmersiveView() {
                     }
                 }
 
-                function formatNameOrEmail(input: string): string {
+                function formatNameOrEmail(input: string) : string {
                     if (!input) return "";
 
                     // Nếu là email

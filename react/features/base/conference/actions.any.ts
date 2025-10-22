@@ -58,8 +58,6 @@ import {
     P2P_STATUS_CHANGED,
     SEND_TONES,
     SET_ASSUMED_BANDWIDTH_BPS,
-    SET_FOLLOW_ME,
-    SET_FOLLOW_ME_RECORDER,
     SET_OBFUSCATED_ROOM,
     SET_PASSWORD,
     SET_PASSWORD_FAILED,
@@ -68,7 +66,7 @@ import {
     SET_START_MUTED_POLICY,
     SET_START_REACTIONS_MUTED,
     UPDATE_CONFERENCE_METADATA,
-    CONFERENCE_ROOM_OWNER_SET
+    // CONFERENCE_ROOM_OWNER_SET
 } from './actionTypes';
 import { setupVisitorStartupMedia } from './actions';
 import {
@@ -127,9 +125,9 @@ function _addConferenceListeners(conference: IJitsiConference, dispatch: IStore[
     conference.on(
         JitsiConferenceEvents.CONFERENCE_JOIN_IN_PROGRESS,
         (..._args: any[]) => dispatch(conferenceJoinInProgress(conference)));
-    conference.on(
-            JitsiConferenceEvents.CONFERENCE_ROOM_OWNER_SET,
-            (..._args: any[]) => dispatch(conferenceRoomOwnerSet(conference)));
+    // conference.on(
+    //         JitsiConferenceEvents.CONFERENCE_ROOM_OWNER_SET,
+    //         (..._args: any[]) => dispatch(conferenceRoomOwnerSet(conference)));
     conference.on(
         JitsiConferenceEvents.CONFERENCE_LEFT,
         (..._args: any[]) => {
@@ -512,13 +510,13 @@ export function conferenceUniqueIdSet(conference: IJitsiConference) {
         conference
     };
 }
-export function conferenceRoomOwnerSet(conference: IJitsiConference) {
-    // console.log("dht", conference)
-    return {
-        type: CONFERENCE_ROOM_OWNER_SET,
-        conference
-    }
-}
+// export function conferenceRoomOwnerSet(conference: IJitsiConference) {
+//     // console.log("dht", conference)
+//     return {
+//         type: CONFERENCE_ROOM_OWNER_SET,
+//         conference
+//     }
+// }
 /**
  * Adds any existing local tracks to a specific conference before the conference
  * is joined. Then signals the intention of the application to have the local
@@ -860,38 +858,6 @@ export function sendTones(tones: string, duration: number, pause: number) {
         tones,
         duration,
         pause
-    };
-}
-
-/**
- * Enables or disables the Follow Me feature.
- *
- * @param {boolean} enabled - Whether or not Follow Me should be enabled.
- * @returns {{
- *     type: SET_FOLLOW_ME,
- *     enabled: boolean
- * }}
- */
-export function setFollowMe(enabled: boolean) {
-    return {
-        type: SET_FOLLOW_ME,
-        enabled
-    };
-}
-
-/**
- * Enables or disables the Follow Me feature used only for the recorder.
- *
- * @param {boolean} enabled - Whether Follow Me should be enabled and used only by the recorder.
- * @returns {{
- *     type: SET_FOLLOW_ME_RECORDER,
- *     enabled: boolean
- * }}
- */
-export function setFollowMeRecorder(enabled: boolean) {
-    return {
-        type: SET_FOLLOW_ME_RECORDER,
-        enabled
     };
 }
 

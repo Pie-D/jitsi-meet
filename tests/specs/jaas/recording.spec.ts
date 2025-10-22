@@ -2,13 +2,10 @@ import { Participant } from '../../helpers/Participant';
 import { setTestProperties } from '../../helpers/TestProperties';
 import { config as testsConfig } from '../../helpers/TestsConfig';
 import WebhookProxy from '../../helpers/WebhookProxy';
-import { joinMuc, generateJaasToken as t } from '../helpers/jaas';
+import { joinJaasMuc, generateJaasToken as t } from '../../helpers/jaas';
 
 setTestProperties(__filename, {
     useJaas: true,
-    // Note this just for posterity. We don't depend on the framework doing anything for us because of this flag (we
-    // pass it as a parameter directly)
-    useIFrameApi: true,
     useWebhookProxy: true
 });
 
@@ -18,7 +15,7 @@ setTestProperties(__filename, {
  * TODO: read flags from config.
  * TODO: also assert "this meeting is being recorder" notificaitons are show/played?
  */
-describe('Recording and Live Streaming', () => {
+describe('Recording and live-streaming', () => {
     const tenant = testsConfig.jaas.tenant;
     const customerId = tenant?.replace('vpaas-magic-cookie-', '');
     // TODO: read from config
@@ -30,12 +27,11 @@ describe('Recording and Live Streaming', () => {
 
     it('setup', async () => {
         webhooksProxy = ctx.webhooksProxy;
-        p = await joinMuc({ iFrameApi: true, token: t({ moderator: true }) }, { roomName: ctx.roomName });
+        p = await joinJaasMuc({ iFrameApi: true, token: t({ moderator: true }) }, { roomName: ctx.roomName });
 
         // TODO: what should we do in this case? Add a config for this?
         if (await p.execute(() => config.disableIframeAPI)) {
-            // skip the test if iframeAPI is disabled
-            ctx.skipSuiteTests = true;
+            ctx.skipSuiteTests = 'The environment has the iFrame API disabled.';
 
             return;
         }

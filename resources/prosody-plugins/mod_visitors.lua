@@ -17,6 +17,7 @@ local is_admin = util.is_admin;
 local presence_check_status = util.presence_check_status;
 local process_host_module = util.process_host_module;
 local is_transcriber_jigasi = util.is_transcriber_jigasi;
+local room_jid_match_rewrite = util.room_jid_match_rewrite;
 local json = require 'cjson.safe';
 
 -- Debug flag
@@ -70,7 +71,8 @@ local function send_visitors_iq(conference_service, room, type)
         password = type ~= 'disconnect' and room:get_password() or '',
         lobby = room._data.lobbyroom and 'true' or 'false',
         meetingId = room._data.meetingId,
-        createdTimestamp = room.created_timestamp and tostring(room.created_timestamp) or nil
+        createdTimestamp = room.created_timestamp and tostring(room.created_timestamp) or nil,
+        allowUnauthenticatedAccess = room._data.allowUnauthenticatedAccess ~= nil and tostring(room._data.allowUnauthenticatedAccess) or nil
       });
 
     if type == 'update' then
@@ -93,6 +95,31 @@ local function send_visitors_iq(conference_service, room, type)
                 }):text(json.encode(v)):up();
             end
             visitors_iq:up();
+        end
+
+        if room.polls and room.polls.count > 0 then
+            -- polls created in the room that we want to send to the visitor nodes
+            local data = {
+                command = "old-polls",
+                polls = {},
+                type = 'polls'
+            };
+            for i, poll in ipairs(room.polls.order) do
+                data.polls[i] = {
+                    pollId = poll.pollId,
+                    senderId = poll.senderId,
+                    senderName = poll.senderName,
+                    question = poll.question,
+                    answers = poll.answers
+                };
+            end
+
+            local json_msg_str, error = json.encode(data);
+            if not json_msg_str then
+                module:log('error', 'Error encoding data room:%s error:%s', room.jid, error);
+            end
+
+            visitors_iq:tag('polls'):text(json_msg_str):up();
         end
     end
 
@@ -140,6 +167,20 @@ local function connect_vnode(event)
 
     -- send update initially so we can report the moderators that will join
     send_visitors_iq(conference_service, room, 'update');
+
+    -- let's send message history
+    local event = {
+        room = room;
+        to = conference_service;
+        next_stanza = function() end; -- muc-get-history should define this iterator
+    };
+    module:context(main_muc_component_config):fire_event("muc-get-history", event);
+    for msg in event.next_stanza, event do
+        -- the messages stored in history has been stored before domain_mapper and
+        -- contain the virtual jid for a from
+        msg.attr.from = room_jid_match_rewrite(msg.attr.from);
+        room:route_stanza(msg);
+    end
 
     for _, o in room:each_occupant() do
         if not is_admin(o.bare_jid) then
@@ -472,6 +513,38 @@ process_host_module(main_muc_component_config, function(host_module, host)
             end
         end
     end, -2);
+
+    host_module:hook('poll-created', function (event)
+        local room = event.room;
+
+        if not visitors_nodes[room.jid] then
+            return;
+        end
+
+        -- we need to update all vnodes
+        local vnodes = visitors_nodes[room.jid].nodes;
+        for conference_service in pairs(vnodes) do
+            send_visitors_iq(conference_service, room, 'update');
+        end
+    end);
+    host_module:hook('answer-poll', function (event)
+        local room, stanza = event.room, event.event.stanza;
+
+        if not visitors_nodes[room.jid] then
+            return;
+        end
+
+        local from = stanza.attr.from;
+
+        -- we need to update all vnodes
+        local vnodes = visitors_nodes[room.jid].nodes;
+        for conference_service in pairs(vnodes) do
+            -- skip sending the answer to the node from where it originates
+            if conference_service ~= from then
+                send_visitors_iq(conference_service, room, 'update');
+            end
+        end
+    end);
 end);
 
 local function update_vnodes_for_room(event)

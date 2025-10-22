@@ -24,6 +24,10 @@ export interface IAbstractCaptionsProps {
      * process.
      */
     _transcripts?: Map<string, string>;
+        /**
+     * Array of all subtitle messages in chronological order.
+     */
+    _subtitlesHistory?: Array<any>;
 }
 
 /**
@@ -39,23 +43,34 @@ export class AbstractCaptions<P extends IAbstractCaptionsProps> extends Componen
      * @returns {ReactElement}
      */
     override render(): any {
-        const { _displaySubtitles, _requestingSubtitles, _transcripts } = this.props;
+    const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory } = this.props;
 
-        if (!_requestingSubtitles || !_displaySubtitles || !_transcripts || !_transcripts.size) {
-            return null;
-        }
-
-        const paragraphs = [];
-
-        // @ts-ignore
-        for (const [ id, text ] of _transcripts ?? []) {
-            paragraphs.push(this._renderParagraph(id, text));
-        }
-
-        // @ts-ignore
-        return this._renderSubtitlesContainer(paragraphs);
+    if (!_requestingSubtitles || !_displaySubtitles) {
+        return null;
     }
 
+    // Chỉ sử dụng subtitlesHistory để tránh hiển thị trùng lặp
+    const dataToRender = _subtitlesHistory && _subtitlesHistory.length > 0 
+        ? _subtitlesHistory 
+        : null;
+
+    if (!dataToRender || dataToRender.length === 0) {
+        return null;
+    }
+
+    const paragraphs: ReactElement[] = [];
+
+    // Xử lý subtitlesHistory, bao gồm cả interim subtitles
+    for (const subtitle of dataToRender) {
+        if (subtitle.isTranscription) {
+            const text = `${subtitle.participantId}: ${subtitle.text}`;
+            paragraphs.push(this._renderParagraph(subtitle.id, text));
+        }
+    }
+
+    // @ts-ignore
+    return this._renderSubtitlesContainer(paragraphs);
+}
     /**
      * Renders the transcription text.
      *
@@ -126,18 +141,18 @@ function _constructTranscripts(state: IReduxState): Map<string, string> {
  * @private
  * @returns {{
  *     _requestingSubtitles: boolean,
- *     _transcripts: Map<string, string>
+ *     _transcripts: Map<string, string>,
+ *    _subtitlesHistory: Array<any>
  * }}
  */
 export function _abstractMapStateToProps(state: IReduxState) {
-    const { _displaySubtitles, _requestingSubtitles } = state['features/subtitles'];
+    const { _displaySubtitles, _requestingSubtitles, subtitlesHistory } = state['features/subtitles'];
     const transcripts = _constructTranscripts(state);
 
     return {
         _displaySubtitles,
         _requestingSubtitles,
-
-        // avoid re-renders by setting to prop new empty Map instances.
-        _transcripts: transcripts.size === 0 ? undefined : transcripts
+        _transcripts: transcripts.size === 0 ? undefined : transcripts,
+        _subtitlesHistory: subtitlesHistory
     };
 }

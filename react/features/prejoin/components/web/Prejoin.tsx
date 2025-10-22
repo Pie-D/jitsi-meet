@@ -21,7 +21,7 @@ import Input from '../../../base/ui/components/web/Input';
 import { BUTTON_TYPES } from '../../../base/ui/constants.any';
 import isInsecureRoomName from '../../../base/util/isInsecureRoomName';
 import { openDisplayNamePrompt } from '../../../display-name/actions';
-import { isUnsafeRoomWarningEnabled } from '../../../prejoin/functions.any';
+import { isUnsafeRoomWarningEnabled } from '../../../prejoin/functions';
 import {
     joinConference as joinConferenceAction,
     joinConferenceWithoutAudio as joinConferenceWithoutAudioAction,
@@ -33,7 +33,7 @@ import {
     isJoinByPhoneButtonVisible,
     isJoinByPhoneDialogVisible,
     isPrejoinDisplayNameVisible
-} from '../../functions.any';
+} from '../../functions';
 import logger from '../../logger';
 import { hasDisplayName } from '../../utils';
 

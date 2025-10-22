@@ -6,10 +6,21 @@ import { JitsiConferenceEvents } from '../base/lib-jitsi-meet';
 import { getLocalParticipant, getParticipantDisplayName } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import StateListenerRegistry from '../base/redux/StateListenerRegistry';
+import { addMessage, editMessage } from '../chat/actions.any';
+import { ChatTabs, MESSAGE_TYPE_LOCAL, MESSAGE_TYPE_REMOTE } from '../chat/constants';
 import { showErrorNotification, showNotification, showSuccessNotification } from '../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE, NOTIFICATION_TYPE } from '../notifications/constants';
+import { I_AM_VISITOR_MODE } from '../visitors/actionTypes';
 
-import { DOWNLOAD_FILE, REMOVE_FILE, UPLOAD_FILES, _FILE_LIST_RECEIVED, _FILE_REMOVED } from './actionTypes';
+import {
+    ADD_FILE,
+    DOWNLOAD_FILE,
+    REMOVE_FILE,
+    UPDATE_FILE_UPLOAD_PROGRESS,
+    UPLOAD_FILES,
+    _FILE_LIST_RECEIVED,
+    _FILE_REMOVED
+} from './actionTypes';
 import { addFile, removeFile, updateFileProgress } from './actions';
 import { getFileExtension } from './functions.any';
 import logger from './logger';
@@ -23,12 +34,40 @@ import { downloadFile } from './utils';
  */
 StateListenerRegistry.register(
     state => state['features/base/conference'].conference,
-    (conference, { dispatch }, previousConference) => {
+    (conference, { dispatch, getState }, previousConference) => {
         if (conference && !previousConference) {
             conference.on(JitsiConferenceEvents.FILE_SHARING_FILE_ADDED, (file: IFileMetadata) => {
-                dispatch(addFile(file));
+                const state = getState();
+                const localParticipant = getLocalParticipant(state);
+                const isRemoteFile = file.authorParticipantId !== localParticipant?.id;
+                const { isOpen, focusedTab } = state['features/chat'];
+                const isFileSharingTabVisible = isOpen && focusedTab === ChatTabs.FILE_SHARING;
+
+                dispatch(addFile(file, isRemoteFile && !isFileSharingTabVisible));
+
+                if (isRemoteFile && !isFileSharingTabVisible) {
+                    dispatch(showNotification({
+                        titleKey: 'fileSharing.newFileNotification',
+                        titleArguments: { participantName: file.authorParticipantName, fileName: file.fileName }
+                    }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+                }
             });
             conference.on(JitsiConferenceEvents.FILE_SHARING_FILE_REMOVED, (fileId: string) => {
+                const state = getState();
+                const localParticipant = getLocalParticipant(state);
+                const { files } = state['features/file-sharing'];
+                const { isOpen, focusedTab } = state['features/chat'];
+                const removedFile = files.get(fileId);
+                const isFileSharingTabVisible = isOpen && focusedTab === ChatTabs.FILE_SHARING;
+
+                if (removedFile && removedFile.authorParticipantId === localParticipant?.id && !isFileSharingTabVisible) {
+                    dispatch(showNotification({
+                        titleKey: 'fileSharing.fileRemovedByOther',
+                        titleArguments: { fileName: removedFile.fileName },
+                        appearance: NOTIFICATION_TYPE.WARNING
+                    }, NOTIFICATION_TIMEOUT_TYPE.MEDIUM));
+                }
+
                 dispatch({
                     type: _FILE_REMOVED,
                     fileId
@@ -36,9 +75,13 @@ StateListenerRegistry.register(
             });
 
             conference.on(JitsiConferenceEvents.FILE_SHARING_FILES_RECEIVED, (files: object) => {
+                const state = getState();
+                const localParticipant = getLocalParticipant(state);
+
                 dispatch({
                     type: _FILE_LIST_RECEIVED,
-                    files
+                    files,
+                    localParticipantId: localParticipant?.id
                 });
             });
         }
@@ -52,6 +95,17 @@ StateListenerRegistry.register(
  */
 MiddlewareRegistry.register(store => next => action => {
     switch (action.type) {
+    case I_AM_VISITOR_MODE: {
+        if (!action.iAmVisitor) {
+            const state = store.getState();
+            const conference = getCurrentConference(state);
+
+            conference?.getFileSharing()?.requestFileList?.();
+        }
+
+        return next(action);
+    }
+
     case UPLOAD_FILES: {
         const state = store.getState();
         const conference = getCurrentConference(state);
@@ -63,6 +117,44 @@ MiddlewareRegistry.register(store => next => action => {
         });
 
         return next(action);
+    }
+
+    case UPDATE_FILE_UPLOAD_PROGRESS:
+    case ADD_FILE: {
+        const result = next(action);
+        const state = store.getState();
+        const { files } = state['features/file-sharing'];
+        const file = action.type === ADD_FILE ? action.file as IFileMetadata : files.get(action.fileId);
+
+        if (!file) {
+            return result;
+        }
+
+        const localParticipant = getLocalParticipant(state);
+        const isLocalFile = localParticipant?.id === file.authorParticipantId;
+
+        // Only dispatch chat message for fully uploaded files (progress === 100).
+        // Files that are still uploading have progress < 100, so we skip creating the message.
+        // Once upload completes, for the local participant the file is broadcast with progress: 100 and the message
+        // is created. Remote participants receive the file metadata only once the file is successfully uploaded and
+        // the progress field will be undefined.
+        if (file.progress === 100 || !isLocalFile) {
+            store.dispatch(addMessage({
+                displayName: file.authorParticipantName,
+                fileMetadata: file,
+                hasRead: isLocalFile,
+                isReaction: false,
+                lobbyChat: false,
+                message: '', // Empty message as the file metadata contains all info
+                messageId: file.fileId,
+                messageType: isLocalFile ? MESSAGE_TYPE_LOCAL : MESSAGE_TYPE_REMOTE,
+                participantId: file.authorParticipantId,
+                privateMessage: false,
+                timestamp: file.timestamp
+            }));
+        }
+
+        return result;
     }
 
     case REMOVE_FILE: {
@@ -150,6 +242,27 @@ MiddlewareRegistry.register(store => next => action => {
         });
 
         return next(action);
+    }
+
+    case _FILE_REMOVED: {
+        const result = next(action);
+        const state = store.getState();
+        const { messages } = state['features/chat'];
+
+        // Find the message corresponding to this file and mark it as deleted.
+        const fileMessage = messages.find(msg => msg.messageId === action.fileId);
+
+        if (fileMessage?.fileMetadata) {
+            // Replace the file metadata with just the isDeleted flag to avoid keeping unnecessary data.
+            store.dispatch(editMessage({
+                ...fileMessage,
+                fileMetadata: {
+                    isDeleted: true
+                } as any
+            }));
+        }
+
+        return result;
     }
     }
 
