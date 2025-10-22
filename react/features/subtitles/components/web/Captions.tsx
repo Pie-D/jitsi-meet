@@ -145,7 +145,7 @@ const styles = (theme: Theme, props: IProps) => {
         transcriptionSubtitles: containerStyles,
         subtitlesScrollContainer: scrollContainerStyles,
         subtitleMessage: {
-            background: 'rgba(0, 0, 0, 0.8)',
+            fontSize: pixelsToRem(fontSize),
             borderRadius: '4px',
             padding: `${padding}px 8px`,
             marginBottom: '2px',
@@ -161,7 +161,8 @@ const styles = (theme: Theme, props: IProps) => {
                 color: '#fff'
             }
         },
-        speakerName: { // Thêm style cho tên người nói
+        speakerName: {
+            ontSize: pixelsToRem(fontSize), // Thêm style cho tên người nói
             fontStyle: 'italic', 
             color: '#ccc', // Màu chữ nhẹ hơn để phân biệt
             fontWeight: 'bold' as const
@@ -286,7 +287,7 @@ const Captions = (props: IProps) => {
             .sort((a, b) => b.timestamp - a.timestamp)[0];
         
         if (latestSubtitle) {
-            const text = `${latestSubtitle.participantId}: ${latestSubtitle.text}`;
+            const text = `${latestSubtitle.participantName ? latestSubtitle.participantName : "CMC ATIer"}: ${latestSubtitle.text}`;
             paragraphs.push(_renderParagraph(latestSubtitle.id, text, classes));
         }
     } else {
