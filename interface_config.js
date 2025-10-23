@@ -10,8 +10,8 @@
 
 var interfaceConfig = {
     APP_NAME: "C-MEET",
-    AUDIO_LEVEL_PRIMARY_COLOR: 'rgba(255,255,255,0.4)',
-    AUDIO_LEVEL_SECONDARY_COLOR: 'rgba(255,255,255,0.2)',
+    AUDIO_LEVEL_PRIMARY_COLOR: "rgba(255,255,255,0.4)",
+    AUDIO_LEVEL_SECONDARY_COLOR: "rgba(255,255,255,0.2)",
 
     /**
      * A UX mode where the last screen share participant is automatically
@@ -21,13 +21,13 @@ var interfaceConfig = {
      *
      * Note: this mode is experimental and subject to breakage.
      */
-    AUTO_PIN_LATEST_SCREEN_SHARE: 'remote-only',
-    BRAND_WATERMARK_LINK: '',
+    AUTO_PIN_LATEST_SCREEN_SHARE: "remote-only",
+    BRAND_WATERMARK_LINK: "",
 
     CLOSE_PAGE_GUEST_HINT: false, // A html text to be shown to guests on the close page, false disables it
 
-    DEFAULT_BACKGROUND: '#040404',
-    DEFAULT_WELCOME_PAGE_LOGO_URL: 'images/watermark.svg',
+    DEFAULT_BACKGROUND: "#040404",
+    DEFAULT_WELCOME_PAGE_LOGO_URL: "images/watermark.svg",
 
     DISABLE_DOMINANT_SPEAKER_INDICATOR: false,
 
@@ -71,7 +71,7 @@ var interfaceConfig = {
      */
     HIDE_INVITE_MORE_HEADER: false,
 
-    JITSI_WATERMARK_LINK: 'https://sec.cmcati.vn/c-meet',
+    JITSI_WATERMARK_LINK: "https://sec.cmcati.vn/c-meet",
 
     LANG_DETECTION: true, // Allow i18n to detect the system language
     LOCAL_THUMBNAIL_RATIO: 16 / 9, // 16:9
@@ -97,10 +97,10 @@ var interfaceConfig = {
     // has a suboptimal experience. Browsers which are not listed as optimal or
     // unsupported are considered suboptimal. Valid values are:
     // chrome, chromium, electron, firefox , safari, webkit
-    OPTIMAL_BROWSERS: [ 'chrome', 'chromium', 'firefox', 'electron', 'safari', 'webkit' ],
+    OPTIMAL_BROWSERS: ["chrome", "chromium", "firefox", "electron", "safari", "webkit"],
 
     POLICY_LOGO: null,
-    PROVIDER_NAME: 'CMC ATI',
+    PROVIDER_NAME: "CMC ATI",
 
     /**
      * If true, will display recent list
@@ -110,7 +110,7 @@ var interfaceConfig = {
     RECENT_LIST_ENABLED: true,
     REMOTE_THUMBNAIL_RATIO: 1, // 1:1
 
-    SETTINGS_SECTIONS: [ 'devices', 'language', 'moderator', 'profile', 'calendar', 'sounds', 'more' ],
+    SETTINGS_SECTIONS: ["devices", "language", "moderator", "profile", "calendar", "sounds", "more"],
 
     /**
      * Specify which sharing features should be displayed. If the value is not set
@@ -135,8 +135,7 @@ var interfaceConfig = {
      * If indicated some of the error dialogs may point to the support URL for
      * help.
      */
-    SUPPORT_URL: 'https://sec.cmcati.vn/c-meet',
-
+    SUPPORT_URL: "https://sec.cmcati.vn/c-meet",
 
     // Browsers, in addition to those which do not fully support WebRTC, that
     // are not supported and should show the unsupported browser page.
@@ -152,7 +151,7 @@ var interfaceConfig = {
     // screen, 'width' would fit the original video width to the width of the
     // screen respecting ratio, 'nocrop' would make the video as large as
     // possible and preserve aspect ratio without cropping.
-    VIDEO_LAYOUT_FIT: 'both',
+    VIDEO_LAYOUT_FIT: "both",
 
     /**
      * If true, hides the video quality label indicating the resolution status
@@ -179,19 +178,19 @@ var interfaceConfig = {
     /**
      * Specify URL for downloading ios mobile app.
      */
-    MOBILE_DOWNLOAD_LINK_IOS: 'https://apps.apple.com/th/app/c-meet/id6599835526',
+    MOBILE_DOWNLOAD_LINK_IOS: "https://apps.apple.com/th/app/c-meet/id6599835526",
 
     /**
      * Specify custom URL for downloading android mobile app.
      */
-    MOBILE_DOWNLOAD_LINK_ANDROID: 'https://play.google.com/store/apps/details?id=com.cmcati.cmeetglobal',
+    MOBILE_DOWNLOAD_LINK_ANDROID: "https://play.google.com/store/apps/details?id=com.cmcati.cmeetglobal",
 
     /**
      * Specify mobile app scheme for opening the app from the mobile browser.
      */
     // APP_SCHEME: 'org.jitsi.meet',
 
-    NATIVE_APP_NAME: 'C-Meet',
+    NATIVE_APP_NAME: "C-Meet",
 
     /**
      * Hide the logo on the deep linking pages.
@@ -201,7 +200,7 @@ var interfaceConfig = {
     /**
      * Specify the Android app package name.
      */
-    ANDROID_APP_PACKAGE: 'https://sec.cmcati.vn/c-meet',
+    ANDROID_APP_PACKAGE: "https://sec.cmcati.vn/c-meet",
 
     /**
      * Specify custom URL for downloading f droid app.
@@ -244,7 +243,7 @@ var interfaceConfig = {
     // Allow all above example options to include a trailing comma and
     // prevent fear when commenting out the last value.
     // eslint-disable-next-line sort-keys
-    makeJsonParserHappy: 'even if last key had a trailing comma'
+    makeJsonParserHappy: "even if last key had a trailing comma",
 
     // No configuration value should follow this line.
 };

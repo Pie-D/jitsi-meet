@@ -128,7 +128,7 @@ const toggleCamera = {
 const videoQuality = {
     key: 'videoquality',
     Content: VideoQualityButton,
-    group: 2
+    group: 4
 };
 
 const fullscreen = {
@@ -158,7 +158,7 @@ const noiseSuppression = {
 const settings = {
     key: 'settings',
     Content: SettingsButton,
-    group: 4
+    group: 5
 };
 
 const download = {
@@ -307,11 +307,13 @@ export function useToolboxButtons(
         invite,
         tileview,
         'toggle-camera': toggleCameraButton,
-        videoquality: videoQuality,
-        fullscreen: _fullscreen,
-        security,
-        closedcaptions: cc,
+        // Reordered to control OverflowMenu first group order
         recording,
+        fullscreen: _fullscreen,
+        'select-background': virtualBackground,
+        saveSpeechToText,
+        // Items below are for subsequent groups
+        closedcaptions: cc,
         livestreaming: liveStreaming,
         linktosalesforce,
         sharedvideo: shareVideo,
@@ -319,15 +321,16 @@ export function useToolboxButtons(
         noisesuppression: noiseSuppression,
         whiteboard,
         etherpad,
-        'select-background': virtualBackground,
         stats: speakerStats,
-        settings,
+        // Place Security and Performance together with shortcuts/embed (same group 4)
+        security,
+        videoquality: videoQuality,
         shortcuts,
         embedmeeting: embed,
         feedback,
         download: _download,
         help: _help,
-        saveSpeechToText
+        settings
     };
     const buttonKeys = Object.keys(buttons) as ToolbarButton[];
 

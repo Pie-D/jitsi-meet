@@ -218,13 +218,18 @@ export default function ImmersiveView() {
 
                     // Nếu là họ tên
                     const parts = input.trim().split(/\s+/);
-                    if (parts.length === 1) return parts[0];
+                    const length = parts.length;
 
+                    if (length === 1) return parts[0]; // chỉ một từ thì giữ nguyên
+                    if (length === 2) return parts.join(" "); // hai từ thì cũng giữ nguyên
+                    if (length === 3) return parts.join(" "); // hai từ thì cũng giữ nguyên
+
+                    // Tên dài hơn 2 từ -> rút gọn
                     const initials = parts
                         .slice(0, -1)
-                        .map((word : string) => word[0].toUpperCase())
+                        .map((word: string) => word[0].toUpperCase())
                         .join("");
-                    const lastName = parts[parts.length - 1];
+                    const lastName = parts[length - 1];
 
                     return `${initials}.${lastName}`;
                 }
@@ -260,12 +265,17 @@ export default function ImmersiveView() {
                                         padding: "3px 15px",
                                         background: "linear-gradient(90deg, #BCF2FF 0%, #FFF 50.2%, #BCF2FF 100%)",
                                         color: "#015d92ff",
-                                        fontSize: "2rem",
+                                        fontSize: "clamp(0.8rem, 3vw, 1.5rem)",
                                         lineHeight: 1.4,
                                         pointerEvents: "none",
                                         border: "10px solid #41b6fb",
                                         borderRadius: "3rem",
                                         zIndex: 1000,
+                                        whiteSpace: "nowrap", // 🔹 Không cho text xuống dòng
+                                        overflow: "hidden", // 🔹 Ẩn phần vượt ra ngoài
+                                        textOverflow: "ellipsis", // 🔹 Hiển thị "..." nếu text bị cắt
+                                        maxWidth: "90vw", // 🔹 Giới hạn chiều rộng tối đa theo màn hình
+                                        textAlign: "center",
                                     }}
                                 >
                                     {formatNameOrEmail(p.name || "CMC ATIer")}
