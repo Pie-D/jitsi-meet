@@ -16,18 +16,21 @@ const useStyles = makeStyles()(() => ({
     root: {
         position: "absolute",
         inset: 0,
+        zIndex: 9999, // Đảm bảo hiển thị trên cùng
+        backgroundColor: "rgba(0,0,0,0.1)", // Thêm background để debug
     },
     background: {
         position: "absolute",
         inset: 0,
         backgroundSize: "cover",
-        // backgroundPosition: "center",
+        backgroundPosition: "center",
+        zIndex: 1,
     },
     slot: {
         position: "absolute",
         boxSizing: "border-box",
-        // overflow: "hidden",
         background: "rgba(0,0,0,0.05)",
+        zIndex: 2,
     },
     slotHighlight: {
         border: "2px solid #4da3ff",
@@ -59,6 +62,11 @@ export default function ImmersiveView() {
     const immersive = useSelector((state: IReduxState) => state["features/immersive-view"]);
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const { classes, cx } = useStyles();
+
+    // Chỉ log khi state thay đổi
+    useEffect(() => {
+        console.log('🎬 [ImmersiveView] State changed:', immersive);
+    }, [immersive]);
 
     const remotesMap = useSelector((s: IReduxState) => getRemoteParticipants(s));
     const remotes = remotesMap ? Array.from(remotesMap.values()) : [];
@@ -171,11 +179,36 @@ export default function ImmersiveView() {
     };
 
     if (!immersive?.enabled || !tpl) {
+        console.log('❌ [ImmersiveView] Not rendering - enabled:', immersive?.enabled, 'template:', !!tpl);
         return null;
     }
 
+    console.log('✅ [ImmersiveView] Rendering immersive view with:', {
+        enabled: immersive.enabled,
+        templateId: immersive.templateId,
+        slotCount: immersive.slotCount,
+        assignments,
+        slots: slots.length,
+        backgroundUrl: tpl.backgroundUrl
+    });
+
     return (
         <div className={classes.root}>
+            {/* Debug element để kiểm tra */}
+            <div style={{
+                position: 'absolute',
+                top: '10px',
+                left: '10px',
+                background: 'red',
+                color: 'white',
+                padding: '10px',
+                zIndex: 10000,
+                fontSize: '16px',
+                fontWeight: 'bold'
+            }}>
+                IMMERSIVE VIEW ACTIVE - {immersive.templateId}
+            </div>
+            
             <div className={classes.background} style={{ backgroundImage: `url(${tpl.backgroundUrl})` }} />
             {slots.map((s, idx) => {
                 const pid = assignments[idx];
