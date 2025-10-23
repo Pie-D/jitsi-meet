@@ -171,6 +171,14 @@ export interface IJitsiConference {
     startVerification: Function;
     stopRecording: Function;
     toggleE2EE: Function;
+    // Immersive view methods
+    setImmersiveViewEnabled: Function;
+    setImmersiveViewTemplate: Function;
+    setImmersiveViewSlotCount: Function;
+    sendImmersiveViewAssignments: Function;
+    getParticipantImmersiveViewEnabled: Function;
+    getParticipantImmersiveViewTemplate: Function;
+    getParticipantImmersiveViewSlotCount: Function;
 }
 
 export interface IConferenceState {

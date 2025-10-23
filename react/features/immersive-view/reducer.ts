@@ -9,6 +9,10 @@ import {
     SET_IMMERSIVE_SLOT_COUNT
 } from './actionTypes';
 
+// Import middleware để sync qua XMPP
+import './middleware';
+import './xmppMiddleware';
+
 export interface IImmersiveState {
     enabled: boolean;
     templateId?: string;

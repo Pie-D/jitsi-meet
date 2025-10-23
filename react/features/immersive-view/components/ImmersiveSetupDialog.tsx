@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import Dialog from '../../base/ui/components/web/Dialog';
@@ -8,6 +8,8 @@ import { IMMERSIVE_TEMPLATES, getTemplateSlots } from '../templates';
 import { useTranslation } from 'react-i18next';
 import { setImmersiveEnabled, setImmersiveSlotCount, setImmersiveTemplate } from '../actions';
 import { IMMERSIVE_ALLOWED_SLOT_COUNTS, ImmersiveSlotCount } from '../constants';
+import { isLocalParticipantModerator } from '../../base/participants/functions';
+import { IReduxState } from '../../app/types';
 
 
 const useStyles = makeStyles()(theme => ({
@@ -177,9 +179,27 @@ export default function ImmersiveSetupDialog() {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const { classes, cx } = useStyles();
+    const isModerator = useSelector(isLocalParticipantModerator);
     const templateIds = Object.keys(IMMERSIVE_TEMPLATES);
     const [ selectedTpl, setSelectedTpl ] = useState(templateIds[0]);
     const [ selectedCount, setSelectedCount ] = useState<ImmersiveSlotCount>(IMMERSIVE_ALLOWED_SLOT_COUNTS[0]);
+
+    // Chỉ moderator mới có thể setup immersive view
+    if (!isModerator) {
+        return (
+            <Dialog
+                className = { classes.modalWide }
+                cancel = {{ translationKey: 'dialog.Cancel' }}
+                titleKey = 'immersive.accessDenied'
+                size = 'medium'>
+                <div className = { classes.container }>
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                        {t('immersive.moderatorOnly')}
+                    </div>
+                </div>
+            </Dialog>
+        );
+    }
 
     const items = useMemo(() => templateIds.map(id => IMMERSIVE_TEMPLATES[id]), [ templateIds ]);
     const previewSlots = useMemo(() => getTemplateSlots(selectedTpl, selectedCount), [ selectedTpl, selectedCount ]);
