@@ -15,9 +15,13 @@ import { IMMERSIVE_TEMPLATES, getTemplateSlots } from "../templates";
 const useStyles = makeStyles()(() => ({
     root: {
         position: "absolute",
-        inset: 0,
-        zIndex: 9999, // Đảm bảo hiển thị trên cùng
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0, // Không dùng inset để tránh che toolbar
+        zIndex: 1, // Thấp hơn toolbar (250)
         backgroundColor: "rgba(0,0,0,0.1)", // Thêm background để debug
+        pointerEvents: "none", // Cho phép click through
     },
     background: {
         position: "absolute",
@@ -31,6 +35,7 @@ const useStyles = makeStyles()(() => ({
         boxSizing: "border-box",
         background: "rgba(0,0,0,0.05)",
         zIndex: 2,
+        pointerEvents: "auto", // Cho phép click trên slot
     },
     slotHighlight: {
         border: "2px solid #4da3ff",
@@ -202,9 +207,10 @@ export default function ImmersiveView() {
                 background: 'red',
                 color: 'white',
                 padding: '10px',
-                zIndex: 10000,
+                zIndex: 3,
                 fontSize: '16px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                pointerEvents: 'none' // Không che khuất click
             }}>
                 IMMERSIVE VIEW ACTIVE - {immersive.templateId}
             </div>
