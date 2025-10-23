@@ -38,7 +38,7 @@ const DEFAULT_STATE = {
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
     shownMessages: new Set<string>(),
-    isHistoryLoaded: false,
+    // isHistoryLoaded: false,
     focusedTab: ChatTabs.CHAT,
     isResizing: false,
     width: {
@@ -61,7 +61,7 @@ export interface IChatState {
     messages: IMessage[];
     // nbUnreadMessages: number;
     shownMessages: Set<string>;
-    isHistoryLoaded: boolean;
+    // isHistoryLoaded: boolean;
     notifyPrivateRecipientsChangedTimestamp?: number;
     privateMessageRecipient?: IParticipant | IVisitorChatParticipant;
     unreadFilesCount: number;
@@ -248,11 +248,11 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             isLobbyChatActive: false,
             lobbyMessageRecipient: undefined
         };
-    case SET_HISTORY_LOADED:
-        return {
-            ...state,
-            isHistoryLoaded: action.isHistoryLoaded
-        };
+    // case SET_HISTORY_LOADED:
+    //     return {
+    //         ...state,
+    //         isHistoryLoaded: action.isHistoryLoaded
+    //     };
     case UPDATE_CONFERENCE_METADATA: {
         const { metadata } = action;
 
