@@ -439,9 +439,9 @@ function _onConferenceMessageReceived(store: IStore,
             participantId: string; privateMessage: boolean; source?: string; timestamp: number; }
 ) {
     const state = store.getState();
-    if (!state['features/chat'].isHistoryLoaded) {
-        return;
-    }
+    // if (!state['features/chat'].isHistoryLoaded) {
+    //     return;
+    // }
 
     const isGif = isGifEnabled(store.getState()) && isGifMessage(message);
 
