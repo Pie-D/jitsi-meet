@@ -65,6 +65,7 @@ import {
     MESSAGE_TYPE_SYSTEM
 } from './constants';
 import {
+    createMessageId,
     getDisplayNameSuffix,
     getUnreadCount,
     isSendGroupChatDisabled,

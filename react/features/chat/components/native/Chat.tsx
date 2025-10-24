@@ -67,7 +67,24 @@ class Chat extends Component<IProps> {
         this._onSendMessage = this._onSendMessage.bind(this);
     }
 
-    syncRocketChatMessages: (offset: number) => Promise<void> = RocketChat.syncRocketChatMessages;
+    /**
+     * Load initial RocketChat messages when component mounts.
+     *
+     * @returns {void}
+     */
+    override componentDidMount() {
+        const loadInitialMessages = async () => {
+            try {
+                await this.syncRocketChatMessages(0);
+            } catch (error) {
+                console.warn('Failed to load initial Rocket.Chat messages:', error);
+            }
+        };
+
+        loadInitialMessages();
+    }
+
+    syncRocketChatMessages: (offset: number, limit?: number) => Promise<void> = RocketChat.syncRocketChatMessages;
 
     /**
      * Implements React's {@link Component#render()}.
@@ -82,8 +99,7 @@ class Chat extends Component<IProps> {
                 await this.syncRocketChatMessages(offset);
                 offset += 30;
             } catch (e) {
-                // eslint-disable-next-line no-console
-                console.error(e);
+                console.warn('Failed to load more Rocket.Chat messages:', e);
             }
         };
         const privateMessageRecipient = route?.params?.privateMessageRecipient;

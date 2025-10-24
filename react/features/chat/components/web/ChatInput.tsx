@@ -216,8 +216,8 @@ class ChatInput extends Component<IProps, IState> {
     override render() {
         const classes = withStyles.getClasses(this.props);
         const hideInput = this.props._isSendGroupChatDisabled && !this.props._privateMessageRecipientId;
-        // console.log('hideInput', hideInput, this.props._isSendGroupChatDisabled, this.props._privateMessageRecipientId);
-        if (hideInput) {
+
+        if (hideInput || this.state.isChatDisabled) {
             return (
                 <div className = { classes.chatDisabled }>
                     {this.props.t('chat.disabled')}
@@ -289,6 +289,7 @@ class ChatInput extends Component<IProps, IState> {
         }
 
         const trimmed = this.state.message.trim();
+
         if (trimmed) {
             onSend(trimmed);
 
