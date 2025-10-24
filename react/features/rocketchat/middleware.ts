@@ -46,7 +46,7 @@ MiddlewareRegistry.register(store => next => async action => {
         const currentState = store.getState();
         const chatState = currentState['features/chat'] || {};
 
-        console.log('RocketChat Middleware: Adding message to RocketChat', action);
+        // console.log('RocketChat Middleware: Adding message to RocketChat', action);
 
         if (action.message && action.participantId && action.timestamp) {
             try {

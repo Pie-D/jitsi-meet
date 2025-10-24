@@ -301,11 +301,11 @@ export function getDisplayNameSuffix(message: IMessage): string {
  * @param {number} timestamp - The Unix timestamp when the message was created.
  * @param {string} message - The content of the message.
  * @returns {string} A unique message ID in the format: "participantId-timestamp-message".
- * 
  */
 export function createMessageId(participantId: string, timestamp: number, message: string) {
     return `${participantId}-${timestamp}-${message}`;
-  
+}
+
 /**
  * Checks if a message is a file message by verifying the presence of file metadata.
  *
