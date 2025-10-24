@@ -19,48 +19,45 @@ MiddlewareRegistry.register(store => next => action => {
     const conference = state['features/base/conference'].conference;
 
     // Chỉ log immersive view actions
-    if (action.type === SET_IMMERSIVE_ENABLED || 
-        action.type === SET_IMMERSIVE_TEMPLATE || 
-        action.type === SET_IMMERSIVE_SLOT_COUNT || 
-        action.type === SET_IMMERSIVE_ASSIGNMENTS) {
-        console.log('🔧 [ImmersiveView Middleware] Action:', action.type, action);
-    }
-
     if (!conference) {
-        if (action.type === SET_IMMERSIVE_ENABLED || 
-            action.type === SET_IMMERSIVE_TEMPLATE || 
-            action.type === SET_IMMERSIVE_SLOT_COUNT || 
-            action.type === SET_IMMERSIVE_ASSIGNMENTS) {
-            console.log('❌ [ImmersiveView Middleware] No conference available');
-        }
         return result;
     }
 
+    // Chỉ moderator mới được gửi immersive view settings qua XMPP
+    const isModerator = state['features/base/participants']?.local?.role === 'moderator';
+    
     switch (action.type) {
     case SET_IMMERSIVE_ENABLED: {
-        console.log('🚀 [ImmersiveView Middleware] Setting immersive view enabled:', action.enabled);
-        // Sync immersive view enabled state qua XMPP
-        conference.setImmersiveViewEnabled(action.enabled);
+        if (isModerator) {
+            conference.setImmersiveViewEnabled(action.enabled);
+        } else {
+            console.log('❌ [ImmersiveView Middleware] Only moderators can enable/disable immersive view');
+        }
         break;
     }
     case SET_IMMERSIVE_TEMPLATE: {
-        console.log('🎨 [ImmersiveView Middleware] Setting immersive view template:', action.templateId);
-        // Sync immersive view template qua XMPP
-        if (action.templateId) {
+        if (isModerator && action.templateId) {
             conference.setImmersiveViewTemplate(action.templateId);
+        } else if (!isModerator) {
+            console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view template');
         }
         break;
     }
     case SET_IMMERSIVE_SLOT_COUNT: {
-        console.log('📊 [ImmersiveView Middleware] Setting immersive view slot count:', action.slotCount);
-        // Sync immersive view slot count qua XMPP
-        conference.setImmersiveViewSlotCount(action.slotCount);
+        if (isModerator) {
+            conference.setImmersiveViewSlotCount(action.slotCount);
+        } else {
+            console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view slot count');
+        }
         break;
     }
     case SET_IMMERSIVE_ASSIGNMENTS: {
-        console.log('👥 [ImmersiveView Middleware] Sending immersive view assignments:', action.assignments);
-        // Sync immersive view assignments qua XMPP
-        conference.sendImmersiveViewAssignments(action.assignments);
+        console.log('🎯 [ImmersiveView Middleware] Dispatching assignments:', action.assignments);
+        if (isModerator) {
+            conference.sendImmersiveViewAssignments(action.assignments);
+        } else {
+            console.log('❌ [ImmersiveView Middleware] Only moderators can send immersive view assignments');
+        }
         break;
     }
     }
