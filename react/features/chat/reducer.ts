@@ -38,7 +38,6 @@ const DEFAULT_STATE = {
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
     shownMessages: new Set<string>(),
-    // isHistoryLoaded: false,
     focusedTab: ChatTabs.CHAT,
     isResizing: false,
     width: {
@@ -50,7 +49,6 @@ const DEFAULT_STATE = {
 export interface IChatState {
     focusedTab: ChatTabs;
     groupChatWithPermissions: boolean;
-    isHistoryLoaded: boolean;
     isLobbyChatActive: boolean;
     isOpen: boolean;
     isResizing: boolean;
@@ -240,11 +238,6 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             isLobbyChatActive: false,
             lobbyMessageRecipient: undefined
         };
-    // case SET_HISTORY_LOADED:
-    //     return {
-    //         ...state,
-    //         isHistoryLoaded: action.isHistoryLoaded
-    //     };
     case UPDATE_CONFERENCE_METADATA: {
         const { metadata } = action;
 

@@ -110,7 +110,7 @@ export class RocketChat {
                 'X-Auth-Token': this.rocketChatAuthToken
             });
 
-            if (!res.ok) {
+            if (!res.success) {
                 logger.error('Failed to check user in Rocket Chat room: ', res);
 
                 return false;
@@ -135,7 +135,7 @@ export class RocketChat {
             return false;
         };
 
-        if (await isUserInRocketChatRoom()) {
+        if (!await isUserInRocketChatRoom()) {
             this.rocketChatAuthToken = this.config.botToken;
             this.rocketChatUserId = this.config.botUserId;
             this.rocketChatType = ROCKET_CHAT_USER_TYPES.BOT;
