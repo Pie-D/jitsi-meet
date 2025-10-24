@@ -1,0 +1,38 @@
+/**
+ * Adaptive layout fixes for ImmersiveView
+ * Giải pháp thích ứng cho ImmersiveView mà không ảnh hưởng đến Toolbox và Participants pane
+ */
+
+// Đảm bảo ImmersiveView có thể thích ứng với layout
+.immersive-view-container {
+    // Smooth transitions khi UI thay đổi
+    transition: padding 0.3s ease-in-out;
+    
+    // Đảm bảo không bị overflow
+    overflow: hidden;
+    
+    // Z-index thấp hơn toolbox để không che khuất
+    z-index: 1;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+    .immersive-view-container {
+        // Trên mobile, không cần padding cho participants pane
+        padding-right: 0 !important;
+    }
+}
+
+// Đảm bảo slots không bị cắt khi có toolbox
+.immersive-slot {
+    // Thêm margin bottom để tránh bị che bởi toolbox
+    margin-bottom: 10px;
+    
+    // Đảm bảo nội dung không bị overflow
+    box-sizing: border-box;
+}
+
+// Smooth animation cho slot repositioning
+.immersive-slot-content {
+    transition: all 0.3s ease-in-out;
+}
