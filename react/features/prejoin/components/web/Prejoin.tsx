@@ -209,8 +209,9 @@ const useStyles = makeStyles()(theme => {
         },
 
         languageToggleContainer: {
+            justifyItems: 'flex-end',
             position: 'absolute',
-            top: theme.spacing(2),
+            top: theme.spacing(5),
             right: theme.spacing(2),
             zIndex: 10,
             

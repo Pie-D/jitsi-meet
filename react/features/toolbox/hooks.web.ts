@@ -321,10 +321,10 @@ export function useToolboxButtons(
         noisesuppression: noiseSuppression,
         whiteboard,
         etherpad,
-        stats: speakerStats,
+        // stats: speakerStats,
         // Place Security and Performance together with shortcuts/embed (same group 4)
         security,
-        videoquality: videoQuality,
+        videoquality: videoQuality, 
         shortcuts,
         embedmeeting: embed,
         feedback,
