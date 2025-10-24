@@ -90,31 +90,44 @@ export default function ClosedCaptionsTab() {
     const subtitlesError = useSelector((state: IReduxState) => state['features/subtitles']._hasError);
 
     const filteredSubtitles = useMemo(() => {
-        // First, create a map of transcription messages by message ID
-        const transcriptionMessages = new Map(
-            subtitles
-                .filter(s => s.isTranscription)
-                .map(s => [ s.id, s ])
-        );
+        console.log('=== ClosedCaptionsTab filteredSubtitles ===', { subtitles, selectedLanguage });
+        
+        // Lọc và loại bỏ duplicate phụ đề dựa trên id và timestamp
+        // Chỉ giữ lại phụ đề transcription (không phải translation)
+        const transcriptionSubtitles = subtitles
+            .filter(s => s.isTranscription)
+            .reduce((acc, current) => {
+                // Kiểm tra xem đã có subtitle với cùng id và timestamp chưa
+                const existingIndex = acc.findIndex(item => 
+                    item.id === current.id && 
+                    item.timestamp === current.timestamp &&
+                    item.participantId === current.participantId
+                );
+                
+                // Nếu chưa có thì thêm vào, nếu có rồi thì bỏ qua (tránh duplicate)
+                if (existingIndex === -1) {
+                    acc.push(current);
+                }
+                
+                return acc;
+            }, [] as ISubtitle[])
+            .sort((a, b) => a.timestamp - b.timestamp); // Sắp xếp theo timestamp
 
         if (!selectedLanguage) {
             // When no language is selected, show all original transcriptions
-            return Array.from(transcriptionMessages.values());
+            return transcriptionSubtitles;
         }
 
-        // Then, create a map of translation messages by message ID
+        // When a language is selected, for each transcription message:
+        // 1. Use its translation if available
+        // 2. Fall back to the original transcription if no translation exists
         const translationMessages = new Map(
             subtitles
                 .filter(s => !s.isTranscription && s.language === selectedLanguage)
                 .map(s => [ s.id, s ])
         );
 
-        // When a language is selected, for each transcription message:
-        // 1. Use its translation if available
-        // 2. Fall back to the original transcription if no translation exists
-        return Array.from(transcriptionMessages.values())
-            .filter((m: ISubtitle) => !m.interim)
-            .map(m => translationMessages.get(m.id) ?? m);
+        return transcriptionSubtitles.map(m => translationMessages.get(m.id) ?? m);
     }, [ subtitles, selectedLanguage ]);
 
     const groupedSubtitles = useMemo(() =>

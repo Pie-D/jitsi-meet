@@ -131,7 +131,7 @@ export function getMoreTabProps(stateful: IStateful) {
         disableHideSelfView: disableSelfViewSettings || disableSelfView,
         hideSelfView: getHideSelfView(state),
         iAmVisitor: iAmVisitor(state),
-        languages: LANGUAGES,
+        languages: LANGUAGES.filter(l => l === 'en' || l === 'vi' ),
         maxStageParticipants: state['features/base/settings'].maxStageParticipants,
         showLanguageSettings: configuredTabs.includes('language'),
         showSubtitlesOnStage: state['features/base/settings'].showSubtitlesOnStage,
@@ -279,4 +279,14 @@ export function getAudioSettingsVisibility(state: IReduxState) {
  */
 export function getVideoSettingsVisibility(state: IReduxState) {
     return state['features/settings'].videoSettingsVisible;
+}
+
+/**
+ * Returns the visibility state of the view settings (tile/stage).
+ *
+ * @param {Object} state - The state of the application.
+ * @returns {boolean}
+ */
+export function getViewSettingsVisibility(state: IReduxState) {
+    return state['features/settings'].viewSettingsVisible;
 }

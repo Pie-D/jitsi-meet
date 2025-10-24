@@ -27,6 +27,7 @@ import ParticipantsPane from '../../../participants-pane/components/web/Particip
 import Prejoin from '../../../prejoin/components/web/Prejoin';
 import { isPrejoinPageVisible } from '../../../prejoin/functions.web';
 import ReactionAnimations from '../../../reactions/components/web/ReactionsAnimations';
+import ImmersiveView from '../../../immersive-view/components/ImmersiveView';
 import { toggleToolboxVisible } from '../../../toolbox/actions.any';
 import { fullScreenChanged, showToolbox } from '../../../toolbox/actions.web';
 import JitsiPortal from '../../../toolbox/components/web/JitsiPortal';
@@ -250,6 +251,7 @@ class Conference extends AbstractConference<IProps, any> {
                         id = 'videospace'
                         onTouchStart = { this._onVideospaceTouchStart }>
                         <LargeVideo />
+                        <ImmersiveView />
                         {
                             _showPrejoin || _showLobby || (<>
                                 <StageFilmstrip />

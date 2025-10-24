@@ -18,14 +18,14 @@ const cc = {
  */
 export function useClosedCaptionButton() {
     const isStartSubtitlesButtonVisible = useSelector(canStartSubtitles);
-    const { showSubtitlesOnStage = false } = useSelector((state: IReduxState) => state['features/base/settings']);
+    const { showSubtitlesOnStage = true } = useSelector((state: IReduxState) => state['features/base/settings']);
     const _areClosedCaptionsEnabled = useSelector(areClosedCaptionsEnabled);
 
     if (!_areClosedCaptionsEnabled) {
         return undefined;
     }
 
-    if (isStartSubtitlesButtonVisible || !showSubtitlesOnStage) {
+    if (isStartSubtitlesButtonVisible || showSubtitlesOnStage) {
         return cc;
    }
 }

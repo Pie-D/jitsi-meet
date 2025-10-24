@@ -114,6 +114,9 @@
         "error": "Error: your message was not sent. Reason: {{error}}",
         "everyone": "Everyone",
         "fieldPlaceHolder": "Aa",
+        "fileAccessibleTitle": "{{user}} uploaded a file",
+        "fileAccessibleTitleMe": "me uploaded a file",
+        "fileDeleted": "A file was deleted",
         "guestsChatIndicator": "(guest)",
         "lobbyChatMessageTo": "Lobby chat message to {{recipient}}",
         "message": "Message",
@@ -1494,7 +1497,11 @@
         "stopSubtitles": "Stop subtitles",
         "surprised": "Surprised",
         "talkWhileMutedPopup": "Trying to speak? You are muted.",
-        "tileViewToggle": "Toggle tile view",
+        "tileViewToggle": "Display settings",
+        "viewSettings": "Select display mode",
+        "speakerView": "Speaker view",
+        "galleryView": "Library view",
+        "immersiveView": "Immersive view",
         "toggleCamera": "Toggle camera",
         "unmute": "Unmute microphone",
         "videoSettings": "Video settings",
@@ -1692,4 +1699,12 @@
         },
         "screenTitle": "Whiteboard"
     }
+  ,
+  "immersive": {
+    "selectTitle": "Choose immersive layout",
+   "secondTitle": "Sample Library",
+    "start": "Start",
+    "slots": "slots",
+    "description": "This layout will be the same for everyone. Participants can be arranged freely within this view."
+  }
 }

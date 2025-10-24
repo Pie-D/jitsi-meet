@@ -1,31 +1,31 @@
 /* eslint-disable react/no-multi-comp */
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, { Component } from "react";
+import { connect } from "react-redux";
 
-import { IReduxState, IStore } from '../../../app/types';
-import { JitsiRecordingConstants } from '../../../base/lib-jitsi-meet';
-import E2EELabel from '../../../e2ee/components/E2EELabel';
-import HighlightButton from '../../../recording/components/Recording/web/HighlightButton';
-import RecordingLabel from '../../../recording/components/web/RecordingLabel';
-import { showToolbox } from '../../../toolbox/actions.web';
-import { isToolboxVisible } from '../../../toolbox/functions.web';
-import VideoQualityLabel from '../../../video-quality/components/VideoQualityLabel.web';
-import VisitorsCountLabel from '../../../visitors/components/web/VisitorsCountLabel';
-import ConferenceTimer from '../ConferenceTimer';
-import { getConferenceInfo } from '../functions.web';
+import { IReduxState, IStore } from "../../../app/types";
+import { JitsiRecordingConstants } from "../../../base/lib-jitsi-meet";
+import E2EELabel from "../../../e2ee/components/E2EELabel";
+import HighlightButton from "../../../recording/components/Recording/web/HighlightButton";
+import RecordingLabel from "../../../recording/components/web/RecordingLabel";
+import { showToolbox } from "../../../toolbox/actions.web";
+import { isToolboxVisible } from "../../../toolbox/functions.web";
+import VideoQualityLabel from "../../../video-quality/components/VideoQualityLabel.web";
+import VisitorsCountLabel from "../../../visitors/components/web/VisitorsCountLabel";
+import ConferenceTimer from "../ConferenceTimer";
+import { getConferenceInfo } from "../functions.web";
 
-import ConferenceInfoContainer from './ConferenceInfoContainer';
-import InsecureRoomNameLabel from './InsecureRoomNameLabel';
-import RaisedHandsCountLabel from './RaisedHandsCountLabel';
-import SpeakerStatsLabel from './SpeakerStatsLabel';
-import SubjectText from './SubjectText';
-import ToggleTopPanelLabel from './ToggleTopPanelLabel';
+import ConferenceInfoContainer from "./ConferenceInfoContainer";
+import InsecureRoomNameLabel from "./InsecureRoomNameLabel";
+import LanguageToggleLabel from "./LanguageToggleLabel";
+import RaisedHandsCountLabel from "./RaisedHandsCountLabel";
+import SpeakerStatsLabel from "./SpeakerStatsLabel";
+import SubjectText from "./SubjectText";
+import ToggleTopPanelLabel from "./ToggleTopPanelLabel";
 
 /**
  * The type of the React {@code Component} props of {@link Subject}.
  */
 interface IProps {
-
     /**
      * The conference info labels to be shown in the conference header.
      */
@@ -42,7 +42,7 @@ interface IProps {
     /**
      * Invoked to active other features of the app.
      */
-    dispatch: IStore['dispatch'];
+    dispatch: IStore["dispatch"];
 }
 
 const COMPONENTS: Array<{
@@ -51,53 +51,57 @@ const COMPONENTS: Array<{
 }> = [
     {
         Component: HighlightButton,
-        id: 'highlight-moment'
+        id: "highlight-moment",
     },
     {
         Component: SubjectText,
-        id: 'subject'
+        id: "subject",
     },
     {
         Component: ConferenceTimer,
-        id: 'conference-timer'
+        id: "conference-timer",
     },
     {
         Component: SpeakerStatsLabel,
-        id: 'participants-count'
+        id: "participants-count",
     },
     {
         Component: E2EELabel,
-        id: 'e2ee'
+        id: "e2ee",
     },
     {
         Component: () => (
             <>
-                <RecordingLabel mode = { JitsiRecordingConstants.mode.FILE } />
-                <RecordingLabel mode = { JitsiRecordingConstants.mode.STREAM } />
+                <RecordingLabel mode={JitsiRecordingConstants.mode.FILE} />
+                <RecordingLabel mode={JitsiRecordingConstants.mode.STREAM} />
             </>
         ),
-        id: 'recording'
+        id: "recording",
     },
     {
         Component: RaisedHandsCountLabel,
-        id: 'raised-hands-count'
+        id: "raised-hands-count",
     },
     {
         Component: VideoQualityLabel,
-        id: 'video-quality'
+        id: "video-quality",
     },
     {
         Component: VisitorsCountLabel,
-        id: 'visitors-count'
+        id: "visitors-count",
     },
     {
         Component: InsecureRoomNameLabel,
-        id: 'insecure-room'
+        id: "insecure-room",
     },
     {
         Component: ToggleTopPanelLabel,
-        id: 'top-panel-toggle'
-    }
+        id: "top-panel-toggle",
+    },
+    {
+        Component: LanguageToggleLabel,
+        id: "language-toggle",
+    },
 ];
 
 /**
@@ -146,16 +150,10 @@ class ConferenceInfo extends Component<IProps> {
         }
 
         return (
-            <ConferenceInfoContainer
-                id = 'autoHide'
-                visible = { this.props._visible }>
-                {
-                    COMPONENTS
-                        .filter(comp => autoHide.includes(comp.id))
-                        .map(c =>
-                            <c.Component key = { c.id } />
-                        )
-                }
+            <ConferenceInfoContainer id="autoHide" visible={this.props._visible}>
+                {COMPONENTS.filter((comp) => autoHide.includes(comp.id)).map((c) => (
+                    <c.Component key={c.id} />
+                ))}
             </ConferenceInfoContainer>
         );
     }
@@ -173,16 +171,10 @@ class ConferenceInfo extends Component<IProps> {
         }
 
         return (
-            <ConferenceInfoContainer
-                id = 'alwaysVisible'
-                visible = { true } >
-                {
-                    COMPONENTS
-                        .filter(comp => alwaysVisible.includes(comp.id))
-                        .map(c =>
-                            <c.Component key = { c.id } />
-                        )
-                }
+            <ConferenceInfoContainer id="alwaysVisible" visible={true}>
+                {COMPONENTS.filter((comp) => alwaysVisible.includes(comp.id)).map((c) => (
+                    <c.Component key={c.id} />
+                ))}
             </ConferenceInfoContainer>
         );
     }
@@ -195,11 +187,9 @@ class ConferenceInfo extends Component<IProps> {
      */
     override render() {
         return (
-            <div
-                className = 'details-container'
-                onFocus = { this._onTabIn }>
-                { this._renderAlwaysVisible() }
-                { this._renderAutoHide() }
+            <div className="details-container" onFocus={this._onTabIn}>
+                {this._renderAlwaysVisible()}
+                {this._renderAutoHide()}
             </div>
         );
     }
@@ -219,7 +209,7 @@ class ConferenceInfo extends Component<IProps> {
 function _mapStateToProps(state: IReduxState) {
     return {
         _visible: isToolboxVisible(state),
-        _conferenceInfo: getConferenceInfo(state)
+        _conferenceInfo: getConferenceInfo(state),
     };
 }
 

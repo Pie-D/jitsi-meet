@@ -160,6 +160,9 @@ interface IProps {
      * The translated "you" text.
      */
     youText: string;
+
+    /** True if participant is assigned to an immersive slot (on stage). */
+    _isOnStage: boolean;
 }
 
 /**
@@ -181,6 +184,7 @@ function MeetingParticipantItem({
     _quickActionButtonType,
     _raisedHand,
     _videoMediaState,
+    _isOnStage,
     isHighlighted,
     isInBreakoutRoom,
     onContextMenu,
@@ -227,8 +231,19 @@ function MeetingParticipantItem({
     const audioMediaState = _audioMediaState === MEDIA_STATE.UNMUTED && hasAudioLevels
         ? MEDIA_STATE.DOMINANT_SPEAKER : _audioMediaState;
 
+    const onDragStart = useCallback((e: React.DragEvent) => {
+        if (_participantID) {
+            e.dataTransfer.setData('application/x-participant-id', _participantID);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+    }, [ _participantID ]);
+
+    const combinedHighlighted = Boolean(isHighlighted || _isOnStage);
+
     return (
         <ParticipantItem
+            draggable = { Boolean(_participantID) }
+            onDragStart = { onDragStart }
             actionsTrigger = { ACTION_TRIGGER.HOVER }
             {
                 ...(_participant?.fakeParticipant ? {} : {
@@ -238,7 +253,7 @@ function MeetingParticipantItem({
             }
             disableModeratorIndicator = { _disableModeratorIndicator }
             displayName = { _displayName }
-            isHighlighted = { isHighlighted }
+            isHighlighted = { combinedHighlighted }
             isModerator = { isParticipantModerator(_participant) }
             local = { _local }
             onLeave = { onLeave }
@@ -298,6 +313,8 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         ? getLocalAudioTrack(tracks) : getTrackByMediaTypeAndParticipant(tracks, MEDIA_TYPE.AUDIO, participantID);
 
     const { disableModeratorIndicator } = state['features/base/config'];
+    const immersive = state['features/immersive-view'];
+    const isOnStage = Boolean(Object.values(immersive?.assignments || {}).includes(participant?.id ?? ''));
 
     return {
         _audioMediaState,
@@ -311,7 +328,8 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         _participantID: participant?.id ?? '',
         _quickActionButtonType,
         _raisedHand: hasRaisedHand(participant),
-        _videoMediaState
+        _videoMediaState,
+        _isOnStage: isOnStage
     };
 }
 

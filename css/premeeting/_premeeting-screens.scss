@@ -15,12 +15,12 @@
         width: 100%;
 
         &.primary {
-            background: #0376DA;
-            border: 1px solid #0376DA;
+            background: #0376da;
+            border: 1px solid #0376da;
         }
 
         &.secondary {
-            background: #3D3D3D;
+            background: #3d3d3d;
             border: 1px solid transparent;
         }
 
@@ -32,14 +32,14 @@
         }
 
         &.disabled {
-            background: #5E6D7A;
-            border: 1px solid #5E6D7A;
-            color: #AFB6BC;
+            background: #5e6d7a;
+            border: 1px solid #5e6d7a;
+            color: #afb6bc;
             cursor: initial;
 
             .icon {
                 & > svg {
-                    fill: #AFB6BC;
+                    fill: #afb6bc;
                 }
             }
         }
@@ -56,7 +56,7 @@
             width: 36px;
 
             &:hover {
-                background-color: #0262B6;
+                background-color: #0262b6;
             }
 
             svg {
@@ -106,7 +106,7 @@
 }
 
 #preview {
-    background: #040404;
+    background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;

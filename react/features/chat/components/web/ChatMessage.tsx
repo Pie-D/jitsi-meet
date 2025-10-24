@@ -9,9 +9,10 @@ import { getParticipantById, getParticipantDisplayName, isPrivateChatEnabled } f
 import Popover from '../../../base/popover/components/Popover.web';
 import Message from '../../../base/react/components/web/Message';
 import { MESSAGE_TYPE_LOCAL } from '../../constants';
-import { getDisplayNameSuffix, getFormattedTimestamp, getMessageText, getPrivateNoticeMessage } from '../../functions';
+import { getDisplayNameSuffix, getFormattedTimestamp, getMessageText, getPrivateNoticeMessage, isFileMessage } from '../../functions';
 import { IChatMessageProps } from '../../types';
 
+import FileMessage from './FileMessage';
 import MessageMenu from './MessageMenu';
 import ReactButton from './ReactButton';
 
@@ -47,6 +48,22 @@ const useStyles = makeStyles()((theme: Theme) => {
             maxWidth: '100%',
             marginTop: '4px',
             boxSizing: 'border-box' as const,
+
+            '&.file': {
+                display: 'flex',
+                maxWidth: '100%',
+                minWidth: 0,
+
+                '& $replyWrapper': {
+                    width: '100%',
+                    minWidth: 0
+                },
+
+                '& $messageContent': {
+                    width: '100%',
+                    minWidth: 0
+                }
+            },
 
             '&.privatemessage': {
                 backgroundColor: theme.palette.support05
@@ -122,8 +139,7 @@ const useStyles = makeStyles()((theme: Theme) => {
         },
         messageContent: {
             maxWidth: '100%',
-            overflow: 'hidden',
-            flex: 1
+            overflow: 'hidden'
         },
         optionsButtonContainer: {
             display: 'flex',

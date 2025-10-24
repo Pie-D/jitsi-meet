@@ -66,9 +66,17 @@ export const TRANSLATION_LANGUAGES_HEAD: Array<string> = [ DEFAULT_LANGUAGE ];
 const options: i18next.InitOptions = {
     backend: <HttpBackendOptions>{
         loadPath: (lng: string[], ns: string[]) => {
-            switch (ns[0]) {
+            const namespace = ns[0];
+            const language = Array.isArray(lng) ? lng[0] : (lng as unknown as string);
+
+            switch (namespace) {
             case 'countries':
+                return 'lang/{{ns}}-{{lng}}.json';
             case 'main':
+                // For English, reuse the base English bundle which lives at main.json
+                if (language === 'en') {
+                    return 'lang/main.json';
+                }
                 return 'lang/{{ns}}-{{lng}}.json';
             default:
                 return 'lang/{{ns}}.json';

@@ -38,7 +38,7 @@ const DEFAULT_STATE = {
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
     shownMessages: new Set<string>(),
-    isHistoryLoaded: false,
+    // isHistoryLoaded: false,
     focusedTab: ChatTabs.CHAT,
     isResizing: false,
     width: {
@@ -86,6 +86,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         const newMessage: IMessage = {
             displayName: action.displayName,
             error: action.error,
+            fileMetadata: action.fileMetadata,
             isFromGuest: Boolean(action.isFromGuest),
             isFromVisitor: Boolean(action.isFromVisitor),
             participantId: action.participantId,
@@ -239,11 +240,11 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             isLobbyChatActive: false,
             lobbyMessageRecipient: undefined
         };
-    case SET_HISTORY_LOADED:
-        return {
-            ...state,
-            isHistoryLoaded: action.isHistoryLoaded
-        };
+    // case SET_HISTORY_LOADED:
+    //     return {
+    //         ...state,
+    //         isHistoryLoaded: action.isHistoryLoaded
+    //     };
     case UPDATE_CONFERENCE_METADATA: {
         const { metadata } = action;
 

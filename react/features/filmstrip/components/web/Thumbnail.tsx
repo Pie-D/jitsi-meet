@@ -254,6 +254,9 @@ export interface IProps extends WithTranslation {
      * there is empty space.
      */
     width?: number;
+
+    /** Whether this participant is currently assigned to an immersive view slot. */
+    _isOnImmersiveStage?: boolean;
 }
 
 const defaultStyles = (theme: Theme) => {
@@ -324,6 +327,12 @@ const defaultStyles = (theme: Theme) => {
         activeSpeaker: {
             '& .active-speaker-indicator': {
                 boxShadow: `inset 0px 0px 0px 3px ${theme.palette.action01Hover} !important`
+            }
+        },
+
+        immersiveOnStage: {
+            '& .immersive-onstage-indicator': {
+                boxShadow: `inset 0px 0px 0px 3px #4da3ff !important`
             }
         },
 
@@ -752,6 +761,17 @@ class Thumbnail extends Component<IProps, IState> {
     }
 
     /**
+     * Drag start handler to enable dragging participant from filmstrip into immersive slots.
+     */
+    _onDragStart: React.DragEventHandler<HTMLSpanElement> = (e) => {
+        const { _participant } = this.props;
+        if (_participant?.id) {
+            e.dataTransfer.setData('application/x-participant-id', _participant.id);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+    };
+
+    /**
      * This is called as a onKeydown handler on the keyboard-only button to toggle pin.
      *
      * @param {KeyboardEvent} event - The keydown event.
@@ -941,7 +961,8 @@ class Thumbnail extends Component<IProps, IState> {
             _isDominantSpeakerDisabled,
             _participant,
             _raisedHand,
-            _thumbnailType
+            _thumbnailType,
+            _isOnImmersiveStage
         } = this.props;
         const classes = withStyles.getClasses(this.props);
 
@@ -956,6 +977,10 @@ class Thumbnail extends Component<IProps, IState> {
         }
         if (_thumbnailType !== THUMBNAIL_TYPE.TILE && _participant?.pinned) {
             className += ' videoContainerFocused';
+        }
+
+        if (_isOnImmersiveStage) {
+            className += ` ${classes.immersiveOnStage}`;
         }
 
         return className;
@@ -1069,6 +1094,8 @@ class Thumbnail extends Component<IProps, IState> {
                     ? `localVideoContainer${filmstripType === FILMSTRIP_TYPE.MAIN ? '' : `_${filmstripType}`}`
                     : `participant_${id}${filmstripType === FILMSTRIP_TYPE.MAIN ? '' : `_${filmstripType}`}`
                 }
+                draggable = { true }
+                onDragStart = { this._onDragStart }
                 onBlur = { this._onBlur }
                 onFocus = { this._onFocus }
                 { ...(_isMobile
@@ -1150,6 +1177,10 @@ class Thumbnail extends Component<IProps, IState> {
                     className = { clsx(classes.borderIndicator,
                     _gifSrc && classes.borderIndicatorOnTop,
                     'active-speaker-indicator') } />
+                <div
+                    className = { clsx(classes.borderIndicator,
+                    _gifSrc && classes.borderIndicatorOnTop,
+                    'immersive-onstage-indicator') } />
                 {_gifSrc && (
                     <div
                         className = { clsx(classes.borderIndicator, classes.borderIndicatorOnTop) }

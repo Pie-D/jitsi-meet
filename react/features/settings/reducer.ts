@@ -5,7 +5,8 @@ import {
     SET_AUDIO_SETTINGS,
     SET_AUDIO_SETTINGS_VISIBILITY,
     SET_PREVIEW_AUDIO_TRACK,
-    SET_VIDEO_SETTINGS_VISIBILITY
+    SET_VIDEO_SETTINGS_VISIBILITY,
+    SET_VIEW_SETTINGS_VISIBILITY
 } from './actionTypes';
 
 export interface ISettingsState {
@@ -13,6 +14,7 @@ export interface ISettingsState {
     audioSettingsVisible?: boolean;
     previewAudioTrack?: any | null;
     videoSettingsVisible?: boolean;
+    viewSettingsVisible?: boolean;
 }
 
 ReducerRegistry.register('features/settings', (state: ISettingsState = {}, action) => {
@@ -26,6 +28,11 @@ ReducerRegistry.register('features/settings', (state: ISettingsState = {}, actio
         return {
             ...state,
             videoSettingsVisible: action.value
+        };
+    case SET_VIEW_SETTINGS_VISIBILITY:
+        return {
+            ...state,
+            viewSettingsVisible: action.value
         };
     case SET_PREVIEW_AUDIO_TRACK:
         return {

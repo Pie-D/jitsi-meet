@@ -654,7 +654,9 @@ export interface IConfig {
             audio?: boolean;
             video?: boolean;
         };
+        hideVisitorCountForVisitors?: boolean;
         queueService: string;
+        showJoinMeetingDialog?: boolean;
     };
     watchRTCConfigParams?: IWatchRTCConfiguration;
     webhookProxyUrl?: string;
