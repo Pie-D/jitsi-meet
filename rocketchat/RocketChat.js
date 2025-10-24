@@ -33,11 +33,7 @@ export class RocketChat {
             const decodedToken = Utils.decodeToken(token);
             const cmeetToken = decodedToken?.context?.token;
 
-            logger.log('Decoded Token:', JSON.stringify(decodedToken, null, 2));
-
             if (cmeetToken) {
-                logger.log('C-Meet Token:', cmeetToken);
-
                 const url = this.config.endpoints.login;
                 const data = await Utils.makeRequest('POST', url, {
                     serviceName: 'keycloak',
@@ -108,14 +104,6 @@ export class RocketChat {
         }
 
         const isUserInRocketChatRoom = async () => {
-            let username = this.xmpp.participantId;
-
-            if (this.userContext?.username) {
-                username = this.userContext.username;
-            } else if (this.xmpp.displayName && this.xmpp.displayName !== 'Unknown') {
-                username = this.xmpp.displayName;
-            }
-
             const url = `${this.config.endpoints.roomMembers}?roomId=${this.rocketChatRoomId}`;
             const res = await Utils.makeRequest('GET', url, null, {
                 'X-User-Id': this.rocketChatUserId,
@@ -131,8 +119,10 @@ export class RocketChat {
             const data = await res.json();
 
             if (data && data.members && Array.isArray(data.members)) {
+                logger.log('Current username:', this.userContext.username);
                 for (const member of data.members) {
-                    if (member.username === username) {
+                    logger.log('Member:', member);
+                    if (member.username === this.userContext.username) {
                         return true;
                     }
                 }

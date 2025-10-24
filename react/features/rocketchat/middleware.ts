@@ -19,8 +19,6 @@ MiddlewareRegistry.register(store => next => async action => {
 
         const conferenceState = state['features/base/conference'] as IConferenceState;
 
-        console.log('RocketChat Middleware', conferenceState?.conference?.connection);
-
         const token = conferenceState?.conference?.connection?.token || '';
 
         const localParticipant = getLocalParticipant(state);
@@ -33,6 +31,8 @@ MiddlewareRegistry.register(store => next => async action => {
             })
             .catch((error: any) => {
                 console.error('Failed to init RocketChat:', error);
+            }).finally(() => {
+                console.log('RocketChat Middleware: Synced messages from RocketChat successfully');
             });
         break;
     }
@@ -46,9 +46,13 @@ MiddlewareRegistry.register(store => next => async action => {
         const currentState = store.getState();
         const chatState = currentState['features/chat'] || {};
 
+        console.log('RocketChat Middleware: Adding message to RocketChat', action);
+
         if (action.message && action.participantId && action.timestamp) {
             try {
                 const messageId = createMessageId(action.participantId, action.timestamp, action.message);
+
+                console.log('RocketChat Middleware: Message ID', messageId);
 
                 if (chatState.shownMessages.has(messageId)) {
                     return;
