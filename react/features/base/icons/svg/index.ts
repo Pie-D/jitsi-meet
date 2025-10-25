@@ -117,7 +117,9 @@ const {
     IconYahoo,
     IconSaveSpeechToText,
     IconSaveSpeechToTextHiden,
-    IconMemberImmersiveView
+    IconMemberImmersiveView,
+    IconLanguageVN,
+    IconLanguageEN
 } = Object.keys(DEFAULT_ICON).reduce((exportedIcons: Record<string, any>, key) => {
     return {
         ...exportedIcons,
@@ -243,5 +245,7 @@ export {
     IconYahoo,
     IconSaveSpeechToText,
     IconSaveSpeechToTextHiden,
-    IconMemberImmersiveView
+    IconMemberImmersiveView,
+    IconLanguageVN,
+    IconLanguageEN
 };

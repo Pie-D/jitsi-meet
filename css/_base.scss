@@ -9,7 +9,7 @@
 
     // Firefox only
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, .5) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.5) transparent;
 }
 
 input,
@@ -31,7 +31,7 @@ body {
     font-size: 0.75rem;
     font-weight: 400;
     overflow: hidden;
-    color: #F1F1F1;
+    color: #f1f1f1;
     background: #040404; // should match DEFAULT_BACKGROUND from interface_config
 }
 
@@ -40,7 +40,7 @@ body {
  * but it will still show up on keyboard focus, thus preserving accessibility.
  */
 .js-focus-visible :focus:not(.focus-visible) {
-  outline: none;
+    outline: none;
 }
 
 .jitsi-icon {
@@ -54,7 +54,7 @@ body {
 }
 
 .jitsi-icon.gray svg {
-    fill: #5E6D7A;
+    fill: #5e6d7a;
     cursor: pointer;
 }
 
@@ -62,18 +62,29 @@ p {
     margin: 0;
 }
 
-body, input, textarea, keygen, select, button {
+body,
+input,
+textarea,
+keygen,
+select,
+button {
     font-family: $baseFontFamily !important;
 }
 
-button, input, select, textarea {
+button,
+input,
+select,
+textarea {
     margin: 0;
     vertical-align: baseline;
     font-size: 1em;
 }
 
-button, select, input[type="button"],
-input[type="reset"], input[type="submit"] {
+button,
+select,
+input[type="button"],
+input[type="reset"],
+input[type="submit"] {
     cursor: pointer;
 }
 
@@ -83,14 +94,16 @@ textarea {
     line-height: 1.5em;
 }
 
-input[type='text'], input[type='password'], textarea {
+input[type="text"],
+input[type="password"],
+textarea {
     outline: none; /* removes the default outline */
     resize: none; /* prevents the user-resizing, adjust to taste */
 }
 
 button {
-    color: #FFF;
-    background-color: #44A5FF;
+    color: #fff;
+    background-color: #44a5ff;
     border-radius: $borderRadius;
 
     &.no-icon {
@@ -116,7 +129,7 @@ form {
 
 .leftwatermark {
     max-width: 140px;
-    max-height:70px;
+    max-height: 70px;
     left: 32px;
     top: 32px;
     background-position: center left;
@@ -124,8 +137,8 @@ form {
     background-size: contain;
 
     &.no-margin {
-        left:0;
-        top:0;
+        left: 0;
+        top: 0;
     }
 }
 
@@ -140,7 +153,7 @@ form {
     left: 25;
     bottom: 7;
     font-size: 0.875rem;
-    color: rgba(255,255,255,.50);
+    color: rgba(255, 255, 255, 0.5);
     text-decoration: none;
     z-index: $watermarkZ;
 }
@@ -167,7 +180,7 @@ form {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #3D3D3D;
+    background: #3d3d3d;
     border-radius: 4px;
 }
 

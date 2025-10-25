@@ -7,6 +7,7 @@ import { makeStyles } from 'tss-react/mui';
 import { IReduxState } from '../../../app/types';
 import Avatar from '../../../base/avatar/components/Avatar';
 import { isNameReadOnly } from '../../../base/config/functions.web';
+import LanguageToggleButton from '../../../base/i18n/components/web/LanguageToggleButton';
 import { IconArrowDown, IconArrowUp, IconPhoneRinging, IconVolumeOff } from '../../../base/icons/svg';
 import { isVideoMutedByUser } from '../../../base/media/functions';
 import { getLocalParticipant } from '../../../base/participants/functions';
@@ -21,7 +22,7 @@ import Input from '../../../base/ui/components/web/Input';
 import { BUTTON_TYPES } from '../../../base/ui/constants.any';
 import isInsecureRoomName from '../../../base/util/isInsecureRoomName';
 import { openDisplayNamePrompt } from '../../../display-name/actions';
-import { isUnsafeRoomWarningEnabled } from '../../../prejoin/functions';
+import { isUnsafeRoomWarningEnabled } from '../../../prejoin/functions.any';
 import {
     joinConference as joinConferenceAction,
     joinConferenceWithoutAudio as joinConferenceWithoutAudioAction,
@@ -33,7 +34,7 @@ import {
     isJoinByPhoneButtonVisible,
     isJoinByPhoneDialogVisible,
     isPrejoinDisplayNameVisible
-} from '../../functions';
+} from '../../functions.any';
 import logger from '../../logger';
 import { hasDisplayName } from '../../utils';
 
@@ -204,6 +205,19 @@ const useStyles = makeStyles()(theme => {
             '@media (max-width: 420px)': {
                 top: 0,
                 width: 'calc(100% - 32px)'
+            }
+        },
+
+        languageToggleContainer: {
+            justifyItems: 'flex-end',
+            position: 'absolute',
+            top: theme.spacing(5),
+            right: theme.spacing(2),
+            zIndex: 10,
+            
+            '@media (max-width: 768px)': {
+                top: theme.spacing(1),
+                right: theme.spacing(1)
             }
         }
     };
@@ -409,6 +423,11 @@ const Prejoin = ({
             title = { t('prejoin.joinMeeting') }
             videoMuted = { !showCameraPreview }
             videoTrack = { videoTrack }>
+            <div className = { classes.languageToggleContainer }>
+                <LanguageToggleButton 
+                    compact = { true }
+                    testId = 'prejoin.languageToggle' />
+            </div>
             <div
                 className = { classes.inputContainer }
                 data-testid = 'prejoin.screen'>
