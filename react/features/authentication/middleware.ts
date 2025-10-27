@@ -295,11 +295,11 @@ function _handleLogin({ dispatch, getState }: IStore) {
         return;
     }
 
-    // if (!isTokenAuthEnabled(config)) {
-    //     dispatch(openLoginDialog());
+    if (!isTokenAuthEnabled(config)) {
+        // dispatch(openLoginDialog());
 
-    //     return;
-    // }
+        return;
+    }
 
     getTokenAuthUrl(
         config,

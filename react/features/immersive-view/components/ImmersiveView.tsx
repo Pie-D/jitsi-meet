@@ -11,17 +11,24 @@ import { setImmersiveAssignments, swapImmersiveSlots } from "../actions";
 import { DEFAULT_IMMERSIVE_SLOT_COUNT } from "../constants";
 import "../reducer";
 import { IMMERSIVE_TEMPLATES, getTemplateSlots } from "../templates";
+import { isLocalParticipantModerator } from "../../base/participants/functions";
 
 const useStyles = makeStyles()(() => ({
     root: {
         position: "absolute",
-        inset: 0,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1, // Thấp hơn toolbar (250)
+        pointerEvents: "none", // Cho phép click through
     },
     background: {
         position: "absolute",
         inset: 0,
         backgroundSize: "cover",
-        // backgroundPosition: "center",
+        backgroundPosition: "center",
+        zIndex: 1,
     },
     slot: {
         position: "absolute",
@@ -29,6 +36,12 @@ const useStyles = makeStyles()(() => ({
         background: "rgba(0,0,0,0.05)",
         padding: "0",
         margin: "0",
+        zIndex: 2,
+        pointerEvents: "auto", // Cho phép click trên slot
+    },
+    slotDisabled: {
+        cursor: "not-allowed", // Hiển thị cursor không được phép
+        opacity: 0.7, // Làm mờ slot
     },
     slotHighlight: {
         border: "2px solid #4da3ff",
@@ -95,6 +108,7 @@ const useStyles = makeStyles()(() => ({
 export default function ImmersiveView() {
     const dispatch = useDispatch();
     const immersive = useSelector((state: IReduxState) => state["features/immersive-view"]);
+    const isModerator = useSelector(isLocalParticipantModerator);
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const [viewportInfo, setViewportInfo] = useState({ 
         availableWidth: window.innerWidth, 
@@ -103,6 +117,7 @@ export default function ImmersiveView() {
         hasParticipantsPane: false
     });
     const { classes, cx } = useStyles();
+
 
     const remotesMap = useSelector((s: IReduxState) => getRemoteParticipants(s));
     const remotes = remotesMap ? Array.from(remotesMap.values()) : [];
@@ -227,13 +242,19 @@ export default function ImmersiveView() {
         let changed = false;
 
         // If no assignments yet, initialize with current participants (preserve avatar fallback)
+        // Chỉ moderator mới được tạo assignments ban đầu, user sẽ nhận từ moderator
         if (!Object.keys(current).length) {
-            ordered.forEach((p: any, i: number) => {
-                if (i < baseSlots.length) {
-                    current[i] = p.id;
-                    changed = true;
-                }
-            });
+            if (isModerator) {
+                console.log('🎯 [ImmersiveView] Moderator initializing assignments:', ordered.map(p => p?.id));
+                ordered.forEach((p: any, i: number) => {
+                    if (i < baseSlots.length) {
+                        current[i] = p.id;
+                        changed = true;
+                    }
+                });
+            } else {
+                console.log('❌ [ImmersiveView] User waiting for assignments from moderator');
+            }
         }
 
         // Clean assignments for participants that left or for slots out of range
@@ -277,8 +298,20 @@ export default function ImmersiveView() {
     }, [dispatch, immersive?.enabled, tpl?.id, participantIds.join(","), tracks, immersive?.assignments, baseSlots.length]);
 
     const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-    const handleDragStart = (index: number) => () => setDragIndex(index);
+    const handleDragStart = (index: number) => () => {
+        // Chỉ moderator mới được drag
+        if (!isModerator) {
+            console.log('❌ [ImmersiveView] Only moderators can drag participants');
+            return;
+        }
+        setDragIndex(index);
+    };
     const handleDrop = (index: number) => (e?: React.DragEvent) => {
+        // Chỉ moderator mới được drop
+        if (!isModerator) {
+            console.log('❌ [ImmersiveView] Only moderators can drop participants');
+            return;
+        }
         const dataPid = e?.dataTransfer?.getData("application/x-participant-id");
 
         if (dataPid) {
@@ -293,12 +326,14 @@ export default function ImmersiveView() {
             } else {
                 next[index] = dataPid;
             }
+            console.log('🎯 [ImmersiveView] Drag & drop assignments:', next);
             dispatch(setImmersiveAssignments(next));
             setDragIndex(null);
             return;
         }
 
         if (dragIndex !== null && dragIndex !== index) {
+            console.log('🎯 [ImmersiveView] Swap slots:', dragIndex, '->', index);
             dispatch(swapImmersiveSlots(dragIndex, index));
         }
         setDragIndex(null);
@@ -413,7 +448,11 @@ export default function ImmersiveView() {
                 return (
                     <div
                         key={idx}
-                        className={cx(classes.slot, pid === local?.id ? classes.slotHighlight : classes.slotNormal)}
+                        className={cx(classes.slot, {
+                            [classes.slotHighlight]: pid === local?.id,
+                            [classes.slotNormal]: pid !== local?.id,
+                            [classes.slotDisabled]: !isModerator, // Disable cho user
+                        })}
                         style={{
                             borderRadius: "1.5rem",
                             border: "8px solid #41b6fb",
@@ -427,7 +466,7 @@ export default function ImmersiveView() {
                         }}
                     >
                         <div
-                            draggable={Boolean(p)}
+                            draggable={Boolean(p) && isModerator} // Chỉ moderator mới được drag
                             onDragStart={handleDragStart(idx)}
                             onDragOver={handleDragOver}
                             onDrop={handleDrop(idx)}
