@@ -296,7 +296,7 @@ function _handleLogin({ dispatch, getState }: IStore) {
     }
 
     if (!isTokenAuthEnabled(config)) {
-        // dispatch(openLoginDialog());
+        dispatch(openLoginDialog());
 
         return;
     }
