@@ -3,7 +3,6 @@ import { WithTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 
 import { IReduxState } from '../../../app/types';
-import { isMobileBrowser } from '../../../base/environment/utils';
 import { translate } from '../../../base/i18n/functions';
 import { IconArrowUp } from '../../../base/icons/svg';
 import ToolboxButtonWithIcon from '../../../base/toolbox/components/web/ToolboxButtonWithIcon';
@@ -77,7 +76,7 @@ function mapStateToProps(state: IReduxState) {
 
     return {
         isOpen: Boolean(getViewSettingsVisibility(state)),
-        visible: !isMobileBrowser() && !isNarrowLayout
+        visible: !isNarrowLayout
     };
 }
 const mapDispatchToProps = {
