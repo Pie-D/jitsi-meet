@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../app/types';
+import { isMobileBrowser } from '../../../base/environment/utils';
 import ContextMenu from '../../../base/ui/components/web/ContextMenu';
 import ContextMenuItem from '../../../base/ui/components/web/ContextMenuItem';
 import ContextMenuItemGroup from '../../../base/ui/components/web/ContextMenuItemGroup';
@@ -31,6 +32,7 @@ const ViewSettingsContent = () => {
     const dispatch = useDispatch();
     const isTile = useSelector(shouldDisplayTileView);
     const immersiveEnabled = useSelector((state: IReduxState) => state['features/immersive-view']?.enabled);
+    const isMobile = isMobileBrowser();
 
     const selectTile = useCallback(() => {
         dispatch(setImmersiveEnabled(false));
@@ -72,14 +74,16 @@ const ViewSettingsContent = () => {
                     selected={isTile && !immersiveEnabled} 
                     text={t('toolbar.galleryView')} />
 
-                {/* immersive view */}
-                <ContextMenuItem
-                    accessibilityLabel={t('toolbar.immersiveView')}
-                    icon={IconImmersiveView}
-                    onClick={selectImmersive}
-                    role='menuitem'
-                    selected={immersiveEnabled}
-                    text={t('toolbar.immersiveView')} />
+                {/* immersive view - only show on desktop */}
+                {!isMobile && (
+                    <ContextMenuItem
+                        accessibilityLabel={t('toolbar.immersiveView')}
+                        icon={IconImmersiveView}
+                        onClick={selectImmersive}
+                        role='menuitem'
+                        selected={immersiveEnabled}
+                        text={t('toolbar.immersiveView')} />
+                )}
 
             </ContextMenuItemGroup>
         </ContextMenu>
