@@ -52,11 +52,17 @@ MiddlewareRegistry.register(store => next => action => {
         break;
     }
     case SET_IMMERSIVE_ASSIGNMENTS: {
-        console.log('🎯 [ImmersiveView Middleware] Dispatching assignments:', action.assignments);
+        // console.log('🔥 IMMERSIVE_SYNC: SENDING assignments:', action.assignments);
         if (isModerator) {
-            conference.sendImmersiveViewAssignments(action.assignments);
+            // Lấy thông tin template và slot count từ state
+            const immersiveState = state['features/immersive-view'];
+            const templateId = immersiveState?.templateId;
+            const slotCount = immersiveState?.slotCount;
+            
+            // Gửi metadata để user tự tính toán vị trí responsive
+            conference.sendImmersiveViewAssignments(action.assignments, templateId, slotCount);
         } else {
-            console.log('❌ [ImmersiveView Middleware] Only moderators can send immersive view assignments');
+            // console.log('🔥 IMMERSIVE_SYNC: Only moderators can send assignments');
         }
         break;
     }

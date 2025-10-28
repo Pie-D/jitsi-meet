@@ -175,7 +175,7 @@ export interface IJitsiConference {
     setImmersiveViewEnabled: Function;
     setImmersiveViewTemplate: Function;
     setImmersiveViewSlotCount: Function;
-    sendImmersiveViewAssignments: Function;
+    sendImmersiveViewAssignments: (assignments: { [slotIndex: number]: string }, templateId?: string, slotCount?: number) => void;
     getParticipantImmersiveViewEnabled: Function;
     getParticipantImmersiveViewTemplate: Function;
     getParticipantImmersiveViewSlotCount: Function;
