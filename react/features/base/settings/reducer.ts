@@ -29,7 +29,7 @@ const DEFAULT_STATE: ISettingsState = {
     micDeviceId: undefined,
     serverURL: undefined,
     hideShareAudioHelper: false,
-    showSubtitlesOnStage: false,
+    showSubtitlesOnStage: true, // chỉnh sửa mặc định là false thành true
     soundsIncomingMessage: true,
     soundsParticipantJoined: true,
     soundsParticipantKnocking: true,

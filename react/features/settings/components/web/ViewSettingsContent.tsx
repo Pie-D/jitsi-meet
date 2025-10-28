@@ -14,6 +14,7 @@ import { IconGalleryView, IconImmersiveView, IconSpeakerView } from '../../../ba
 import { setImmersiveEnabled, setImmersiveTemplate } from '../../../immersive-view/actions';
 import ImmersiveSetupDialog from '../../../immersive-view/components/ImmersiveSetupDialog';
 import { openDialog } from '../../../base/dialog/actions';
+import { isLocalParticipantModerator } from '../../../base/participants/functions';
 import '../../../immersive-view/reducer';
 
 const useStyles = makeStyles()(() => ({
@@ -31,6 +32,7 @@ const ViewSettingsContent = () => {
     const dispatch = useDispatch();
     const isTile = useSelector(shouldDisplayTileView);
     const immersiveEnabled = useSelector((state: IReduxState) => state['features/immersive-view']?.enabled);
+    const isModerator = useSelector(isLocalParticipantModerator);
 
     const selectTile = useCallback(() => {
         dispatch(setImmersiveEnabled(false));
@@ -72,14 +74,16 @@ const ViewSettingsContent = () => {
                     selected={isTile && !immersiveEnabled} 
                     text={t('toolbar.galleryView')} />
 
-                {/* immersive view */}
-                <ContextMenuItem
-                    accessibilityLabel={t('toolbar.immersiveView')}
-                    icon={IconImmersiveView}
-                    onClick={selectImmersive}
-                    role='menuitem'
-                    selected={immersiveEnabled}
-                    text={t('toolbar.immersiveView')} />
+                {/* immersive view - chỉ moderator mới có thể sử dụng */}
+                {isModerator && (
+                    <ContextMenuItem
+                        accessibilityLabel={t('toolbar.immersiveView')}
+                        icon={IconImmersiveView}
+                        onClick={selectImmersive}
+                        role='menuitem'
+                        selected={immersiveEnabled}
+                        text={t('toolbar.immersiveView')} />
+                )}
 
             </ContextMenuItemGroup>
         </ContextMenu>
