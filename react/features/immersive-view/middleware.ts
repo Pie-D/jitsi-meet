@@ -1,7 +1,7 @@
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { IStore } from '../app/types';
 import { AnyAction } from 'redux';
-
+import { setImmersiveEnabled, setImmersiveSlotCount, setImmersiveTemplate, setImmersiveAssignments } from './actions';
 import {
     SET_IMMERSIVE_ENABLED,
     SET_IMMERSIVE_TEMPLATE,
@@ -17,7 +17,68 @@ MiddlewareRegistry.register(store => next => action => {
     const { dispatch, getState } = store;
     const state = getState();
     const conference = state['features/base/conference'].conference;
+    // Đăng ký lắng nghe presence để đồng bộ immersive view từ moderator tới những client khác
+        if (conference && !(window as any)._immersivePresenceListenersRegistered) {
+        (window as any)._immersivePresenceListenersRegistered = true;
 
+        // Helper: safely extract value from presence payload
+        const extractValue = (data: any): any => {
+            // Presence handler receives object like { value, attributes, ... }
+            if (!data) {
+                return undefined;
+            }
+            if (typeof data === 'object' && 'value' in data) {
+                return (data as any).value;
+            }
+
+            return data;
+        };
+
+        // enabled flag
+        conference.addCommandListener('jitsi_participant_immersive_view_enabled', (payload: any) => {
+            const value = extractValue(payload);
+            const enabled = String(value) === 'true';
+            (window as any)._immersiveSuppressSend = true;
+            dispatch(setImmersiveEnabled(enabled));
+            (window as any)._immersiveSuppressSend = false;
+        });
+
+        // template id
+        conference.addCommandListener('jitsi_participant_immersive_view_template', (payload: any) => {
+            const value = extractValue(payload);
+            if (typeof value === 'string' && value.length) {
+                (window as any)._immersiveSuppressSend = true;
+                dispatch(setImmersiveTemplate(value));
+                (window as any)._immersiveSuppressSend = false;
+            }
+        });
+
+        // slot count
+        conference.addCommandListener('jitsi_participant_immersive_view_slot_count', (payload: any) => {
+            const value = extractValue(payload);
+            const num = Number.parseInt(String(value), 10);
+            if (!Number.isNaN(num)) {
+                (window as any)._immersiveSuppressSend = true;
+                dispatch(setImmersiveSlotCount(num));
+                (window as any)._immersiveSuppressSend = false;
+            }
+        });
+
+        // assignments (JSON string)
+        conference.addCommandListener('jitsi_participant_immersive_view_assignments', (payload: any) => {
+            try {
+                const value = extractValue(payload);
+                const json = typeof value === 'string' ? JSON.parse(value) : value;
+                if (json && typeof json === 'object') {
+                    (window as any)._immersiveSuppressSend = true;
+                    dispatch(setImmersiveAssignments(json));
+                    (window as any)._immersiveSuppressSend = false;
+                }
+            } catch (e) {
+                // ignore malformed data
+            }
+        });
+    }
     // Chỉ log immersive view actions
     if (!conference) {
         return result;
@@ -25,10 +86,10 @@ MiddlewareRegistry.register(store => next => action => {
 
     // Chỉ moderator mới được gửi immersive view settings qua XMPP
     const isModerator = state['features/base/participants']?.local?.role === 'moderator';
-    
+    const suppress = (window as any)._immersiveSuppressSend === true;
     switch (action.type) {
     case SET_IMMERSIVE_ENABLED: {
-        if (isModerator) {
+        if (isModerator && !suppress) {
             conference.setImmersiveViewEnabled(action.enabled);
         } else {
             console.log('❌ [ImmersiveView Middleware] Only moderators can enable/disable immersive view');
@@ -36,7 +97,7 @@ MiddlewareRegistry.register(store => next => action => {
         break;
     }
     case SET_IMMERSIVE_TEMPLATE: {
-        if (isModerator && action.templateId) {
+        if (isModerator && action.templateId && !suppress) {
             conference.setImmersiveViewTemplate(action.templateId);
         } else if (!isModerator) {
             console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view template');
@@ -44,7 +105,7 @@ MiddlewareRegistry.register(store => next => action => {
         break;
     }
     case SET_IMMERSIVE_SLOT_COUNT: {
-        if (isModerator) {
+        if (isModerator && !suppress) {
             conference.setImmersiveViewSlotCount(action.slotCount);
         } else {
             console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view slot count');
@@ -53,7 +114,7 @@ MiddlewareRegistry.register(store => next => action => {
     }
     case SET_IMMERSIVE_ASSIGNMENTS: {
         // console.log('🔥 IMMERSIVE_SYNC: SENDING assignments:', action.assignments);
-        if (isModerator) {
+        if (isModerator && !suppress) {
             // Lấy thông tin template và slot count từ state
             const immersiveState = state['features/immersive-view'];
             const templateId = immersiveState?.templateId;
