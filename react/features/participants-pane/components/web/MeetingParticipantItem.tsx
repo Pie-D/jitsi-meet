@@ -224,9 +224,9 @@ function MeetingParticipantItem({
         };
     }, [ _audioTrack ]);
 
-    if (!_matchesSearch) {
-        return null;
-    }
+    // if (!_matchesSearch) {
+    //     return null;
+    // }
 
     const audioMediaState = _audioMediaState === MEDIA_STATE.UNMUTED && hasAudioLevels
         ? MEDIA_STATE.DOMINANT_SPEAKER : _audioMediaState;
@@ -241,6 +241,7 @@ function MeetingParticipantItem({
     const combinedHighlighted = Boolean(isHighlighted || _isOnStage);
 
     return (
+                _matchesSearch ? (
         <ParticipantItem
             draggable = { Boolean(_participantID) }
             onDragStart = { onDragStart }
@@ -284,6 +285,7 @@ function MeetingParticipantItem({
                     onClick = { onContextMenu } />
             )}
         </ParticipantItem>
+                ) : null
     );
 }
 
