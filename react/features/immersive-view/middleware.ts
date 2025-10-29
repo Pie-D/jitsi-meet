@@ -2,7 +2,6 @@ import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { IStore } from '../app/types';
 import { AnyAction } from 'redux';
 import { setImmersiveEnabled, setImmersiveSlotCount, setImmersiveTemplate, setImmersiveAssignments } from './actions';
-
 import {
     SET_IMMERSIVE_ENABLED,
     SET_IMMERSIVE_TEMPLATE,
@@ -18,9 +17,8 @@ MiddlewareRegistry.register(store => next => action => {
     const { dispatch, getState } = store;
     const state = getState();
     const conference = state['features/base/conference'].conference;
-
     // Đăng ký lắng nghe presence để đồng bộ immersive view từ moderator tới những client khác
-    if (conference && !(window as any)._immersivePresenceListenersRegistered) {
+        if (conference && !(window as any)._immersivePresenceListenersRegistered) {
         (window as any)._immersivePresenceListenersRegistered = true;
 
         // Helper: safely extract value from presence payload
@@ -81,7 +79,6 @@ MiddlewareRegistry.register(store => next => action => {
             }
         });
     }
-
     // Chỉ log immersive view actions
     if (!conference) {
         return result;
@@ -89,9 +86,7 @@ MiddlewareRegistry.register(store => next => action => {
 
     // Chỉ moderator mới được gửi immersive view settings qua XMPP
     const isModerator = state['features/base/participants']?.local?.role === 'moderator';
-    
     const suppress = (window as any)._immersiveSuppressSend === true;
-
     switch (action.type) {
     case SET_IMMERSIVE_ENABLED: {
         if (isModerator && !suppress) {
@@ -118,11 +113,17 @@ MiddlewareRegistry.register(store => next => action => {
         break;
     }
     case SET_IMMERSIVE_ASSIGNMENTS: {
-        console.log('🎯 [ImmersiveView Middleware] Dispatching assignments:', action.assignments);
+        // console.log('🔥 IMMERSIVE_SYNC: SENDING assignments:', action.assignments);
         if (isModerator && !suppress) {
-            conference.sendImmersiveViewAssignments(action.assignments);
+            // Lấy thông tin template và slot count từ state
+            const immersiveState = state['features/immersive-view'];
+            const templateId = immersiveState?.templateId;
+            const slotCount = immersiveState?.slotCount;
+            
+            // Gửi metadata để user tự tính toán vị trí responsive
+            conference.sendImmersiveViewAssignments(action.assignments, templateId, slotCount);
         } else {
-            console.log('❌ [ImmersiveView Middleware] Only moderators can send immersive view assignments');
+            // console.log('🔥 IMMERSIVE_SYNC: Only moderators can send assignments');
         }
         break;
     }

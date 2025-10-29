@@ -22,14 +22,14 @@ MiddlewareRegistry.register(store => next => action => {
 
     // Đăng ký listener cho conference events khi conference được tạo
     if (action.type === 'CONFERENCE_JOINED' && !immersiveViewListenerRegistered) {
-        console.log('🎯 [ImmersiveView XMPP Middleware] Registering conference event listeners');
+        // console.log('🔥 IMMERSIVE_SYNC: Registering XMPP listeners');
         immersiveViewListenerRegistered = true;
         
         const state = getState();
         const conference = state['features/base/conference'].conference;
         
         if (conference) {
-            console.log('✅ [ImmersiveView XMPP Middleware] Conference found, setting up listeners');
+            // console.log('🔥 IMMERSIVE_SYNC: Conference found, setting up listeners');
             // Listen for immersive view events
             conference.on(JitsiConferenceEvents.IMMERSIVE_VIEW_ENABLED, (participantId: string, enabled: boolean) => {
                 // Chỉ sync từ moderator
@@ -59,18 +59,26 @@ MiddlewareRegistry.register(store => next => action => {
                 }
             });
 
-            conference.on(JitsiConferenceEvents.IMMERSIVE_VIEW_ASSIGNMENTS_CHANGED, (participantId: string, assignments: any) => {
-                console.log('🎯 [ImmersiveView XMPP Middleware] Received assignments event:', { participantId, assignments });
+            conference.on(JitsiConferenceEvents.IMMERSIVE_VIEW_ASSIGNMENTS_CHANGED, (participantId: string, payload: any) => {
+                // console.log('🔥 IMMERSIVE_SYNC: ASSIGNMENTS RECEIVED from', participantId, payload);
                 const currentState = getState();
                 const participant = currentState['features/base/participants'].remote.get(participantId);
                 
-                console.log('👤 [ImmersiveView XMPP Middleware] Participant:', participant?.id, participant?.role);
-                
                 if (participant && participant.role === 'moderator') {
-                    console.log('✅ [ImmersiveView XMPP Middleware] Syncing assignments from moderator');
-                    dispatch(setImmersiveAssignments(assignments));
+                    // console.log('🔥 IMMERSIVE_SYNC: Syncing assignments from moderator');
+                    
+                    // Sync assignments
+                    dispatch(setImmersiveAssignments(payload.assignments || payload));
+                    
+                    // Sync template và slot count nếu có
+                    if (payload.templateId) {
+                        dispatch(setImmersiveTemplate(payload.templateId));
+                    }
+                    if (payload.slotCount) {
+                        dispatch(setImmersiveSlotCount(payload.slotCount));
+                    }
                 } else {
-                    console.log('❌ [ImmersiveView XMPP Middleware] Not from moderator, ignoring assignments');
+                    // console.log('🔥 IMMERSIVE_SYNC: Ignoring - not from moderator');
                 }
             });
         }

@@ -10,6 +10,7 @@ import { toJid } from '../../../base/connection/functions';
 import { translate, translateToHTML } from '../../../base/i18n/functions';
 import { JitsiConnectionErrors } from '../../../base/lib-jitsi-meet';
 import Dialog from '../../../base/ui/components/web/Dialog';
+import Spinner from '../../../base/ui/components/web/Spinner';
 import Input from '../../../base/ui/components/web/Input';
 import {
     authenticateAndUpgradeRole,
@@ -240,26 +241,22 @@ class LoginDialog extends Component<IProps, IState> {
                 }}
                 onCancel = { this._onCancelLogin }
                 onSubmit = { this._onLogin }
-                titleKey = { t('dialog.authenticationRequired') }>
-                <Input
-                    autoFocus = { true }
-                    id = 'login-dialog-username'
-                    label = { t('dialog.user') }
-                    name = 'username'
-                    onChange = { this._onUsernameChange }
-                    placeholder = { t('dialog.userIdentifier') }
-                    type = 'text'
-                    value = { username } />
-                <br />
-                <Input
-                    className = 'dialog-bottom-margin'
-                    id = 'login-dialog-password'
-                    label = { t('dialog.userPassword') }
-                    name = 'password'
-                    onChange = { this._onPasswordChange }
-                    placeholder = { t('dialog.password') }
-                    type = 'password'
-                    value = { password } />
+                titleKey = { t('') }>
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    background: 'rgba(0,0,0,1)',
+                    color: 'white',
+                    fontSize: '1.2em',
+                    zIndex: 9999
+                }}>
+                    <Spinner size="large" />
+                    <p>{t('dialog.connecting')}...</p>
+                </div>
                 { this.renderMessage() }
             </Dialog>
         );
