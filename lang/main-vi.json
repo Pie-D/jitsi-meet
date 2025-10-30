@@ -1699,6 +1699,8 @@
     "secondTitle": "Thư viện mẫu ",
     "start": "Bắt đầu",
     "slots": "ô",
-    "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này"
+    "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này",
+    "accessDenied": "Không có quyền truy cập",
+    "ownerOnly": "Chỉ Chủ phòng mới có thể cấu hình chế độ nhập vai"
   }
 }
