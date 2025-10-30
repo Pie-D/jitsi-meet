@@ -1,5 +1,5 @@
 import { Theme } from '@mui/material';
-import React, { ReactElement, useRef, useEffect } from 'react';
+import React, { ReactElement, useRef, useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { withStyles } from 'tss-react/mui';
 
@@ -249,6 +249,10 @@ const Captions = (props: IProps) => {
 
     const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory, showSubtitlesOnStage } = props;
 
+    // Trạng thái hiển thị phụ đề on-stage với timeout 3s
+    const [ onStageVisible, setOnStageVisible ] = useState(true);
+    const [ latestId, setLatestId ] = useState<string | undefined>(undefined);
+
     // Tự động cuộn xuống dưới khi có phụ đề mới (chỉ cho ccTab)
     useEffect(() => {
         if (scrollContainerRef.current && !showSubtitlesOnStage) {
@@ -280,13 +284,33 @@ const Captions = (props: IProps) => {
 
     const paragraphs: ReactElement[] = [];
 
-    if (showSubtitlesOnStage) {
-        // Chế độ showSubtitlesOnStage: chỉ hiển thị phụ đề mới nhất
-        const latestSubtitle = dataToRender
+    // Tìm phụ đề mới nhất (dùng cho on-stage)
+    const latestSubtitle: any = showSubtitlesOnStage
+        ? dataToRender
             .filter(s => s.isTranscription)
-            .sort((a, b) => b.timestamp - a.timestamp)[0];
-        
-        if (latestSubtitle) {
+            .sort((a, b) => b.timestamp - a.timestamp)[0]
+        : null;
+
+    // Khi có phụ đề mới trên stage, hiển thị lại và set timeout 3s để ẩn
+    useEffect(() => {
+        if (!showSubtitlesOnStage) {
+            return;
+        }
+
+        if (latestSubtitle && latestSubtitle.id !== latestId) {
+            setLatestId(latestSubtitle.id);
+            setOnStageVisible(true);
+
+            const t = window.setTimeout(() => {
+                setOnStageVisible(false);
+            }, 3000);
+
+            return () => window.clearTimeout(t);
+        }
+    }, [ showSubtitlesOnStage, latestSubtitle?.id ]);
+
+    if (showSubtitlesOnStage) {
+        if (latestSubtitle && onStageVisible) {
             const text = `${latestSubtitle.participantName ? latestSubtitle.participantName : "CMC ATIer"}: ${latestSubtitle.text}`;
             paragraphs.push(_renderParagraph(latestSubtitle.id, text, classes));
         }
