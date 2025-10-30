@@ -663,6 +663,32 @@ export function isParticipantModerator(participant?: IParticipant) {
     return participant?.role === PARTICIPANT_ROLE.MODERATOR;
 }
 
+/**
+ * Returns true if the participant is flagged as room owner (super moderator).
+ * The flag is propagated via JWT in context.features.{owner|isOwner}.
+ *
+ * This does NOT replace the underlying XMPP role (moderator/participant).
+ * It is meant for UI/logic gating of extra privileges.
+ *
+ * @param {IParticipant | undefined} participant - Participant object.
+ * @returns {boolean}
+ */
+export function isOwnerParticipant(participant?: IParticipant) {
+    const features = participant?.features as any;
+
+    if (!features) {
+        return false;
+    }
+
+    const value = features.owner ?? features.isOwner;
+
+    if (typeof value === 'string') {
+        return value.toLowerCase() === 'true';
+    }
+
+    return Boolean(value);
+}
+
 // export function isRoomOwner(participant?: IParticipant, roomOwner?: string) {
 //     // console.log("dht - id - roomOwner - logic", participant?.id, roomOwner, participant?.id === roomOwner)
 //     return participant?.id === roomOwner;

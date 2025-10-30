@@ -235,6 +235,17 @@ function MeetingParticipantItem({
     }, [ _participantID ]);
 
     const combinedHighlighted = Boolean(isHighlighted || _isOnStage);
+    const isOwnerFlag = (() => {
+        const features: any = _participant?.features as any;
+        if (!features) {
+            return false;
+        }
+        const raw = features.owner ?? features.isOwner;
+        if (typeof raw === 'string') {
+            return raw.toLowerCase() === 'true';
+        }
+        return Boolean(raw);
+    })();
 
     return (
         _matchesSearch ? (
@@ -250,6 +261,7 @@ function MeetingParticipantItem({
             }
             disableModeratorIndicator = { _disableModeratorIndicator }
             displayName = { _displayName }
+            isOwner = { isOwnerFlag }
             isHighlighted = { combinedHighlighted }
             isModerator = { isParticipantModerator(_participant) }
             local = { _local }
