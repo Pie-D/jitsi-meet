@@ -302,7 +302,7 @@ export function getDisplayNameSuffix(message: IMessage): string {
  * @param {string} message - The content of the message.
  * @returns {string} A unique message ID in the format: "participantId-timestamp-message".
  */
-export function createMessageId(participantId: string, timestamp: number, message: string) {
+export function createMessageId(participantId: string, timestamp: number, message: string): string {
     return `${participantId}-${timestamp}-${message}`;
 }
 

@@ -9,31 +9,31 @@ import { ADD_MESSAGE } from '../chat/actionTypes';
 import { addMessage } from '../chat/actions.any';
 import { createMessageId } from '../chat/functions';
 
-MiddlewareRegistry.register(store => next => async action => {
-    const result = next(action);
-    const state = store.getState();
+MiddlewareRegistry.register(store => next => action => {
+    const { dispatch, getState } = store;
+    const state = getState();
+    const localParticipant = getLocalParticipant(state) as IRocketChatParticipant;
 
     switch (action.type) {
     case CONFERENCE_JOINED: {
-        const roomName = getRoomName(state) || '';
+        (async () => {
+            try {
+                const roomName = getRoomName(store.getState()) || '';
+                const conferenceState = store.getState()['features/base/conference'] as IConferenceState;
+                const token = conferenceState?.conference?.connection?.token || '';
 
-        const conferenceState = state['features/base/conference'] as IConferenceState;
+                const instance = await initRocketChat(store, token, roomName, localParticipant);
 
-        const token = conferenceState?.conference?.connection?.token || '';
-
-        const localParticipant = getLocalParticipant(state);
-
-        initRocketChat(store, token, roomName, localParticipant as IRocketChatParticipant)
-            .then((instance: any) => {
                 if (instance) {
-                    return syncRocketChatMessages(0, 30, (message: IRocketChatMessage) => store.dispatch(addMessage({ ...message, hasRead: false })));
+                    await syncRocketChatMessages(0, 30, (msg: IRocketChatMessage) => {
+                        dispatch(addMessage({ ...msg, hasRead: false }));
+                    });
+                    console.log('RocketChat Middleware: Synced messages from RocketChat successfully');
                 }
-            })
-            .catch((error: any) => {
-                console.error('Failed to init RocketChat:', error);
-            }).finally(() => {
-                console.log('RocketChat Middleware: Synced messages from RocketChat successfully');
-            });
+            } catch (err) {
+                console.error('RocketChat Middleware error in CONFERENCE_JOINED:', err);
+            }
+        })().catch(err => console.error('Unhandled error in RocketChat init:', err));
         break;
     }
 
@@ -43,30 +43,29 @@ MiddlewareRegistry.register(store => next => async action => {
         break;
 
     case ADD_MESSAGE: {
-        const currentState = store.getState();
-        const chatState = currentState['features/chat'] || {};
-
-        // console.log('RocketChat Middleware: Adding message to RocketChat', action);
+        const chatState = state['features/chat'] || { shownMessages: new Set<string>() };
 
         if (action.message && action.participantId && action.timestamp) {
             try {
                 const messageId = createMessageId(action.participantId, action.timestamp, action.message);
 
-                console.log('RocketChat Middleware: Message ID', messageId);
+                if (!chatState.shownMessages) {
+                    chatState.shownMessages = new Set<string>();
+                }
 
                 if (chatState.shownMessages.has(messageId)) {
                     return;
                 }
 
-                await sendMessageToRocketChat(action.message);
+                void sendMessageToRocketChat(action.message);
                 chatState.shownMessages.add(messageId);
-            } catch {
-                console.error('Failed to send message to Rocket.Chat');
+            } catch (err) {
+                console.error('Failed to send message to Rocket.Chat', err);
             }
         }
         break;
     }
     }
 
-    return result;
+    return next(action);
 });

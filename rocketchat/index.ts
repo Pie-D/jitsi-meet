@@ -4,14 +4,41 @@ import { RocketChat } from './RocketChat';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const logger = require('./logger').getLogger('RocketChat:Index');
 
+let instance: RocketChat | null = null;
 
-let instance = null;
+export interface IRocketChatMessage {
+    messageId: string;
+    message: string;
+    displayName: string;
+    participantId: string;
+    timestamp: number;
+    hasRead?: boolean;
+    messageType?: string;
+    privateMessage?: boolean;
+    lobbyChat?: boolean;
+    recipient?: string;
+    isReaction?: boolean;
+    isFromVisitor?: boolean;
+    isFromGuest?: boolean;
+    reactions?: any;
+    error?: any;
+    sentToVisitor?: boolean;
+}
 
-export async function initRocketChat(store, token, meetingId, localParticipant) {
+export interface IRocketChatParticipant {
+    id: string;
+    name: string;
+}
+
+export async function initRocketChat(
+    store: any,
+    token: string,
+    meetingId: string,
+    localParticipant: any
+): Promise<RocketChat | false> {
     try {
         if (!meetingId) {
             logger.error('Meeting ID is required');
-
             return false;
         }
 
@@ -20,7 +47,6 @@ export async function initRocketChat(store, token, meetingId, localParticipant) 
 
         if (!rocketChatRoomId) {
             logger.error('Not found RocketChat room ID');
-
             return false;
         }
 
@@ -35,25 +61,28 @@ export async function initRocketChat(store, token, meetingId, localParticipant) 
         return rocketChat;
     } catch (error) {
         logger.error('Failed to init RocketChat', error);
-
         return false;
     }
 }
 
-export function stopRocketChat() {
+export function stopRocketChat(): void {
     if (instance) {
         instance.destroy();
         instance = null;
     }
 }
 
-export async function syncRocketChatMessages(offset = 0, limit = 30, deliverMessage) {
+export async function syncRocketChatMessages(
+    offset = 0,
+    limit = 30,
+    deliverMessage?: (message: any) => void
+): Promise<void> {
     if (instance) {
-        return await instance.loadchat(offset, limit, deliverMessage);
+        await instance.loadchat(offset, limit, deliverMessage);
     }
 }
 
-export async function sendMessageToRocketChat(message) {
+export async function sendMessageToRocketChat(message: string): Promise<string | undefined> {
     if (instance) {
         return await instance.sendMessage(message);
     }
