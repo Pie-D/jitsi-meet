@@ -14,15 +14,6 @@
 export const ADD_MESSAGE = 'ADD_MESSAGE';
 
 /**
- * The type of the action which signals to prepend messages.
- *
- * {
- *     type: PREPEND_MESSAGES,
- * }
- */
-export const PREPEND_MESSAGES = 'PREPEND_MESSAGES';
-
-/**
  * The type of the action that adds a reaction to a chat message.
  *
  * {

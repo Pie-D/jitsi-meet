@@ -167,7 +167,6 @@ import { createRnnoiseProcessor } from './react/features/stream-effects/rnnoise'
 import { handleToggleVideoMuted } from './react/features/toolbox/actions.any';
 import { transcriberJoined, transcriberLeft } from './react/features/transcribing/actions';
 import { muteLocal } from './react/features/video-menu/actions.any';
-import { setRoomIdOnChange, startConference } from './rocketchat';
 import { toast } from 'react-toastify';
 import i18next from 'i18next';
 
@@ -243,22 +242,7 @@ class ConferenceConnector {
         this._resolve = resolve;
         this._reject = reject;
         this.reconnectTimeout = null;
-        this.accessToken = this._getTokenFromXMPP();
-        this._passwordTried = false
-
-        document.addEventListener('rocketChatRoomIdReady', event => {
-            // console.log(`Received event: rocketChatRoomIdReady - ${event.detail.roomId}`);
-            const rocketChatRoomId = event.detail.roomId;
-
-            startConference(APP.store, rocketChatRoomId, this._conference.roomName);
-        });
-
-        document.addEventListener('rocketChatRoomIdChanged', event => {
-            // console.log(`Received event: rocketChatRoomIdChanged - ${event.detail.roomId}`);
-            const newRocketChatRoomId = event.detail.roomId;
-
-            setRoomIdOnChange(newRocketChatRoomId);
-        });
+        this._passwordTried = false;
 
         room.on(JitsiConferenceEvents.CONFERENCE_JOINED,
             this._handleConferenceJoined.bind(this));
@@ -267,27 +251,6 @@ class ConferenceConnector {
 
         // logger.info(APP.store.getState['features/base/conference'].gstStreamConnected);
         // startGstStream(this.accessToken, this._conference.roomName);
-    }
-
-    /**
-     *
-     */
-    _getTokenFromXMPP() {
-        const token = this._conference._room.connection.token;
-
-        if (!token) {
-            return null;
-        }
-
-        const parts = token.split('.');
-
-        if (parts.length !== 3) {
-            throw new Error('Invalid JWT token format');
-        }
-
-        const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-
-        return decoded?.context?.token || null;
     }
 
     /**

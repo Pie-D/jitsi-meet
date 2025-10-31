@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { connect, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
+import { sendMessageToRocketChat, syncRocketChatMessages } from '../../../../../rocketchat/index';
 import { IReduxState } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
 import { IconInfo, IconMessage, IconShareDoc, IconSubtitles } from '../../../base/icons/svg';
@@ -15,7 +16,6 @@ import { isFileSharingEnabled } from '../../../file-sharing/functions.any';
 import PollsPane from '../../../polls/components/web/PollsPane';
 import { isCCTabEnabled } from '../../../subtitles/functions.any';
 import {
-    addMessage,
     sendMessage,
     setChatIsResizing,
     setFocusedTab,
@@ -27,7 +27,6 @@ import {
 import { CHAT_SIZE, ChatTabs, OPTION_GROUPCHAT, SMALL_WIDTH_THRESHOLD } from '../../constants';
 import { getChatMaxSize } from '../../functions';
 import { IChatProps as AbstractProps } from '../../types';
-const RocketChat = require('../../../../../rocketchat') as any;
 
 import ChatHeader from './ChatHeader';
 import ChatInput from './ChatInput';
@@ -357,6 +356,19 @@ const Chat = ({
         };
     }, [ onDragMouseUp, onChatResize ]);
 
+    // Load RocketChat messages when component mounts
+    useEffect(() => {
+        const loadInitialMessages = async () => {
+            try {
+                await syncRocketChatMessages(0);
+            } catch (error) {
+                console.warn('Failed to load initial Rocket.Chat messages (non-critical):', error);
+            }
+        };
+
+        loadInitialMessages();
+    }, []);
+
     /**
      * Sends a text message.
      *
@@ -365,19 +377,21 @@ const Chat = ({
      * @returns {void}
      * @type {Function}
      */
-    const onSendMessage = useCallback((text: string) => {
+    const onSendMessage = useCallback(async (text: string) => {
+        // Always send to Jitsi chat first
         dispatch(sendMessage(text));
-    }, []);
-    const onSendMessageCmeet = useCallback((data: any) => {
-        dispatch(addMessage(data));
-    }, []);
-    const handldeMessage = (data: any) => {
-        if (typeof data == 'object') {
-            onSendMessageCmeet(data);
-        } else {
-            onSendMessage(data);
+
+        // Try to send to RocketChat as well
+        try {
+            await sendMessageToRocketChat(text);
+        } catch (error) {
+            console.warn('Failed to send message to Rocket.Chat:', error);
         }
-    };
+    }, [ dispatch ]);
+
+    const handleMessage = useCallback((data: any) => {
+        onSendMessage(data);
+    }, [ onSendMessage ]);
 
     /**
      * Toggles the chat window.
@@ -435,10 +449,11 @@ const Chat = ({
         const newOffset = offset + 30;
 
         try {
-            await syncRocketChatMessages(newOffset);
+            await syncRocketChatMessages(newOffset, 30);
             setOffset(newOffset);
+            console.log(`Loaded more Rocket.Chat messages, offset: ${newOffset}`);
         } catch (error) {
-            console.error(error);
+            console.warn('Failed to load more Rocket.Chat messages:', error);
         }
     }, [ offset ]);
 
@@ -475,7 +490,7 @@ const Chat = ({
                         onChange = { onSelectedRecipientChange }
                         options = { options }
                         value = { privateMessageRecipient?.id || OPTION_GROUPCHAT } />
-                    <ChatInput onSend = { handldeMessage } />
+                    <ChatInput onSend = { handleMessage } />
                 </div>
                 {_isPollsEnabled && (
                     <>
@@ -666,6 +681,5 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
     };
 }
 
-const syncRocketChatMessages: (offset: number) => Promise<void> = RocketChat.syncRocketChatMessages;
 
 export default translate(connect(_mapStateToProps)(Chat));
