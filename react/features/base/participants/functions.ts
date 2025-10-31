@@ -27,6 +27,7 @@ import {
 } from './constants';
 import { preloadImage } from './preloadImage';
 import { FakeParticipant, IJitsiParticipant, IParticipant, ISourceInfo } from './types';
+import { log } from '@tensorflow/tfjs-core/dist/log';
 
 
 /**
@@ -689,10 +690,10 @@ export function isOwnerParticipant(participant?: IParticipant) {
     return Boolean(value);
 }
 
-// export function isRoomOwner(participant?: IParticipant, roomOwner?: string) {
-//     // console.log("dht - id - roomOwner - logic", participant?.id, roomOwner, participant?.id === roomOwner)
-//     return participant?.id === roomOwner;
-// }
+export function isRoomOwner(participant?: IParticipant, roomOwner?: string) {
+    console.log("tqd - id - roomOwner - logic", participant?.id, roomOwner, participant?.id === roomOwner)
+    return participant?.id === roomOwner;
+}
 /**
  * Returns the dominant speaker participant.
  *
@@ -754,16 +755,17 @@ export function isLocalParticipantModerator(stateful: IStateful) {
     return isParticipantModerator(local);
 }
 
-// export function isLocalRoomOwner(stateful: IStateful) {
-//     const state = toState(stateful)['features/base/participants'];
-//     const state2 = toState(stateful)['features/base/conference'];
-//     const { local } = state;
-//     if (!local) {
-//         return false;
-//     }
-//     // console.log(conference)
-//     return isRoomOwner(local, state2?.conference?.room?.roomOwner);
-// }
+export function isLocalRoomOwner(stateful: IStateful) {
+    const state = toState(stateful)['features/base/participants'];
+    const state2 = toState(stateful)['features/base/conference'];
+    console.log("tqd - state2", state);
+    const { local } = state;
+    if (!local) {
+        return false;
+    }
+    // console.log(state2?.conference);
+    return isRoomOwner(local, state2?.conference?.room?.roomOwner);
+}
 /**
  * Resolves the first loadable avatar URL for a participant.
  *

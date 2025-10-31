@@ -29,12 +29,12 @@ module:depends("jitsi_permissions");
 module:hook("muc-room-created", function(event)
     local room = event.room;
 
-    -- local stanza = event.stanza;
-    -- if stanza == nil then
-	-- module:log("warn", "stanze is nil");
-    -- else
-	-- module:log("info", "stanzae is not nil");
-    -- end
+    local stanza = event.stanza;
+    if stanza == nil then
+	module:log("warn", "stanze is nil");
+    else
+	module:log("info", "stanzae is not nil");
+    end
 
     if is_healthcheck_room(room.jid) then
         return;
@@ -44,48 +44,48 @@ module:hook("muc-room-created", function(event)
 
     module:log("debug", "Created meetingId:%s for %s",
         room._data.meetingId, room.jid);
-    --     for key,value in pairs(room) do
-    --         if type(value) == "table" then
-    --             module:log("info", "Key: %s -> Table (nested)", key)
-    --             for k, v in pairs(value) do
-    --                 module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-    --             end
-    --         else
-    --             module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-    --         end
-    --     end
-    --     for key,value in pairs(stanza) do
-    --         if type(value) == "table" then
-    --             module:log("info", "Key: %s -> Table (nested)", key)
-    --             for k, v in pairs(value) do
-    --                 module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-    --             end
-    --         else
-    --             module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-    --         end
-    --     end
-    --     for key, value in pairs(event) do
-    --         if type(value) == "table" then
-    --             module:log("info", "Key: %s -> Table (nested)", key)
-    --             for k, v in pairs(value) do
-    --                 module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-    --             end
-    --         else
-    --             module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-    --         end
-    --     end
-    -- end);
-    -- module:hook("muc-occupant-pre-join", function (event)
-    --     local room, occupant = event.room, event.occupant;
-    --     module:log('debug', 'dht - pre-join');
-    --     if is_healthcheck_room(room.jid) or is_admin(occupant.bare_jid) then
-    --         return;
-    --     end
-    --     module:log('debug', 'dht - %s', occupant.bare_jid);
-    --     if not room._data.owner then
-    --     local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-")
-    --     room._data.owner = jid_prefix;
-    --     end
+        for key,value in pairs(room) do
+            if type(value) == "table" then
+                module:log("info", "Key: %s -> Table (nested)", key)
+                for k, v in pairs(value) do
+                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+                end
+            else
+                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+            end
+        end
+        for key,value in pairs(stanza) do
+            if type(value) == "table" then
+                module:log("info", "Key: %s -> Table (nested)", key)
+                for k, v in pairs(value) do
+                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+                end
+            else
+                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+            end
+        end
+        for key, value in pairs(event) do
+            if type(value) == "table" then
+                module:log("info", "Key: %s -> Table (nested)", key)
+                for k, v in pairs(value) do
+                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+                end
+            else
+                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+            end
+        end
+    end);
+    module:hook("muc-occupant-pre-join", function (event)
+        local room, occupant = event.room, event.occupant;
+        module:log('debug', 'tqd - pre-join');
+        if is_healthcheck_room(room.jid) or is_admin(occupant.bare_jid) then
+            return;
+        end
+        module:log('debug', 'tqd - %s', occupant.bare_jid);
+        if not room._data.owner then
+        local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-")
+        room._data.owner = jid_prefix;
+        end
 end);
 
 -- Returns the meeting config Id form data.
@@ -98,27 +98,27 @@ function getMeetingIdConfig(room)
     };
 end
 
--- function getMeetingRoomOwmer(room)
---     local room_owner = room._data.owner or "Unknown";
---     module:log("debug", "dht room owner: %s", room_owner);
---     return {
--- 	name = "muc#roominfo_roomOwner";
--- 	type = "text-single";
--- 	lable = "The room owner id.";
--- 	value = room_owner;
---     };
--- end
+function getMeetingRoomOwner(room)
+    local room_owner = room._data.owner or "Unknown";
+    module:log("debug", "tqd room owner: %s", room_owner);
+    return {
+	name = "muc#roominfo_roomOwner";
+	type = "text-single";
+	lable = "The room owner id.";
+	value = room_owner;
+    };
+end
 -- add meeting Id to the disco info requests to the room
 module:hook("muc-disco#info", function(event)
     table.insert(event.form, getMeetingIdConfig(event.room));
-    -- table.insert(event.form, getMeetingRoomOwmer(event.room))
+    table.insert(event.form, getMeetingRoomOwner(event.room))
 end);
 
 -- add the meeting Id in the default config we return to jicofo
 module:hook("muc-config-form", function(event)
     table.insert(event.form, getMeetingIdConfig(event.room));
---     table.insert(event.form, getMeetingRoomOwmer(event.room));
--- end, 91-3);
+    table.insert(event.form, getMeetingRoomOwner(event.room));
+end, 91-3);
 
 -- disabled few options for room config, to not mess with visitor logic
 module:hook("muc-config-submitted/muc#roomconfig_moderatedroom", function()
