@@ -39,7 +39,7 @@ export async function initRocketChat(
 ): Promise<RocketChat | false> {
     try {
         if (!meetingId) {
-            logger.error('Meeting ID is required');
+            logger.warn('Meeting ID is required');
             return false;
         }
 
@@ -47,8 +47,12 @@ export async function initRocketChat(
         const rocketChatRoomId = await rocketChat.getRocketChatRoomId();
 
         if (!rocketChatRoomId) {
-            logger.error('Not found RocketChat room ID');
-            return false;
+            logger.warn('Not found RocketChat room ID');
+            await rocketChat.loginToRocketChat(token);
+            rocketChat.connectWebSocket();
+
+            instance = rocketChat;
+            return rocketChat;
         }
 
         rocketChat.setRocketChatRoomId(rocketChatRoomId);
