@@ -58,7 +58,6 @@ MiddlewareRegistry.register(store => next => action => {
                 }
 
                 void sendMessageToRocketChat(action.message);
-                chatState.shownMessages.add(messageId);
             } catch (err) {
                 console.error('Failed to send message to Rocket.Chat', err);
             }
