@@ -17,7 +17,7 @@ import ImmersiveSetupDialog from '../../../immersive-view/components/ImmersiveSe
 import { openDialog } from '../../../base/dialog/actions';
 import { IReduxState as IState } from '../../../app/types';
 import '../../../immersive-view/reducer';
-
+import {isLocalParticipantModerator, isLocalRoomOwner} from '../../../base/participants/functions';
 const useStyles = makeStyles()(() => ({
     container: {
         position: 'relative',
@@ -33,11 +33,12 @@ const ViewSettingsContent = () => {
     const dispatch = useDispatch();
     const isTile = useSelector(shouldDisplayTileView);
     const immersiveEnabled = useSelector((state: IReduxState) => state['features/immersive-view']?.enabled);
-    const isOwner = useSelector((state: IState) => {
-        const features: any = state['features/base/participants'].local?.features as any;
-        const raw = features?.owner ?? features?.isOwner;
-        return typeof raw === 'string' ? raw.toLowerCase() === 'true' : Boolean(raw);
-    });
+    // const isOwner = useSelector((state: IState) => {
+    //     const features: any = state['features/base/participants'].local?.features as any;
+    //     const raw = features?.owner ?? features?.isOwner;
+    //     return typeof raw === 'string' ? raw.toLowerCase() === 'true' : Boolean(raw);
+    // });
+    const isOwner = useSelector(isLocalRoomOwner);
     const isMobile = isMobileBrowser();
 
     const selectTile = useCallback(() => {

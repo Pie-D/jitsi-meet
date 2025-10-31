@@ -9,7 +9,8 @@ import {
     getParticipantByIdOrUndefined,
     getParticipantDisplayName,
     hasRaisedHand,
-    isParticipantModerator
+    isParticipantModerator,
+    isLocalRoomOwner
 } from '../../../base/participants/functions';
 import { IParticipant } from '../../../base/participants/types';
 import {
@@ -30,7 +31,6 @@ import {
 import ParticipantActionEllipsis from './ParticipantActionEllipsis';
 import ParticipantItem from './ParticipantItem';
 import ParticipantQuickAction from './ParticipantQuickAction';
-
 interface IProps {
 
     /**
@@ -163,6 +163,9 @@ interface IProps {
 
     /** True if participant is assigned to an immersive slot (on stage). */
     _isOnStage: boolean;
+
+    /** Local user satisfies roomOwner or JWT isOwner condition */
+    _isLocalRoomOwner: boolean;
 }
 
 /**
@@ -192,7 +195,8 @@ function MeetingParticipantItem({
     openDrawerForParticipant,
     overflowDrawer,
     participantActionEllipsisLabel,
-    youText
+    youText,
+    _isLocalRoomOwner
 }: IProps) {
 
     const [ hasAudioLevels, setHasAudioLevel ] = useState(false);
@@ -235,17 +239,18 @@ function MeetingParticipantItem({
     }, [ _participantID ]);
 
     const combinedHighlighted = Boolean(isHighlighted || _isOnStage);
-    const isOwnerFlag = (() => {
-        const features: any = _participant?.features as any;
-        if (!features) {
-            return false;
-        }
-        const raw = features.owner ?? features.isOwner;
-        if (typeof raw === 'string') {
-            return raw.toLowerCase() === 'true';
-        }
-        return Boolean(raw);
-    })();
+    // const isOwnerFlag = (() => {
+    //     const features: any = _participant?.features as any;
+    //     if (!features) {
+    //         return false;
+    //     }
+    //     const raw = features.owner ?? features.isOwner;
+    //     if (typeof raw === 'string') {
+    //         return raw.toLowerCase() === 'true';
+    //     }
+    //     return Boolean(raw);
+    // })();
+    const isOwnerFlag = _isLocalRoomOwner;
 
     return (
         _matchesSearch ? (
@@ -339,7 +344,8 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         _quickActionButtonType,
         _raisedHand: hasRaisedHand(participant),
         _videoMediaState,
-        _isOnStage: isOnStage
+        _isOnStage: isOnStage,
+        _isLocalRoomOwner: isLocalRoomOwner(state)
     };
 }
 

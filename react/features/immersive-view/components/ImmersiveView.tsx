@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { makeStyles } from "tss-react/mui";
-
+import {isLocalParticipantModerator, isLocalRoomOwner} from '../../base/participants/functions';
 import { IReduxState } from "../../app/types";
 import Avatar from "../../base/avatar/components/Avatar";
 import { MEDIA_TYPE } from "../../base/media/constants";
@@ -107,11 +107,12 @@ const useStyles = makeStyles()(() => ({
 export default function ImmersiveView() {
     const dispatch = useDispatch();
     const immersive = useSelector((state: IReduxState) => state["features/immersive-view"]);
-    const isOwner = useSelector((state: IReduxState) => {
-        const features: any = state["features/base/participants"].local?.features as any;
-        const raw = features?.owner ?? features?.isOwner;
-        return typeof raw === 'string' ? raw.toLowerCase() === 'true' : Boolean(raw);
-    });
+    // const isOwner = useSelector((state: IReduxState) => {
+    //     const features: any = state["features/base/participants"].local?.features as any;
+    //     const raw = features?.owner ?? features?.isOwner;
+    //     return typeof raw === 'string' ? raw.toLowerCase() === 'true' : Boolean(raw);
+    // });
+    const isOwner = useSelector(isLocalRoomOwner);
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const [viewportInfo, setViewportInfo] = useState({ 
         availableWidth: window.innerWidth, 

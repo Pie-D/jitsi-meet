@@ -243,7 +243,7 @@ const styles = (theme: Theme, props: IProps) => {
 //     );
 // };
 const Captions = (props: IProps) => {
-    console.log('=== Captions component rendered ===');
+    // console.log('=== Captions component rendered ===');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const { classes = {} } = props;  // Dùng trực tiếp prop classes từ props
 

@@ -8,7 +8,7 @@ import {
     SET_IMMERSIVE_SLOT_COUNT,
     SET_IMMERSIVE_ASSIGNMENTS
 } from './actionTypes';
-
+import {isLocalParticipantModerator, isLocalRoomOwner} from '../base/participants/functions';
 /**
  * Middleware để sync immersive view state qua XMPP.
  */
@@ -84,10 +84,11 @@ MiddlewareRegistry.register(store => next => action => {
         return result;
     }
 
-    // Chỉ owner (flag trong JWT features) mới được gửi immersive view settings qua XMPP
-    const localFeatures: any = state['features/base/participants']?.local?.features as any;
-    const ownerRaw = localFeatures?.owner ?? localFeatures?.isOwner;
-    const isOwner = typeof ownerRaw === 'string' ? ownerRaw.toLowerCase() === 'true' : Boolean(ownerRaw);
+    // Chỉ owner (flag trong JWT features) mới được gửi immersive view settings qua XMPP hoặc participant join first time
+    // const localFeatures: any = state['features/base/participants']?.local?.features as any;
+    // const ownerRaw = localFeatures?.owner ?? localFeatures?.isOwner;
+    // const isOwner = typeof ownerRaw === 'string' ? ownerRaw.toLowerCase() === 'true' : Boolean(ownerRaw);
+    const isOwner = isLocalRoomOwner(state);
     const suppress = (window as any)._immersiveSuppressSend === true;
     switch (action.type) {
     case SET_IMMERSIVE_ENABLED: {
