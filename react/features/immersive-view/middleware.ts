@@ -78,6 +78,60 @@ MiddlewareRegistry.register(store => next => action => {
                 // ignore malformed data
             }
         });
+
+        // Bootstrap: Khi client join sau, đọc snapshot immersive từ presence hiện có của moderator
+        const bootstrapFromPresence = () => {
+            try {
+                const participants = conference.getParticipants?.() || [];
+                // Tìm participant đã bật immersive (thường là moderator)
+                const found = participants.find(p => {
+                    const id = p.getId?.();
+                    return id && conference.getParticipantImmersiveViewEnabled?.(id) === true;
+                });
+
+                if (!found) {
+                    return false;
+                }
+
+                const pid = found.getId();
+
+                const enabled = conference.getParticipantImmersiveViewEnabled?.(pid) === true;
+                const templateId = conference.getParticipantImmersiveViewTemplate?.(pid);
+                const slotCount = conference.getParticipantImmersiveViewSlotCount?.(pid);
+                const assignments = (conference as any).getParticipantImmersiveViewAssignments
+                    ? (conference as any).getParticipantImmersiveViewAssignments(pid)
+                    : undefined;
+
+                (window as any)._immersiveSuppressSend = true;
+                if (typeof enabled === 'boolean') {
+                    dispatch(setImmersiveEnabled(enabled));
+                }
+                if (typeof templateId === 'string' && templateId.length) {
+                    dispatch(setImmersiveTemplate(templateId));
+                }
+                if (typeof slotCount === 'number' && !Number.isNaN(slotCount)) {
+                    dispatch(setImmersiveSlotCount(slotCount));
+                }
+                if (assignments && typeof assignments === 'object') {
+                    dispatch(setImmersiveAssignments(assignments));
+                }
+                (window as any)._immersiveSuppressSend = false;
+
+                return true;
+            } catch {
+                return false;
+            }
+        };
+
+        // Thử bootstrap ngay và thêm cơ chế retry ngắn nếu participants chưa sẵn sàng
+        let attempts = 0;
+        const maxAttempts = 10; // ~5s
+        const interval = setInterval(() => {
+            attempts++;
+            if (bootstrapFromPresence() || attempts >= maxAttempts) {
+                clearInterval(interval);
+            }
+        }, 500);
     }
     // Chỉ log immersive view actions
     if (!conference) {
