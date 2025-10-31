@@ -10,7 +10,9 @@ import {
     getParticipantDisplayName,
     hasRaisedHand,
     isParticipantModerator,
-    isLocalRoomOwner
+    isLocalRoomOwner,
+    isOwnerParticipant,
+    isRoomOwner
 } from '../../../base/participants/functions';
 import { IParticipant } from '../../../base/participants/types';
 import {
@@ -166,6 +168,9 @@ interface IProps {
 
     /** Local user satisfies roomOwner or JWT isOwner condition */
     _isLocalRoomOwner: boolean;
+
+    /** This row's participant is owner (JWT or first-join) */
+    _isOwner: boolean;
 }
 
 /**
@@ -196,7 +201,8 @@ function MeetingParticipantItem({
     overflowDrawer,
     participantActionEllipsisLabel,
     youText,
-    _isLocalRoomOwner
+    _isLocalRoomOwner,
+    _isOwner
 }: IProps) {
 
     const [ hasAudioLevels, setHasAudioLevel ] = useState(false);
@@ -239,18 +245,7 @@ function MeetingParticipantItem({
     }, [ _participantID ]);
 
     const combinedHighlighted = Boolean(isHighlighted || _isOnStage);
-    // const isOwnerFlag = (() => {
-    //     const features: any = _participant?.features as any;
-    //     if (!features) {
-    //         return false;
-    //     }
-    //     const raw = features.owner ?? features.isOwner;
-    //     if (typeof raw === 'string') {
-    //         return raw.toLowerCase() === 'true';
-    //     }
-    //     return Boolean(raw);
-    // })();
-    const isOwnerFlag = _isLocalRoomOwner;
+    const isOwnerFlag = _isOwner;
 
     return (
         _matchesSearch ? (
@@ -331,6 +326,9 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
     const immersive = state['features/immersive-view'];
     const isOnStage = Boolean(Object.values(immersive?.assignments || {}).includes(participant?.id ?? ''));
 
+    const roomOwnerId = state['features/base/conference']?.conference?.room?.roomOwner;
+    const _isOwner = Boolean(participant) && (isOwnerParticipant(participant) || isRoomOwner(participant, roomOwnerId));
+
     return {
         _audioMediaState,
         _audioTrack,
@@ -345,7 +343,8 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         _raisedHand: hasRaisedHand(participant),
         _videoMediaState,
         _isOnStage: isOnStage,
-        _isLocalRoomOwner: isLocalRoomOwner(state)
+        _isLocalRoomOwner: isLocalRoomOwner(state),
+        _isOwner
     };
 }
 

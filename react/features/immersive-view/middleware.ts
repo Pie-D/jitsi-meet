@@ -84,7 +84,7 @@ MiddlewareRegistry.register(store => next => action => {
             try {
                 const participants = conference.getParticipants?.() || [];
                 // Tìm participant đã bật immersive (thường là moderator)
-                const found = participants.find(p => {
+                const found = participants.find((p: { getId?: () => string }) => {
                     const id = p.getId?.();
                     return id && conference.getParticipantImmersiveViewEnabled?.(id) === true;
                 });
