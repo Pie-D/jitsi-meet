@@ -8,7 +8,7 @@ import {
     SET_IMMERSIVE_SLOT_COUNT,
     SET_IMMERSIVE_ASSIGNMENTS
 } from './actionTypes';
-
+import {isLocalParticipantModerator, isLocalRoomOwner} from '../base/participants/functions';
 /**
  * Middleware để sync immersive view state qua XMPP.
  */
@@ -78,43 +78,94 @@ MiddlewareRegistry.register(store => next => action => {
                 // ignore malformed data
             }
         });
+
+        // Bootstrap: Khi client join sau, đọc snapshot immersive từ presence hiện có của moderator
+        const bootstrapFromPresence = () => {
+            try {
+                const participants = conference.getParticipants?.() || [];
+                // Tìm participant đã bật immersive (thường là moderator)
+                const found = participants.find((p: { getId?: () => string }) => {
+                    const id = p.getId?.();
+                    return id && conference.getParticipantImmersiveViewEnabled?.(id) === true;
+                });
+
+                if (!found) {
+                    return false;
+                }
+
+                const pid = found.getId();
+
+                const enabled = conference.getParticipantImmersiveViewEnabled?.(pid) === true;
+                const templateId = conference.getParticipantImmersiveViewTemplate?.(pid);
+                const slotCount = conference.getParticipantImmersiveViewSlotCount?.(pid);
+                const assignments = (conference as any).getParticipantImmersiveViewAssignments
+                    ? (conference as any).getParticipantImmersiveViewAssignments(pid)
+                    : undefined;
+
+                (window as any)._immersiveSuppressSend = true;
+                if (typeof enabled === 'boolean') {
+                    dispatch(setImmersiveEnabled(enabled));
+                }
+                if (typeof templateId === 'string' && templateId.length) {
+                    dispatch(setImmersiveTemplate(templateId));
+                }
+                if (typeof slotCount === 'number' && !Number.isNaN(slotCount)) {
+                    dispatch(setImmersiveSlotCount(slotCount));
+                }
+                if (assignments && typeof assignments === 'object') {
+                    dispatch(setImmersiveAssignments(assignments));
+                }
+                (window as any)._immersiveSuppressSend = false;
+
+                return true;
+            } catch {
+                return false;
+            }
+        };
+
+        // Thử bootstrap ngay và thêm cơ chế retry ngắn nếu participants chưa sẵn sàng
+        let attempts = 0;
+        const maxAttempts = 10; // ~5s
+        const interval = setInterval(() => {
+            attempts++;
+            if (bootstrapFromPresence() || attempts >= maxAttempts) {
+                clearInterval(interval);
+            }
+        }, 500);
     }
     // Chỉ log immersive view actions
     if (!conference) {
         return result;
     }
 
-    // Chỉ moderator mới được gửi immersive view settings qua XMPP
-    const isModerator = state['features/base/participants']?.local?.role === 'moderator';
+    // Chỉ owner (flag trong JWT features) mới được gửi immersive view settings qua XMPP hoặc participant join first time
+    // const localFeatures: any = state['features/base/participants']?.local?.features as any;
+    // const ownerRaw = localFeatures?.owner ?? localFeatures?.isOwner;
+    // const isOwner = typeof ownerRaw === 'string' ? ownerRaw.toLowerCase() === 'true' : Boolean(ownerRaw);
+    const isOwner = isLocalRoomOwner(state);
     const suppress = (window as any)._immersiveSuppressSend === true;
     switch (action.type) {
     case SET_IMMERSIVE_ENABLED: {
-        if (isModerator && !suppress) {
+        if (isOwner && !suppress) {
             conference.setImmersiveViewEnabled(action.enabled);
-        } else {
-            console.log('❌ [ImmersiveView Middleware] Only moderators can enable/disable immersive view');
-        }
+        } 
         break;
     }
     case SET_IMMERSIVE_TEMPLATE: {
-        if (isModerator && action.templateId && !suppress) {
+        if (isOwner && action.templateId && !suppress) {
             conference.setImmersiveViewTemplate(action.templateId);
-        } else if (!isModerator) {
-            console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view template');
-        }
+        } 
         break;
     }
     case SET_IMMERSIVE_SLOT_COUNT: {
-        if (isModerator && !suppress) {
+        if (isOwner && !suppress) {
             conference.setImmersiveViewSlotCount(action.slotCount);
-        } else {
-            console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view slot count');
-        }
+        } 
         break;
     }
     case SET_IMMERSIVE_ASSIGNMENTS: {
         // console.log('🔥 IMMERSIVE_SYNC: SENDING assignments:', action.assignments);
-        if (isModerator && !suppress) {
+        if (isOwner && !suppress) {
             // Lấy thông tin template và slot count từ state
             const immersiveState = state['features/immersive-view'];
             const templateId = immersiveState?.templateId;
@@ -122,9 +173,7 @@ MiddlewareRegistry.register(store => next => action => {
             
             // Gửi metadata để user tự tính toán vị trí responsive
             conference.sendImmersiveViewAssignments(action.assignments, templateId, slotCount);
-        } else {
-            // console.log('🔥 IMMERSIVE_SYNC: Only moderators can send assignments');
-        }
+        } 
         break;
     }
     }

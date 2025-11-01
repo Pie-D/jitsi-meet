@@ -295,6 +295,18 @@ export function getDisplayNameSuffix(message: IMessage): string {
 }
 
 /**
+ * Generates a unique message identifier by combining participant ID, timestamp, and message content.
+ *
+ * @param {string} participantId - The unique identifier of the message sender.
+ * @param {number} timestamp - The Unix timestamp when the message was created.
+ * @param {string} message - The content of the message.
+ * @returns {string} A unique message ID in the format: "participantId-timestamp-message".
+ */
+export function createMessageId(participantId: string, timestamp: number, message: string): string {
+    return `${participantId}-${timestamp}-${message}`;
+}
+
+/**
  * Checks if a message is a file message by verifying the presence of file metadata.
  *
  * @param {IMessage} message - The message to check.

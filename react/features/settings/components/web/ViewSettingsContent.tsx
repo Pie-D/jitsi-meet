@@ -15,9 +15,9 @@ import { IconGalleryView, IconImmersiveView, IconSpeakerView } from '../../../ba
 import { setImmersiveEnabled, setImmersiveTemplate } from '../../../immersive-view/actions';
 import ImmersiveSetupDialog from '../../../immersive-view/components/ImmersiveSetupDialog';
 import { openDialog } from '../../../base/dialog/actions';
-import { isLocalParticipantModerator } from '../../../base/participants/functions';
+import { IReduxState as IState } from '../../../app/types';
 import '../../../immersive-view/reducer';
-
+import {isLocalParticipantModerator, isLocalRoomOwner} from '../../../base/participants/functions';
 const useStyles = makeStyles()(() => ({
     container: {
         position: 'relative',
@@ -33,7 +33,12 @@ const ViewSettingsContent = () => {
     const dispatch = useDispatch();
     const isTile = useSelector(shouldDisplayTileView);
     const immersiveEnabled = useSelector((state: IReduxState) => state['features/immersive-view']?.enabled);
-    const isModerator = useSelector(isLocalParticipantModerator);
+    // const isOwner = useSelector((state: IState) => {
+    //     const features: any = state['features/base/participants'].local?.features as any;
+    //     const raw = features?.owner ?? features?.isOwner;
+    //     return typeof raw === 'string' ? raw.toLowerCase() === 'true' : Boolean(raw);
+    // });
+    const isOwner = useSelector(isLocalRoomOwner);
     const isMobile = isMobileBrowser();
 
     const selectTile = useCallback(() => {
@@ -76,8 +81,8 @@ const ViewSettingsContent = () => {
                     selected={isTile && !immersiveEnabled} 
                     text={t('toolbar.galleryView')} />
 
-                {/* immersive view - chỉ moderator mới có thể sử dụng và chỉ trên desktop */}
-                {isModerator && !isMobile && (
+                {/* immersive view - chỉ owner mới có thể sử dụng và chỉ trên desktop */}
+                {isOwner && !isMobile && (
 
                     <ContextMenuItem
                         accessibilityLabel={t('toolbar.immersiveView')}

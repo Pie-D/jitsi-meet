@@ -83,6 +83,9 @@ const getNotifications = (state: IReduxState) => {
  * @param {Store} store - The redux store.
  * @returns {Function}
  */
+// Debounce timer for local moderator notification
+let moderatorNotifyTimer: number | undefined;
+
 MiddlewareRegistry.register(store => next => action => {
     const { dispatch, getState } = store;
     const state = getState();
@@ -178,11 +181,20 @@ MiddlewareRegistry.register(store => next => action => {
         const oldRole = oldParticipant?.role;
 
         if (oldRole && oldRole !== role && role === PARTICIPANT_ROLE.MODERATOR) {
+            // Debounce: only notify if after a short delay the role remains MODERATOR
+            if (moderatorNotifyTimer) {
+                clearTimeout(moderatorNotifyTimer);
+            }
 
-            store.dispatch(showNotification({
-                titleKey: 'notify.moderator'
-            },
-            NOTIFICATION_TIMEOUT_TYPE.SHORT));
+            moderatorNotifyTimer = window.setTimeout(() => {
+                const latestRole = getLocalParticipant(store.getState())?.role;
+
+                if (latestRole === PARTICIPANT_ROLE.MODERATOR) {
+                    store.dispatch(showNotification({
+                        titleKey: 'notify.moderator'
+                    }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+                }
+            }, 400);
         }
 
         return next(action);

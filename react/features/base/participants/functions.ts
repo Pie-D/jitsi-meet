@@ -27,6 +27,7 @@ import {
 } from './constants';
 import { preloadImage } from './preloadImage';
 import { FakeParticipant, IJitsiParticipant, IParticipant, ISourceInfo } from './types';
+import { log } from '@tensorflow/tfjs-core/dist/log';
 
 
 /**
@@ -663,10 +664,37 @@ export function isParticipantModerator(participant?: IParticipant) {
     return participant?.role === PARTICIPANT_ROLE.MODERATOR;
 }
 
-// export function isRoomOwner(participant?: IParticipant, roomOwner?: string) {
-//     // console.log("dht - id - roomOwner - logic", participant?.id, roomOwner, participant?.id === roomOwner)
-//     return participant?.id === roomOwner;
-// }
+/**
+ * Returns true if the participant is flagged as room owner (super moderator).
+ * The flag is propagated via JWT in context.features.{owner|isOwner}.
+ *
+ * This does NOT replace the underlying XMPP role (moderator/participant).
+ * It is meant for UI/logic gating of extra privileges.
+ *
+ * @param {IParticipant | undefined} participant - Participant object.
+ * @returns {boolean}
+ */
+export function isOwnerParticipant(participant?: IParticipant) {
+    const features = participant?.features as any;
+
+    if (!features) {
+        return false;
+    }
+
+    const value = features.owner ?? features.isOwner;
+
+    if (typeof value === 'string') {
+        return value.toLowerCase() === 'true';
+    }
+
+    return Boolean(value);
+}
+
+export function isRoomOwner(participant?: IParticipant, roomOwner?: string) {
+    return Boolean(participant) && (
+        participant!.id === roomOwner || isOwnerParticipant(participant!)
+    );
+}
 /**
  * Returns the dominant speaker participant.
  *
@@ -728,16 +756,15 @@ export function isLocalParticipantModerator(stateful: IStateful) {
     return isParticipantModerator(local);
 }
 
-// export function isLocalRoomOwner(stateful: IStateful) {
-//     const state = toState(stateful)['features/base/participants'];
-//     const state2 = toState(stateful)['features/base/conference'];
-//     const { local } = state;
-//     if (!local) {
-//         return false;
-//     }
-//     // console.log(conference)
-//     return isRoomOwner(local, state2?.conference?.room?.roomOwner);
-// }
+export function isLocalRoomOwner(stateful: IStateful) {
+    const state = toState(stateful)['features/base/participants'];
+    const state2 = toState(stateful)['features/base/conference'];
+    const { local } = state;
+    if (!local) {
+        return false;
+    }
+    return isRoomOwner(local, state2?.conference?.room?.roomOwner);
+}
 /**
  * Resolves the first loadable avatar URL for a participant.
  *

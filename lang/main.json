@@ -1579,6 +1579,7 @@
         "kick": "Kick out",
         "mirrorVideo": "Mirror my video",
         "moderator": "Moderator",
+        "host": "Host",
         "mute": "Participant is muted",
         "muted": "Muted",
         "pinToStage": "Pin to stage",
@@ -1705,6 +1706,8 @@
    "secondTitle": "Sample Library",
     "start": "Start",
     "slots": "slots",
-    "description": "This layout will be the same for everyone. Participants can be arranged freely within this view."
+    "description": "This layout will be the same for everyone. Participants can be arranged freely within this view.",
+    "accessDenied": "Access denied",
+    "ownerOnly": "Only the host can configure immersive view"
   }
 }

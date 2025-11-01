@@ -73,6 +73,9 @@ export interface IParticipantFeatures {
     'sip-inbound-call'?: boolean | string;
     'sip-outbound-call'?: boolean | string;
     'transcription'?: boolean | string;
+    // Custom feature flags propagated via JWT token
+    'owner'?: boolean | string;
+    'isOwner'?: boolean | string;
 }
 
 export interface ISourceInfo {

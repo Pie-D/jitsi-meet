@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { endConference } from '../../../base/conference/actions';
-import {isLocalParticipantModerator} from '../../../base/participants/functions';
-// import {isLocalParticipantModerator, isLocalRoomOwner} from '../../../base/participants/functions';
+// import {isLocalParticipantModerator} from '../../../base/participants/functions';
+import {isLocalParticipantModerator, isLocalRoomOwner} from '../../../base/participants/functions';
 import { BUTTON_TYPES } from '../../../base/ui/constants.web';
 import { isInBreakoutRoom } from '../../../breakout-rooms/functions';
 
@@ -39,9 +39,9 @@ interface IProps {
 export const EndConferenceButton = (props: IProps) => {
     const { t } = useTranslation();
     const dispatch = useDispatch();
-    const _isLocalParticipantModerator = useSelector(isLocalParticipantModerator);
+    // const _isLocalParticipantModerator = useSelector(isLocalParticipantModerator);
     const _isInBreakoutRoom = useSelector(isInBreakoutRoom);
-    // const _isOwner = useSelector(isLocalRoomOwner);
+    const _isOwner = useSelector(isLocalRoomOwner);
     const state = useSelector(state => state as IReduxState);
 
     const onEndConference = useCallback(() => {
@@ -57,8 +57,8 @@ export const EndConferenceButton = (props: IProps) => {
     }, [ dispatch ]);
         // console.log(_isOwner);
     return (<>
-        {/* { !_isInBreakoutRoom && _isLocalParticipantModerator && _isOwner && <HangupContextMenuItem */}
-        { !_isInBreakoutRoom && _isLocalParticipantModerator && <HangupContextMenuItem
+        { !_isInBreakoutRoom && _isOwner && <HangupContextMenuItem
+        // { !_isInBreakoutRoom && _isLocalParticipantModerator && <HangupContextMenuItem
             accessibilityLabel = { t('toolbar.accessibilityLabel.endConference') }
             buttonKey = { props.buttonKey }
             buttonType = { BUTTON_TYPES.DESTRUCTIVE }

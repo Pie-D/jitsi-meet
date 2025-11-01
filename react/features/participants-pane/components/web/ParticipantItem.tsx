@@ -54,6 +54,12 @@ interface IProps extends WithTranslation {
     isModerator?: boolean;
 
     /**
+     * Whether the participant is the room owner (super moderator).
+     * This is a custom flag propagated via JWT features.
+     */
+    isOwner?: boolean;
+
+    /**
      * True if the participant is local.
      */
     local?: boolean;
@@ -139,6 +145,7 @@ function ParticipantItem({
     displayName,
     isHighlighted,
     isModerator,
+    isOwner,
     local,
     onLeave,
     openDrawerForParticipant,
@@ -175,7 +182,10 @@ function ParticipantItem({
                 </div>
                 {local ? <span>&nbsp;({youText})</span> : null}
             </div>
-            {isModerator && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
+            {isOwner && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
+                {t('videothumbnail.host')}
+            </div>}
+            {!isOwner && isModerator && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
                 {t('videothumbnail.moderator')}
             </div>}
         </>

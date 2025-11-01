@@ -9,7 +9,10 @@ import {
     getParticipantByIdOrUndefined,
     getParticipantDisplayName,
     hasRaisedHand,
-    isParticipantModerator
+    isParticipantModerator,
+    isLocalRoomOwner,
+    isOwnerParticipant,
+    isRoomOwner
 } from '../../../base/participants/functions';
 import { IParticipant } from '../../../base/participants/types';
 import {
@@ -30,7 +33,6 @@ import {
 import ParticipantActionEllipsis from './ParticipantActionEllipsis';
 import ParticipantItem from './ParticipantItem';
 import ParticipantQuickAction from './ParticipantQuickAction';
-
 interface IProps {
 
     /**
@@ -163,6 +165,12 @@ interface IProps {
 
     /** True if participant is assigned to an immersive slot (on stage). */
     _isOnStage: boolean;
+
+    /** Local user satisfies roomOwner or JWT isOwner condition */
+    _isLocalRoomOwner: boolean;
+
+    /** This row's participant is owner (JWT or first-join) */
+    _isOwner: boolean;
 }
 
 /**
@@ -192,7 +200,9 @@ function MeetingParticipantItem({
     openDrawerForParticipant,
     overflowDrawer,
     participantActionEllipsisLabel,
-    youText
+    youText,
+    _isLocalRoomOwner,
+    _isOwner
 }: IProps) {
 
     const [ hasAudioLevels, setHasAudioLevel ] = useState(false);
@@ -239,9 +249,10 @@ function MeetingParticipantItem({
     }, [ _participantID ]);
 
     const combinedHighlighted = Boolean(isHighlighted || _isOnStage);
+    const isOwnerFlag = _isOwner;
 
     return (
-                _matchesSearch ? (
+        _matchesSearch ? (
         <ParticipantItem
             draggable = { Boolean(_participantID) }
             onDragStart = { onDragStart }
@@ -254,6 +265,7 @@ function MeetingParticipantItem({
             }
             disableModeratorIndicator = { _disableModeratorIndicator }
             displayName = { _displayName }
+            isOwner = { isOwnerFlag }
             isHighlighted = { combinedHighlighted }
             isModerator = { isParticipantModerator(_participant) }
             local = { _local }
@@ -285,7 +297,7 @@ function MeetingParticipantItem({
                     onClick = { onContextMenu } />
             )}
         </ParticipantItem>
-                ) : null
+        ) : null
     );
 }
 
@@ -318,6 +330,9 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
     const immersive = state['features/immersive-view'];
     const isOnStage = Boolean(Object.values(immersive?.assignments || {}).includes(participant?.id ?? ''));
 
+    const roomOwnerId = state['features/base/conference']?.conference?.room?.roomOwner;
+    const _isOwner = Boolean(participant) && (isOwnerParticipant(participant) || isRoomOwner(participant, roomOwnerId));
+
     return {
         _audioMediaState,
         _audioTrack,
@@ -331,7 +346,9 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
         _quickActionButtonType,
         _raisedHand: hasRaisedHand(participant),
         _videoMediaState,
-        _isOnStage: isOnStage
+        _isOnStage: isOnStage,
+        _isLocalRoomOwner: isLocalRoomOwner(state),
+        _isOwner
     };
 }
 
