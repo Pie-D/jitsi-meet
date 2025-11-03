@@ -146,7 +146,7 @@ MiddlewareRegistry.register(store => next => action => {
         if (isModerator && !suppress) {
             conference.setImmersiveViewEnabled(action.enabled);
         } else {
-            console.log('❌ [ImmersiveView Middleware] Only moderators can enable/disable immersive view');
+            // console.log('❌ [ImmersiveView Middleware] Only moderators can enable/disable immersive view');
         }
         break;
     }
@@ -154,7 +154,7 @@ MiddlewareRegistry.register(store => next => action => {
         if (isModerator && action.templateId && !suppress) {
             conference.setImmersiveViewTemplate(action.templateId);
         } else if (!isModerator) {
-            console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view template');
+            // console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view template');
         }
         break;
     }
@@ -162,7 +162,7 @@ MiddlewareRegistry.register(store => next => action => {
         if (isModerator && !suppress) {
             conference.setImmersiveViewSlotCount(action.slotCount);
         } else {
-            console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view slot count');
+            // console.log('❌ [ImmersiveView Middleware] Only moderators can change immersive view slot count');
         }
         break;
     }

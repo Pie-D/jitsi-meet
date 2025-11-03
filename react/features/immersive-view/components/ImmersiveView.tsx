@@ -27,7 +27,7 @@ const useStyles = makeStyles()(() => ({
         position: "absolute",
         inset: 0,
         backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundPosition: "top !important",
         zIndex: 1,
     },
     slot: {
