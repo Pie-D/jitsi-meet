@@ -14,6 +14,7 @@ import { IMMERSIVE_TEMPLATES, getTemplateSlots } from "../templates";
 import { isLocalParticipantModerator } from "../../base/participants/functions";
 import { getParticipantsPaneOpen, getParticipantsPaneWidth } from "../../participants-pane/functions";
 import { CHAT_SIZE } from "../../chat/constants";
+import { isMobileBrowser } from "../../base/environment/utils";
 
 const useStyles = makeStyles()(() => ({
     root: {
@@ -124,6 +125,10 @@ export default function ImmersiveView() {
     const getInitialViewportInfo = useCallback(() => {
         const toolbox = document.getElementById('new-toolbox');
         const toolboxHeight = toolbox?.clientHeight || 80; // Mặc định 80px
+        const isMobile = isMobileBrowser();
+        const isSmallScreen = isMobile || window.innerWidth < 768;
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const use16to9Aspect = isSmallScreen && (isMobile || (isPortrait && window.innerWidth < 600));
         
         return {
             containerWidth: window.innerWidth,
@@ -134,7 +139,9 @@ export default function ImmersiveView() {
             hasChatPane: false,
             hasParticipantsPane: false,
             chatPaneWidth: 0,
-            participantsPaneWidth: 0
+            participantsPaneWidth: 0,
+            isSmallScreen,
+            use16to9Aspect
         };
     }, []);
     
@@ -181,6 +188,15 @@ export default function ImmersiveView() {
         const containerWidth = containerRect.width;
         let containerHeight = containerRect.height;
         
+        // Phát hiện màn hình nhỏ (mobile hoặc width < 768px)
+        const isMobile = isMobileBrowser();
+        const isSmallScreen = isMobile || window.innerWidth < 768;
+        const isPortrait = window.innerHeight > window.innerWidth;
+        
+        // Quyết định có dùng tỷ lệ 16:9 không
+        // Dùng 16:9 khi: màn hình nhỏ VÀ (mobile HOẶC portrait VÀ width < 600px)
+        const use16to9Aspect = isSmallScreen && (isMobile || (isPortrait && window.innerWidth < 600));
+        
         // Tính toán toolbox height - LUÔN dành chỗ cho toolbox để tránh overlap
         // Ngay cả khi toolbox chưa visible, vẫn phải trừ đi vì nó có thể xuất hiện bất cứ lúc nào
         let toolboxHeight = 80; // Chiều cao mặc định
@@ -197,9 +213,23 @@ export default function ImmersiveView() {
         // - Không có sidebars: containerHeight có thể = window.innerHeight và bao gồm Toolbox area
         // Vì vậy, LUÔN trừ Toolbox height trong mọi trường hợp
         
-        // Tính toán không gian có sẵn bên trong container (sau khi đã trừ Toolbox)
-        const availableWidth = containerWidth;
+        // Tính toán không gian có sẵn bên trong container
+        let availableWidth = containerWidth;
         let availableHeight = containerHeight - toolboxHeight;
+        
+        // Nếu dùng tỷ lệ 16:9, tính toán lại availableHeight dựa trên aspect ratio
+        if (use16to9Aspect && availableWidth > 0) {
+            // Tính height dựa trên tỷ lệ 16:9
+            const target16to9Height = (availableWidth / 16) * 9;
+            const maxAvailableHeight = window.innerHeight - toolboxHeight;
+            
+            // Nếu calculated height nhỏ hơn available height, dùng calculated
+            // Điều này tạo letterboxing (black bars ở trên và dưới)
+            if (target16to9Height < maxAvailableHeight) {
+                availableHeight = target16to9Height;
+            }
+            // Nếu calculated height lớn hơn, vẫn dùng maxAvailableHeight để tránh overflow
+        }
         
         // Đảm bảo availableHeight không âm
         if (availableHeight < 0) {
@@ -221,7 +251,9 @@ export default function ImmersiveView() {
             hasChatPane: isChatOpen,
             hasParticipantsPane: isParticipantsPaneOpen,
             chatPaneWidth: actualChatWidth,
-            participantsPaneWidth: actualParticipantsWidth
+            participantsPaneWidth: actualParticipantsWidth,
+            isSmallScreen,
+            use16to9Aspect
         });
     }, [isChatOpen, chatWidth, isParticipantsPaneOpen, participantsPaneWidth]);
 
@@ -440,23 +472,52 @@ export default function ImmersiveView() {
         setDragIndex(null);
     };
 
-    if (!immersive?.enabled || !tpl) {
-        return null;
-    }
+    // Tránh return sớm để không thay đổi số lượng hook giữa các lần render
+    const immersiveActive = Boolean(immersive?.enabled && tpl);
+
+    // Root container luôn full-size; tạo canvas (vùng 16:9) bên trong
+    const rootStyle = useMemo(() => ({ transition: 'all 0.3s ease-in-out' as const }), []);
+
+    const canvasStyle = useMemo(() => {
+        if (viewportInfo.use16to9Aspect && viewportInfo.availableWidth > 0) {
+            const targetHeight = (viewportInfo.availableWidth / 16) * 9;
+            return {
+                position: 'absolute' as const,
+                left: 0,
+                right: 0,
+                height: `${targetHeight}px`,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 1
+            };
+        }
+        return {
+            position: 'absolute' as const,
+            inset: 0,
+            zIndex: 1
+        };
+    }, [viewportInfo.use16to9Aspect, viewportInfo.availableWidth]);
 
     return (
         <div 
             ref={rootRef}
             className={classes.root}
-            style={{
-                // Đảm bảo ImmersiveView không bị che khuất
-                // Không cần paddingBottom nữa vì slots đã được tính toán để tránh toolbox
-                // Không cần paddingLeft và paddingRight nữa vì container đã được layout system điều chỉnh
-                transition: 'all 0.3s ease-in-out'
-            }}
+            style={rootStyle}
         >
-            <div className={classes.background} style={{ backgroundImage: `url(${tpl.backgroundUrl})` }} />
-            {baseSlots.map((s, idx) => {
+            {immersiveActive && (
+                <>
+                    {/* Mask đen che background gallery bên ngoài canvas */}
+                    <div style={{ position: 'absolute', inset: 0, backgroundColor: '#000', zIndex: 0 }} />
+                    <div style={canvasStyle}>
+                        <div 
+                            className={classes.background} 
+                            style={{ backgroundImage: `url(${tpl!.backgroundUrl})` }}
+                        />
+                        {/* Background only; slots are rendered below with absolute positions and adjusted top offset */}
+                    </div>
+                </>
+            )}
+            {immersiveActive && baseSlots.map((s, idx) => {
                 const pid = assignments[idx];
                 const p = ordered.find((pp: any) => pp.id === pid);
                 let videoEl: React.ReactNode = null;
@@ -484,20 +545,18 @@ export default function ImmersiveView() {
                             </div>
                         );
                     } else {
-                        // Tính toán kích thước avatar dựa trên số lượng slot
-                        const slotCount = baseSlots.length;
-                        let avatarSize = 128; // Mặc định cho ít slot
-                        
-                        if (slotCount >= 16) {
-                            avatarSize = 64; // 4x4 grid
-                        } else if (slotCount >= 9) {
-                            avatarSize = 80; // 3x3 grid
-                        } else if (slotCount >= 6) {
-                            avatarSize = 96; // 2x3 hoặc 3x2 grid
-                        } else if (slotCount >= 4) {
-                            avatarSize = 112; // 2x2 grid
-                        }
-                        
+                        // Tính toán kích thước avatar responsive theo slot thực tế
+                        // Dựa trên kích thước slot đã quy đổi ra pixel (finalWidth/finalHeight)
+                        // Ước lượng kích thước slot dựa trên phần trăm slot và kích thước container hiện tại
+                        const slotWidthPxEst = (s.w / 100) * viewportInfo.containerWidth;
+                        const slotHeightPxEst = (s.h / 100) * viewportInfo.availableHeight;
+                        const slotInnerPx = Math.min(slotWidthPxEst, slotHeightPxEst);
+                        const baseAvatar = slotInnerPx * 0.48; // Tỷ lệ mặc định của avatar trong slot
+                        // Nếu màn hình nhỏ, tăng một chút để dễ đọc hơn
+                        const mobileBoost = viewportInfo.isSmallScreen ? 1.1 : 1.0;
+                        // Giới hạn min/max hợp lý
+                        const avatarSize = Math.max(48, Math.min(140, baseAvatar * mobileBoost));
+
                         videoEl = (
                             <div className={classes.avatarWrapper}>
                                 <Avatar size={avatarSize} participantId={p.id} />
@@ -579,6 +638,9 @@ export default function ImmersiveView() {
                 // Tính toán maxTop để đảm bảo slot hoàn toàn nằm trong availableHeight
                 const maxTop = Math.max(0, availableHeight - heightPx);
                 const finalTop = Math.min(Math.max(0, topPx), maxTop);
+                const canvasOffsetTop = viewportInfo.use16to9Aspect
+                    ? Math.max(0, (window.innerHeight - availableHeight) / 2)
+                    : 0;
                 
                 // Đảm bảo height không vượt quá availableHeight
                 const finalHeight = Math.min(heightPx, availableHeight - finalTop);
@@ -595,29 +657,34 @@ export default function ImmersiveView() {
                 // Tính hệ số scale dựa trên việc có sidebars hay không
                 // Khi có sidebars, containerWidth nhỏ hơn, nên cần scale down các giá trị
                 const hasSidebars = viewportInfo.hasChatPane || viewportInfo.hasParticipantsPane;
-                const scaleFactor = hasSidebars 
+                let scaleFactor = hasSidebars 
                     ? Math.min(1, containerWidth / window.innerWidth) // Scale down khi có sidebars
                     : 1;
+                // Trên màn hình nhỏ, không để scale nhỏ hơn 0.85 để giữ khả năng đọc
+                if (viewportInfo.isSmallScreen) {
+                    scaleFactor = Math.max(0.85, scaleFactor);
+                }
                 
                 // Tính toán fontSize responsive dựa trên slot width thực tế và scale factor
                 // Khi container bị co (có sidebars), fontSize sẽ tự động nhỏ hơn
                 // Tăng fontSize cho chế độ 12 và 16 slots để tên hiển thị rõ hơn
                 let fontSize: string;
                 const baseFontSize = slotWidthPx * 0.045; // Base size dựa trên slot width
+                const textBoost = viewportInfo.isSmallScreen ? 1.15 : 1; // Tăng nhẹ trên mobile
                 if (baseSlots.length >= 16) {
                     // 16 slots: tăng fontSize lên để tên lớn hơn, dễ đọc hơn
-                    fontSize = `clamp(${0.9 * scaleFactor}rem, ${slotWidthPx * 0.06 * scaleFactor}px, ${1.2 * scaleFactor}rem)`;
+                    fontSize = `clamp(${0.9 * scaleFactor * textBoost}rem, ${slotWidthPx * 0.06 * scaleFactor * textBoost}px, ${1.2 * scaleFactor * textBoost}rem)`;
                 } else if (baseSlots.length >= 12) {
                     // 12 slots: tăng fontSize lên để tên lớn hơn
-                    fontSize = `clamp(${0.95 * scaleFactor}rem, ${slotWidthPx * 0.062 * scaleFactor}px, ${1.3 * scaleFactor}rem)`;
+                    fontSize = `clamp(${0.95 * scaleFactor * textBoost}rem, ${slotWidthPx * 0.062 * scaleFactor * textBoost}px, ${1.3 * scaleFactor * textBoost}rem)`;
                 } else if (baseSlots.length >= 9) {
-                    fontSize = `clamp(${0.8 * scaleFactor}rem, ${baseFontSize * scaleFactor}px, ${1.1 * scaleFactor}rem)`;
+                    fontSize = `clamp(${0.8 * scaleFactor * textBoost}rem, ${baseFontSize * scaleFactor * textBoost}px, ${1.1 * scaleFactor * textBoost}rem)`;
                 } else if (slotWidthPercent > 25) {
-                    fontSize = `clamp(${1 * scaleFactor}rem, ${slotWidthPx * 0.055 * scaleFactor}px, ${1.6 * scaleFactor}rem)`;
+                    fontSize = `clamp(${1 * scaleFactor * textBoost}rem, ${slotWidthPx * 0.055 * scaleFactor * textBoost}px, ${1.6 * scaleFactor * textBoost}rem)`;
                 } else if (slotWidthPercent > 20) {
-                    fontSize = `clamp(${0.9 * scaleFactor}rem, ${slotWidthPx * 0.05 * scaleFactor}px, ${1.4 * scaleFactor}rem)`;
+                    fontSize = `clamp(${0.9 * scaleFactor * textBoost}rem, ${slotWidthPx * 0.05 * scaleFactor * textBoost}px, ${1.4 * scaleFactor * textBoost}rem)`;
                 } else {
-                    fontSize = `clamp(${0.8 * scaleFactor}rem, ${baseFontSize * scaleFactor}px, ${1.1 * scaleFactor}rem)`;
+                    fontSize = `clamp(${0.8 * scaleFactor * textBoost}rem, ${baseFontSize * scaleFactor * textBoost}px, ${1.1 * scaleFactor * textBoost}rem)`;
                 }
                 
                 // Tính toán padding responsive với scale factor
@@ -625,29 +692,29 @@ export default function ImmersiveView() {
                 let padding: string;
                 if (baseSlots.length >= 16) {
                     // 16 slots: tăng padding để thành phần tên lớn hơn
-                    const verticalPadding = Math.max(4, slotWidthPx * 0.02) * scaleFactor;
-                    const horizontalPadding = Math.max(12, slotWidthPx * 0.04) * scaleFactor;
+                    const verticalPadding = Math.max(4, slotWidthPx * 0.02) * scaleFactor * textBoost;
+                    const horizontalPadding = Math.max(12, slotWidthPx * 0.04) * scaleFactor * textBoost;
                     padding = `${verticalPadding}px ${horizontalPadding}px`;
                 } else if (baseSlots.length >= 12) {
                     // 12 slots: tăng padding để thành phần tên lớn hơn
-                    const verticalPadding = Math.max(4.5, slotWidthPx * 0.022) * scaleFactor;
-                    const horizontalPadding = Math.max(14, slotWidthPx * 0.045) * scaleFactor;
+                    const verticalPadding = Math.max(4.5, slotWidthPx * 0.022) * scaleFactor * textBoost;
+                    const horizontalPadding = Math.max(14, slotWidthPx * 0.045) * scaleFactor * textBoost;
                     padding = `${verticalPadding}px ${horizontalPadding}px`;
                 } else if (baseSlots.length >= 9) {
-                    const verticalPadding = Math.max(4, slotWidthPx * 0.018) * scaleFactor;
-                    const horizontalPadding = Math.max(15, slotWidthPx * 0.04) * scaleFactor;
+                    const verticalPadding = Math.max(4, slotWidthPx * 0.018) * scaleFactor * textBoost;
+                    const horizontalPadding = Math.max(15, slotWidthPx * 0.04) * scaleFactor * textBoost;
                     padding = `${verticalPadding}px ${horizontalPadding}px`;
                 } else if (slotWidthPercent > 25) {
-                    const verticalPadding = Math.max(5, slotWidthPx * 0.02) * scaleFactor;
-                    const horizontalPadding = Math.max(25, slotWidthPx * 0.06) * scaleFactor;
+                    const verticalPadding = Math.max(5, slotWidthPx * 0.02) * scaleFactor * textBoost;
+                    const horizontalPadding = Math.max(25, slotWidthPx * 0.06) * scaleFactor * textBoost;
                     padding = `${verticalPadding}px ${horizontalPadding}px`;
                 } else if (slotWidthPercent > 20) {
-                    const verticalPadding = Math.max(4, slotWidthPx * 0.018) * scaleFactor;
-                    const horizontalPadding = Math.max(20, slotWidthPx * 0.05) * scaleFactor;
+                    const verticalPadding = Math.max(4, slotWidthPx * 0.018) * scaleFactor * textBoost;
+                    const horizontalPadding = Math.max(20, slotWidthPx * 0.05) * scaleFactor * textBoost;
                     padding = `${verticalPadding}px ${horizontalPadding}px`;
                 } else {
-                    const verticalPadding = Math.max(3, slotWidthPx * 0.015) * scaleFactor;
-                    const horizontalPadding = Math.max(15, slotWidthPx * 0.04) * scaleFactor;
+                    const verticalPadding = Math.max(3, slotWidthPx * 0.015) * scaleFactor * textBoost;
+                    const horizontalPadding = Math.max(15, slotWidthPx * 0.04) * scaleFactor * textBoost;
                     padding = `${verticalPadding}px ${horizontalPadding}px`;
                 }
                 
@@ -656,18 +723,18 @@ export default function ImmersiveView() {
                 let borderWidth: string;
                 if (baseSlots.length >= 16) {
                     // 16 slots: tăng borderWidth
-                    borderWidth = `${Math.max(3, slotWidthPx * 0.015) * scaleFactor}px`;
+                    borderWidth = `${Math.max(3, slotWidthPx * 0.015) * scaleFactor * textBoost}px`;
                 } else if (baseSlots.length >= 12) {
                     // 12 slots: tăng borderWidth
-                    borderWidth = `${Math.max(3.5, slotWidthPx * 0.016) * scaleFactor}px`;
+                    borderWidth = `${Math.max(3.5, slotWidthPx * 0.016) * scaleFactor * textBoost}px`;
                 } else if (baseSlots.length >= 9) {
-                    borderWidth = `${Math.max(3, slotWidthPx * 0.012) * scaleFactor}px`;
+                    borderWidth = `${Math.max(3, slotWidthPx * 0.012) * scaleFactor * textBoost}px`;
                 } else if (slotWidthPercent > 25) {
-                    borderWidth = `${Math.max(8, slotWidthPx * 0.025) * scaleFactor}px`;
+                    borderWidth = `${Math.max(8, slotWidthPx * 0.025) * scaleFactor * textBoost}px`;
                 } else if (slotWidthPercent > 20) {
-                    borderWidth = `${Math.max(6, slotWidthPx * 0.02) * scaleFactor}px`;
+                    borderWidth = `${Math.max(6, slotWidthPx * 0.02) * scaleFactor * textBoost}px`;
                 } else {
-                    borderWidth = `${Math.max(4, slotWidthPx * 0.015) * scaleFactor}px`;
+                    borderWidth = `${Math.max(4, slotWidthPx * 0.015) * scaleFactor * textBoost}px`;
                 }
                 
                 // Tính toán borderRadius responsive với scale factor
@@ -675,35 +742,57 @@ export default function ImmersiveView() {
                 let borderRadius: string;
                 if (baseSlots.length >= 16) {
                     // 16 slots: tăng borderRadius
-                    borderRadius = `${Math.max(1, slotWidthPx * 0.01) * scaleFactor}rem`;
+                    borderRadius = `${Math.max(1, slotWidthPx * 0.01) * scaleFactor * textBoost}rem`;
                 } else if (baseSlots.length >= 12) {
                     // 12 slots: tăng borderRadius
-                    borderRadius = `${Math.max(1.1, slotWidthPx * 0.011) * scaleFactor}rem`;
+                    borderRadius = `${Math.max(1.1, slotWidthPx * 0.011) * scaleFactor * textBoost}rem`;
                 } else if (baseSlots.length >= 9) {
-                    borderRadius = `${Math.max(1.2, slotWidthPx * 0.012) * scaleFactor}rem`;
+                    borderRadius = `${Math.max(1.2, slotWidthPx * 0.012) * scaleFactor * textBoost}rem`;
                 } else if (slotWidthPercent > 25) {
-                    borderRadius = `${Math.max(2.5, slotWidthPx * 0.025) * scaleFactor}rem`;
+                    borderRadius = `${Math.max(2.5, slotWidthPx * 0.025) * scaleFactor * textBoost}rem`;
                 } else if (slotWidthPercent > 20) {
-                    borderRadius = `${Math.max(2, slotWidthPx * 0.02) * scaleFactor}rem`;
+                    borderRadius = `${Math.max(2, slotWidthPx * 0.02) * scaleFactor * textBoost}rem`;
                 } else {
-                    borderRadius = `${Math.max(1.5, slotWidthPx * 0.015) * scaleFactor}rem`;
+                    borderRadius = `${Math.max(1.5, slotWidthPx * 0.015) * scaleFactor * textBoost}rem`;
                 }
                 
+                // Tùy chỉnh thêm cho mobile: đảm bảo chiều cao thẻ tên không vượt quá 28% chiều cao slot
+                if (viewportInfo.isSmallScreen) {
+                    let fontPx = Math.min(32, Math.max(12, slotWidthPx * 0.05)) * scaleFactor; // baseline theo slot
+                    let vPadNum = Math.max(3, slotWidthPx * 0.02) * scaleFactor;
+                    let hPadNum = Math.max(12, slotWidthPx * 0.04) * scaleFactor;
+                    let bWidthNum = Math.max(2, slotWidthPx * 0.012) * scaleFactor;
+                    const maxNameHeight = finalHeight * 0.28;
+                    const estimatedNameHeight = fontPx * 1.2 + vPadNum * 2 + bWidthNum * 2;
+                    if (estimatedNameHeight > maxNameHeight) {
+                        const k = maxNameHeight / estimatedNameHeight;
+                        fontPx *= k;
+                        vPadNum *= k;
+                        hPadNum *= k;
+                        bWidthNum *= k;
+                    }
+                    fontSize = `${fontPx}px`;
+                    padding = `${vPadNum}px ${hPadNum}px`;
+                    borderWidth = `${bWidthNum}px`;
+                    // Cập nhật borderRadius phù hợp với mobile
+                    borderRadius = `${Math.max(12, slotWidthPx * 0.05)}px`;
+                }
+
                 // Tính toán maxWidth responsive - QUAN TRỌNG: phải tỷ lệ với slot width thực tế
                 // Khi có sidebars, slot width nhỏ hơn nên maxWidth cũng nhỏ hơn tự động
                 // Tăng maxWidth cho 12 và 16 slots để hiển thị tên dài hơn
                 let nameMaxWidth: number;
                 if (baseSlots.length >= 16) {
                     // 16 slots: tăng maxWidth để hiển thị tên rõ hơn
-                    nameMaxWidth = Math.min(slotWidthPx * 1.3, containerWidth * 0.4);
+                    nameMaxWidth = Math.min(slotWidthPx * 1.3 * textBoost, containerWidth * 0.45);
                 } else if (baseSlots.length >= 12) {
                     // 12 slots: tăng maxWidth để hiển thị tên rõ hơn
-                    nameMaxWidth = Math.min(slotWidthPx * 1.35, containerWidth * 0.42);
+                    nameMaxWidth = Math.min(slotWidthPx * 1.35 * textBoost, containerWidth * 0.46);
                 } else {
                     // Các chế độ khác: giữ nguyên
                     nameMaxWidth = Math.min(
-                        slotWidthPx * 1.2, // 120% của slot width
-                        slotWidthPx * 0.9  // Hoặc 90% để đảm bảo không quá rộng
+                        slotWidthPx * 1.2 * textBoost, // 120% của slot width
+                        slotWidthPx * 0.95  // Tăng một chút để dễ đọc trên mobile
                     );
                 }
 
@@ -719,7 +808,7 @@ export default function ImmersiveView() {
                             borderRadius: "1.5rem",
                             border: "8px solid #41b6fb",
                             left: `${finalLeft}px`, // Dùng finalLeft để đảm bảo không vượt quá container
-                            top: `${finalTop}px`, // Dùng finalTop để đảm bảo không bị che bởi toolbox
+                            top: `${finalTop + canvasOffsetTop}px`, // Bù offset để nằm trong canvas 16:9
                             width: `${finalWidth}px`, // Dùng finalWidth để đảm bảo không vượt quá container
                             height: `${finalHeight}px`, // Dùng finalHeight để đảm bảo không vượt quá availableHeight
                             boxShadow: "0 8px 32px rgba(65, 182, 251, 0.4), inset 0 0 20px rgba(65, 182, 251, 0.1)",
