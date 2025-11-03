@@ -12,6 +12,7 @@ local presence_check_status = main_util.presence_check_status;
 local extract_subdomain = main_util.extract_subdomain;
 
 local QUEUE_MAX_SIZE = 500;
+local timer = require "util.timer";
 
 module:depends("jitsi_permissions");
 
@@ -75,6 +76,7 @@ module:hook("muc-room-created", function(event)
             end
         end
     end);
+    -- Hook để set owner cho người đầu tiên join (priority cao để chạy trước hook xử lý jicofo_lock)
     module:hook("muc-occupant-pre-join", function (event)
         local room, occupant = event.room, event.occupant;
         module:log('debug', 'tqd - pre-join');
@@ -83,10 +85,47 @@ module:hook("muc-room-created", function(event)
         end
         module:log('debug', 'tqd - %s', occupant.bare_jid);
         if not room._data.owner then
-        local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-")
-        room._data.owner = jid_prefix;
+            local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-")
+            room._data.owner = jid_prefix or occupant.bare_jid;
+            module:log('debug', 'Set room owner: %s', room._data.owner);
         end
-end);
+    end, 1); -- Priority 1 để chạy trước hook priority 8
+
+    -- Hook để tự động cấp quyền moderator cho owner sau khi họ join thành công
+    module:hook("muc-occupant-joined", function(event)
+        local room, occupant = event.room, event.occupant;
+        if is_healthcheck_room(room.jid) or is_admin(occupant.bare_jid) then
+            return;
+        end
+
+        -- Kiểm tra xem occupant có phải là owner không
+        local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-");
+        if room._data.owner and (occupant.bare_jid == room._data.owner or jid_prefix == room._data.owner) then
+            -- Mark token affiliation as already checked to avoid races with mod_token_affiliation
+            if event.origin then
+                event.origin.token_affiliation_checked = true;
+            end
+
+            -- Retry setting affiliation to avoid races with other hooks
+            local i = 0;
+            local function setOwnerAffiliation()
+                local current = room:get_affiliation(occupant.bare_jid);
+                if current ~= "owner" and current ~= "admin" then
+                    module:log('info', 'Setting owner affiliation (retry %d) for %s', i, occupant.bare_jid);
+                    room:set_affiliation(true, occupant.bare_jid, "owner");
+                end
+
+                if current == "owner" or current == "admin" or i > 8 then
+                    return;
+                end
+
+                i = i + 1;
+                timer.add_task(0.2 * i, setOwnerAffiliation);
+            end
+
+            setOwnerAffiliation();
+        end
+    end, 5);
 
 -- Returns the meeting config Id form data.
 function getMeetingIdConfig(room)
