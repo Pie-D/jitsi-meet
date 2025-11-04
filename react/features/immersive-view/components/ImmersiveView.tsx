@@ -43,8 +43,8 @@ const useStyles = makeStyles()(() => ({
         pointerEvents: "auto", // Cho phép click trên slot
     },
     slotDisabled: {
-        cursor: "not-allowed", // Hiển thị cursor không được phép
-        opacity: 0.7, // Làm mờ slot
+        cursor: "not-allowed", // Hiển thị  không được phép
+        // opacity: 0.7, // Làm mờ slot
     },
     slotHighlight: {
         border: "2px solid #4da3ff",
