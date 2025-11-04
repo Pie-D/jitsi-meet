@@ -915,7 +915,8 @@
         "speechFailed": "STT service is currently unavailable. Please try again later.",
         "tokenExpired": "Token has expired. Please log in again.",
         "sttEnabled" : "STT is enabled.",
-        "sttDisabled" : "STT is disabled."
+        "sttDisabled" : "STT is disabled.",
+        "cannotdemoteOwner": "You cannot move the meeting host to viewer."
     },
     "participantsPane": {
         "actions": {
