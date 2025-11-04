@@ -7,13 +7,12 @@ import { setOverflowMenuVisible } from '../../../toolbox/actions.web';
 import { setSaveSpeechToTextOpen } from '../../actionTypes';
 import { startGstStream, stopGstStream } from '../../../base/util/gstStreamUtils';
 import { IJitsiConference } from '../../../base/conference/reducer';
-import { isLocalRoomOwner } from '../../../base/participants/functions';
-import { isLocalParticipantModerator } from '../../../base/participants/functions';
+import { isOwnerParticipant, isLocalRoomOwner, isLocalParticipantModerator } from '../../../base/participants/functions';
 import { getWhipLink } from '../../../base/util/cMeetUtils';
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { env } from '../../../../../ENV';
-
+import { toState } from '../../../base/redux/functions';
 interface IProps extends AbstractButtonProps {
     _toggled: boolean;
     _conference?: IJitsiConference;
@@ -90,6 +89,18 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
 function _mapStateToProps(state: IReduxState) {
     const isOwner = isLocalRoomOwner(state);
+    // const state1 = toState(state)['features/base/participants'];
+    // const { local } = state1;
+    // console.log('SaveSpeechToTextButton _mapStateToProps', local);
+    // if (!local) {
+    //     return {
+    //     _toggled: state['features/saveSpeechToText'].isOpen,
+    //     _conference: state['features/base/conference'].conference,
+    //     visible: false
+    //     };
+    // }
+    // const isOwner = isOwnerParticipant(local);
+    // console.log('isOwnerParticipant:', isOwner);
     // const isOwner = isLocalParticipantModerator(state);
     return {
         _toggled: state['features/saveSpeechToText'].isOpen,
