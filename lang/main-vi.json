@@ -357,7 +357,7 @@
         "kickMessage": "Bạn có thể liên hệ với {{participantDisplayName}} để biết thêm chi tiết.",
         "kickParticipantButton": "Đuổi ra",
         "kickParticipantDialog": "Bạn có chắc muốn đuổi người này ra?",
-        "kickParticipantTitle": "Tắt tiếng của người tham dự này?",
+        "kickParticipantTitle": "Xóa người dùng khỏi cuộc họp?",
         "kickSystemTitle": "Ối! Bạn bị đuổi khỏi cuộc họp rồi",
         "kickTitle": "Ôi! {{participantDisplayName}} đã đuổi bạn ra khỏi cuộc họp",
         "learnMore": "tìm hiểu thêm",
