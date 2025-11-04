@@ -238,8 +238,6 @@ function MeetingParticipantItem({
         }
     }, [ _participantID ]);
 
-    const combinedHighlighted = Boolean(isHighlighted || _isOnStage);
-
     return (
         <ParticipantItem
             draggable = { Boolean(_participantID) }
@@ -253,7 +251,8 @@ function MeetingParticipantItem({
             }
             disableModeratorIndicator = { _disableModeratorIndicator }
             displayName = { _displayName }
-            isHighlighted = { combinedHighlighted }
+            isHighlighted = { isHighlighted }
+            isOnStage = { _isOnStage }
             isModerator = { isParticipantModerator(_participant) }
             local = { _local }
             onLeave = { onLeave }

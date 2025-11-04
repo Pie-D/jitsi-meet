@@ -49,6 +49,11 @@ interface IProps extends WithTranslation {
     isHighlighted?: boolean;
 
     /**
+     * Whether or not the participant is currently on stage (in ImmersiveView).
+     */
+    isOnStage?: boolean;
+
+    /**
      * Whether or not the participant is a moderator.
      */
     isModerator?: boolean;
@@ -139,6 +144,7 @@ function ParticipantItem({
     displayName,
     isHighlighted,
     isModerator,
+    isOnStage,
     local,
     onLeave,
     openDrawerForParticipant,
@@ -199,6 +205,7 @@ function ParticipantItem({
             id = { `participant-item-${participantID}` }
             indicators = { indicators }
             isHighlighted = { isHighlighted }
+            isOnStage = { isOnStage }
             onClick = { !local && overflowDrawer ? onClick : undefined }
             onMouseLeave = { onLeave }
             textChildren = { text }
