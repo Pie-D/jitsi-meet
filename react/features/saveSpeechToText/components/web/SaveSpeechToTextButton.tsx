@@ -44,7 +44,7 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
         if(!_toggled) {
             console.log('SaveSpeechToTextButton clicked', _conference);
             const token = _conference?.connection.token;
-
+            const roomJid = _conference?.room?.roomjid.split('@')[0];
             if (!token) {
                 return null;
             }
@@ -57,23 +57,23 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
             const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
 
-            const whipLink = await getWhipLink(decoded?.context?.token || null, _conference.room.cmeetMeetingId);
+            const whipLink = await getWhipLink(decoded?.context?.token || null, roomJid as string);
             if(whipLink == undefined) return;
 
-            const isStart = await startGstStream(_conference.room.cmeetMeetingId, whipLink);
+            const isStart = await startGstStream(roomJid as string, whipLink);
             if(!isStart) return;
 
             this.stompClient.onConnect = (frame: any) => {
                 this.stompClient.publish({
-                    destination: '/app/conference/' + _conference.room.cmeetMeetingId,
+                    destination: '/app/conference/' + roomJid as string,
                     body: JSON.stringify({
-                        roomId: _conference.room.cmeetMeetingId
+                        roomId: roomJid as string
                     }),
                 });
             };
             this.stompClient.activate();
         } else {
-            const roomId = _conference?.room.cmeetMeetingId;
+            const roomId = _conference?.room?.roomjid.split('@')[0];
             if(!roomId) return null;
             stopGstStream(roomId);
             this.stompClient.deactivate();

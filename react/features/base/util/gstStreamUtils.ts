@@ -4,6 +4,7 @@ import {env} from "../../../../ENV";
 import {CONNECT_GST_STREAM, DISCONNECT_GST_STREAM} from "../conference/actionTypes";
 import {AnyAction} from "redux";
 import { toast } from 'react-toastify';
+import i18next from 'i18next';
 
 const logger = getLogger(__filename);
 
@@ -78,7 +79,7 @@ export const startGstStream = async (meetingId: string, whipLink: string): Promi
         return false;
     }
 
-    toast.success('Bật bóc băng thành công');
+    toast.success(i18next.t('notify.sttEnabled'));
     return true;
 }
 
@@ -103,7 +104,7 @@ export const stopGstStream = async (meetingId: string): Promise<void> => {
                 method: 'POST'
             });
 
-        logger.info('Gst stream stopped');
+        toast.success(i18next.t('notify.sttDisabled'));
     } catch (err) {
         logger.error('Could not stop gst stream: ', err);
     }
