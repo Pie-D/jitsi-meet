@@ -248,7 +248,6 @@ function MeetingParticipantItem({
         }
     }, [ _participantID ]);
 
-    const combinedHighlighted = Boolean(isHighlighted || _isOnStage);
     const isOwnerFlag = _isOwner;
 
     return (
@@ -266,7 +265,8 @@ function MeetingParticipantItem({
             disableModeratorIndicator = { _disableModeratorIndicator }
             displayName = { _displayName }
             isOwner = { isOwnerFlag }
-            isHighlighted = { combinedHighlighted }
+            isHighlighted = { isHighlighted }
+            isOnStage = { _isOnStage }
             isModerator = { isParticipantModerator(_participant) }
             local = { _local }
             onLeave = { onLeave }

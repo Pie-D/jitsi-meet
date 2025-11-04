@@ -909,7 +909,14 @@
         "waitingVisitors": "Viewers waiting in queue: {{waitingVisitors}}",
         "waitingVisitorsTitle": "The meeting is not live yet!",
         "whiteboardLimitDescription": "Please save your progress, as the user limit will soon be reached and the whiteboard will close.",
-        "whiteboardLimitTitle": "Whiteboard usage"
+        "whiteboardLimitTitle": "Whiteboard usage",
+        "cannotKickOwner": "You cannot kick the meeting host out.",
+        "speechContinued": "The STT stream has not ended. Please try again later.",
+        "speechFailed": "STT service is currently unavailable. Please try again later.",
+        "tokenExpired": "Token has expired. Please log in again.",
+        "sttEnabled" : "STT is enabled.",
+        "sttDisabled" : "STT is disabled.",
+        "cannotdemoteOwner": "You cannot move the meeting host to viewer."
     },
     "participantsPane": {
         "actions": {

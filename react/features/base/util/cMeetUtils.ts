@@ -1,7 +1,7 @@
 import {getLogger} from '../logging/functions';
 import {env} from "../../../../ENV";
 import { toast } from 'react-toastify';
-
+import i18n from 'i18next';
 const logger = getLogger(__filename);
 
 /**
@@ -34,7 +34,7 @@ export const getWhipLink = async (token: string, meetingId: string): Promise<str
 
     if(!response.ok) {
         if(response.status === 401) {
-            toast.error('Token hết hạn. Vui lòng đăng nhập lại');
+            toast.error(i18n.t('notify.tokenExpired'));
         } else if(response.status === 400) {
             const code = data.code;
             const message = data.message;
@@ -43,8 +43,8 @@ export const getWhipLink = async (token: string, meetingId: string): Promise<str
             if(code == 39) toast.error(`Vui lòng đợi ${message} giây`);
 
             // code 46 là đang có luồng bóc băng chưa kết thúc
-            if(code == 46) toast.error("Luồng bóc băng chưa kết thúc. Vui lòng thử lại sau");
-        } else toast.error('Lỗi hệ thống. Vui lòng thử lại sau');
+            if(code == 46) toast.error(i18n.t('notify.speechContinued'));
+        } else toast.error(i18n.t('notify.speechFailed'));
         return undefined;
     }
 

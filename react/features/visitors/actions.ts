@@ -1,10 +1,11 @@
+import { toast } from 'react-toastify';
 import { createRemoteVideoMenuButtonEvent } from '../analytics/AnalyticsEvents';
 import { sendAnalytics } from '../analytics/functions';
 import { IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
 import { connect, disconnect, setPreferVisitor } from '../base/connection/actions';
 import { getLocalParticipant } from '../base/participants/functions';
-
+import i18n from 'i18next';
 import {
     CLEAR_VISITOR_PROMOTION_REQUEST,
     I_AM_VISITOR_MODE,
@@ -90,8 +91,14 @@ export function demoteRequest(id: string) {
     return (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
         const conference = getCurrentConference(getState);
         const localParticipant = getLocalParticipant(getState());
-
+        const roomOwner = conference?.room?.roomOwner;
         sendAnalytics(createRemoteVideoMenuButtonEvent('demote.button', { 'participant_id': id }));
+
+        // Chặn demote chủ phòng (owner)
+        if (roomOwner && id === roomOwner) {
+            toast.error(i18n.t('notify.cannotdemoteOwner'));
+            return;
+        }
 
         if (id === localParticipant?.id) {
             dispatch(disconnect(true))

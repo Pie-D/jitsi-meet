@@ -904,7 +904,14 @@
         "waitingVisitors": "Khách đang trong hàng đợi: {{waitingVisitors}}",
         "waitingVisitorsTitle": "Cuộc họp vẫn chưa diễn ra!",
         "whiteboardLimitDescription": "Vui lòng lưu tiến độ của bạn, vì giới hạn người dùng sẽ sớm được đạt và bảng trắng sẽ đóng.",
-        "whiteboardLimitTitle": "Sử dụng bảng trắng"
+        "whiteboardLimitTitle": "Sử dụng bảng trắng",
+        "cannotKickOwner": "Bạn không có quyền đuổi chủ phòng cuộc họp ra ngoài.",
+        "speechContinued": "Luồng bóc băng chưa kết thúc. Vui lòng thử lại sau.",
+        "speechFailed": "Dịch vụ STT hiện không khả dụng. Vui lòng thử lại sau.",
+        "tokenExpired": "Mã thông báo đã hết hạn. Vui lòng đăng nhập lại.",
+        "sttEnabled": "STT đã được bật.",
+        "sttDisabled": "STT đã được tắt.",
+        "cannotdemoteOwner": "Bạn không có quyền di chuyển chủ phòng cuộc họp sang phòng chờ."
     },
     "participantsPane": {
         "actions": {

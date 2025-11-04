@@ -48,6 +48,11 @@ interface IProps {
     isHighlighted?: boolean;
 
     /**
+     * Whether or not the participant is currently on stage (in ImmersiveView).
+     */
+    isOnStage?: boolean;
+
+    /**
      * Click handler.
      */
     onClick?: (e?: React.MouseEvent) => void;
@@ -132,6 +137,15 @@ const useStyles = makeStyles()(theme => {
             }
         },
 
+        onStage: {
+            borderLeft: '4px solid #41b6fb',
+            boxShadow: 'inset 0px 0px 8px rgba(65, 182, 251, 0.2)',
+            
+            '&:hover, &:focus-within': {
+                boxShadow: 'inset 0px 0px 8px rgba(65, 182, 251, 0.3), inset 0px -1px 0px rgba(255, 255, 255, 0.15)'
+            }
+        },
+
         detailsContainer: {
             display: 'flex',
             alignItems: 'center',
@@ -203,6 +217,7 @@ const ListItem = ({
     hideActions = false,
     indicators,
     isHighlighted,
+    isOnStage,
     onClick,
     onLongPress,
     onMouseLeave,
@@ -254,6 +269,7 @@ const ListItem = ({
             className = { cx('list-item-container',
                 classes.container,
                 isHighlighted && classes.highlighted,
+                isOnStage && classes.onStage,
                 className
             ) }
             data-testid = { testId }
