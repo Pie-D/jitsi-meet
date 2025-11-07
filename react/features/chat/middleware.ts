@@ -684,7 +684,7 @@ function _persistSentPrivateMessage({ dispatch, getState }: IStore, recipient: I
         message: string, isLobbyPrivateMessage = false) {
     const state = getState();
     const localParticipant = getLocalParticipant(state);
-    console.log('Local participant:', localParticipant?.id);
+    // console.log('Local participant:', localParticipant?.id);
     if (!localParticipant?.id) {
         console.warn('Unable to persist sent private message, no local participant id found!');
         return;

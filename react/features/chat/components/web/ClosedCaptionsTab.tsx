@@ -90,7 +90,7 @@ export default function ClosedCaptionsTab() {
     const subtitlesError = useSelector((state: IReduxState) => state['features/subtitles']._hasError);
 
     const filteredSubtitles = useMemo(() => {
-        console.log('=== ClosedCaptionsTab filteredSubtitles ===', { subtitles, selectedLanguage });
+        // console.log('=== ClosedCaptionsTab filteredSubtitles ===', { subtitles, selectedLanguage });
         
         // Lọc và loại bỏ duplicate phụ đề dựa trên id và timestamp
         // Chỉ giữ lại phụ đề transcription (không phải translation)

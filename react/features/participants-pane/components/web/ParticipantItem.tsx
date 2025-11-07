@@ -179,7 +179,6 @@ function ParticipantItem({
             participantId = { participantID }
             size = { 32 } />
     );
-
     const text = (
         <>
             <div className = { classes.nameContainer }>
