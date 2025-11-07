@@ -105,7 +105,7 @@ function _mapStateToProps(state: IReduxState) {
     return {
         _toggled: state['features/saveSpeechToText'].isOpen,
         _conference: state['features/base/conference'].conference,
-        visible: isOwner
+        visible: false
     };
 }
 
