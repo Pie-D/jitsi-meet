@@ -65,6 +65,10 @@ export const Utils = {
     },
 
     decodeToken(token) {
+        if (!token || typeof token !== 'string') {
+            throw new Error('Invalid JWT token format');
+        }
+
         const parts = token.split('.');
 
         if (parts.length !== 3) {
