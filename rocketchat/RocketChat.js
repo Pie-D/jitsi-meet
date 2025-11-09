@@ -30,33 +30,35 @@ export class RocketChat {
 
     async loginToRocketChat(token) {
         try {
-            const decodedToken = Utils.decodeToken(token);
-            const cmeetToken = decodedToken?.context?.token;
+            if (token) {
+                const decodedToken = Utils.decodeToken(token);
+                const cmeetToken = decodedToken?.context?.token;
 
-            if (cmeetToken) {
-                const url = this.config.endpoints.login;
-                const data = await Utils.makeRequest('POST', url, {
-                    serviceName: 'keycloak',
-                    accessToken: cmeetToken,
-                    expiresIn: 24 * 60 * 60
-                });
+                if (cmeetToken) {
+                    const url = this.config.endpoints.login;
+                    const data = await Utils.makeRequest('POST', url, {
+                        serviceName: 'keycloak',
+                        accessToken: cmeetToken,
+                        expiresIn: 24 * 60 * 60
+                    });
 
-                if (!data || !data.data || !data.data.userId || !data.data.authToken) {
-                    logger.warn('Invalid response from Rocket.Chat login', data);
+                    if (!data || !data.data || !data.data.userId || !data.data.authToken) {
+                        logger.warn('Invalid response from Rocket.Chat login', data);
 
-                    return false;
+                        return false;
+                    }
+
+                    this.rocketChatUserId = data.data.userId;
+                    this.rocketChatAuthToken = data.data.authToken;
+                    this.rocketChatType = ROCKET_CHAT_USER_TYPES.USER;
+                    this.userContext = {
+                        username: decodedToken?.context?.user?.name
+                    };
+
+                    logger.log('Rocket.Chat login successful as user');
+
+                    return true;
                 }
-
-                this.rocketChatUserId = data.data.userId;
-                this.rocketChatAuthToken = data.data.authToken;
-                this.rocketChatType = ROCKET_CHAT_USER_TYPES.USER;
-                this.userContext = {
-                    username: decodedToken?.context?.user?.name
-                };
-
-                logger.log('Rocket.Chat login successful as user');
-
-                return true;
             }
 
             this.rocketChatUserId = this.config.botUserId;

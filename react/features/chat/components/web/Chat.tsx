@@ -380,13 +380,6 @@ const Chat = ({
     const onSendMessage = useCallback(async (text: string) => {
         // Always send to Jitsi chat first
         dispatch(sendMessage(text));
-
-        // Try to send to RocketChat as well
-        try {
-            await sendMessageToRocketChat(text);
-        } catch (error) {
-            console.warn('Failed to send message to Rocket.Chat:', error);
-        }
     }, [ dispatch ]);
 
     const handleMessage = useCallback((data: any) => {
