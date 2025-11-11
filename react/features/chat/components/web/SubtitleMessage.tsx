@@ -6,7 +6,7 @@ import { makeStyles } from 'tss-react/mui';
 import { IReduxState } from '../../../app/types';
 import { getParticipantDisplayName } from '../../../base/participants/functions';
 import { ISubtitle } from '../../../subtitles/types';
-
+import i18next from 'i18next';
 /**
  * Props for the SubtitleMessage component.
  */
@@ -209,7 +209,7 @@ export default function SubtitleMessage({ participantId, text, timestamp, interi
                         <button
                             className = { classes.translateButton }
                             onClick = { () => setShowTranslation(!showTranslation) }>
-                            {showTranslation ? 'Ẩn dịch' : 'Dịch'}
+                            {showTranslation ? i18next.t('transcribing.hideSubtitles') : i18next.t('transcribing.translation')}
                         </button>
                     )}
                 </div>

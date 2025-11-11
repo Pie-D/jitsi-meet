@@ -7,7 +7,7 @@ import { IReduxState } from '../../../app/types';
 import Select from '../../../base/ui/components/web/Select';
 import { setRequestingSubtitles } from '../../actions.any';
 import { getAvailableSubtitlesLanguages } from '../../functions.any';
-
+import i18next from 'i18next';
 /**
  * The styles for the LanguageSelector component.
  *
@@ -129,7 +129,7 @@ function LanguageSelector({ isBilingualMode = false, onBilingualToggle }: IProps
             <button
                 className = { `${classes.bilingualButton} ${isBilingualMode ? 'active' : ''}` }
                 onClick = { handleBilingualToggle }>
-                Song ngữ
+                {t('transcribing.bilingual')}
             </button>
         </div>
     );
