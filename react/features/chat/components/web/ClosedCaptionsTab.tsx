@@ -88,6 +88,7 @@ export default function ClosedCaptionsTab() {
     const _canStartSubtitles = useSelector(canStartSubtitles);
     const [ isButtonPressed, setButtonPressed ] = useState(false);
     const subtitlesError = useSelector((state: IReduxState) => state['features/subtitles']._hasError);
+    const [ isBilingualMode, setIsBilingualMode ] = useState(false);
 
     const filteredSubtitles = useMemo(() => {
         // console.log('=== ClosedCaptionsTab filteredSubtitles ===', { subtitles, selectedLanguage });
@@ -184,11 +185,14 @@ export default function ClosedCaptionsTab() {
 
     return (
         <div className = { classes.container }>
-            <LanguageSelector />
+            <LanguageSelector
+                isBilingualMode = { isBilingualMode }
+                onBilingualToggle = { setIsBilingualMode } />
             <div className = { classes.messagesContainer }>
                 <SubtitlesMessagesContainer
                     groups = { groupedSubtitles }
-                    messages = { filteredSubtitles } />
+                    messages = { filteredSubtitles }
+                    isBilingualMode = { isBilingualMode } />
             </div>
         </div>
     );

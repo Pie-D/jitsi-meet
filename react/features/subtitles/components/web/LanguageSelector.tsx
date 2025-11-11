@@ -30,9 +30,33 @@ const useStyles = makeStyles()(theme => {
             ...theme.typography.bodyShortRegular,
             color: theme.palette.text01,
             whiteSpace: 'nowrap'
+        },
+        bilingualButton: {
+            ...theme.typography.bodyShortRegular,
+            color: theme.palette.text01,
+            backgroundColor: 'transparent',
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: '4px',
+            padding: '6px 12px',
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+            transition: 'background-color 0.2s',
+            '&:hover': {
+                backgroundColor: theme.palette.ui03
+            },
+            '&.active': {
+                backgroundColor: theme.palette.action01,
+                color: theme.palette.text01,
+                borderColor: theme.palette.action01
+            }
         }
     };
 });
+
+interface IProps {
+    isBilingualMode?: boolean;
+    onBilingualToggle?: (enabled: boolean) => void;
+}
 
 /**
  * Component that renders a language selection dropdown.
@@ -42,7 +66,7 @@ const useStyles = makeStyles()(theme => {
  * @param {IProps} props - The component props.
  * @returns {JSX.Element} - The rendered component.
  */
-function LanguageSelector() {
+function LanguageSelector({ isBilingualMode = false, onBilingualToggle }: IProps = {}) {
     const { t } = useTranslation();
     const { classes } = useStyles();
     const dispatch = useDispatch();
@@ -85,6 +109,12 @@ function LanguageSelector() {
         }
     }, [ dispatch ]);
 
+    const handleBilingualToggle = useCallback(() => {
+        if (onBilingualToggle) {
+            onBilingualToggle(!isBilingualMode);
+        }
+    }, [ isBilingualMode, onBilingualToggle ]);
+
     return (
         <div className = { classes.container }>
             <span className = { classes.label }>
@@ -96,6 +126,11 @@ function LanguageSelector() {
                 onChange = { onLanguageChange }
                 options = { languages }
                 value = { selectedLanguage || 'transcribing.original' } />
+            <button
+                className = { `${classes.bilingualButton} ${isBilingualMode ? 'active' : ''}` }
+                onClick = { handleBilingualToggle }>
+                Song ngữ
+            </button>
         </div>
     );
 }

@@ -47,6 +47,11 @@ interface IProps extends IAbstractCaptionsProps {
     showSubtitlesOnStage?: boolean;
 
     /**
+     * The selected language for subtitles.
+     */
+    _language?: string | null;
+
+    /**
      * An object containing the CSS classes.
      */
     classes?: Partial<Record<keyof ReturnType<typeof styles>, string>>;
@@ -242,12 +247,53 @@ const styles = (theme: Theme, props: IProps) => {
 //         </div>
 //     );
 // };
+/**
+ * Parses text that might be JSON with vi/en structure
+ * @param {string} text - The text to parse
+ * @returns {Object} - Object with vi and en properties, or null if not JSON
+ */
+function parseMessageText(text: string): { vi?: string; en?: string } | null {
+    try {
+        const parsed = JSON.parse(text);
+        if (typeof parsed === 'object' && parsed !== null && ('vi' in parsed || 'en' in parsed)) {
+            return parsed;
+        }
+    } catch (e) {
+        // Not JSON, return null
+    }
+    return null;
+}
+
+/**
+ * Gets the display text based on selected language
+ * @param {string} text - The original text (might be JSON)
+ * @param {string | null} selectedLanguage - The selected language code (e.g., 'en', 'vi', or null for original)
+ * @returns {string} - The text to display
+ */
+function getDisplayText(text: string, selectedLanguage: string | null): string {
+    const parsedText = parseMessageText(text);
+    
+    if (parsedText === null) {
+        // Not JSON, return as is
+        return text;
+    }
+    
+    // If language is 'en' or starts with 'translation-languages:en', show English
+    if (selectedLanguage === 'en' || selectedLanguage === 'translation-languages:en' || 
+        (selectedLanguage && selectedLanguage.replace('translation-languages:', '') === 'en')) {
+        return parsedText.en || parsedText.vi || text;
+    }
+    
+    // Otherwise show Vietnamese (default)
+    return parsedText.vi || parsedText.en || text;
+}
+
 const Captions = (props: IProps) => {
     // console.log('=== Captions component rendered ===');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const { classes = {} } = props;  // Dùng trực tiếp prop classes từ props
 
-    const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory, showSubtitlesOnStage } = props;
+    const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory, showSubtitlesOnStage, _language } = props;
 
     // Tự động cuộn xuống dưới khi có phụ đề mới (chỉ cho ccTab)
     useEffect(() => {
@@ -266,7 +312,8 @@ const Captions = (props: IProps) => {
         _subtitlesHistoryLength: _subtitlesHistory?.length,
         _transcripts: _transcripts,
         _transcriptsSize: _transcripts?.size,
-        showSubtitlesOnStage: showSubtitlesOnStage
+        showSubtitlesOnStage: showSubtitlesOnStage,
+        _language: _language
     });
 
     // Chỉ sử dụng subtitlesHistory để hiển thị tuần tự như chat
@@ -287,7 +334,9 @@ const Captions = (props: IProps) => {
             .sort((a, b) => b.timestamp - a.timestamp)[0];
         
         if (latestSubtitle) {
-            const text = `${latestSubtitle.participantName ? latestSubtitle.participantName : "CMC ATIer"}: ${latestSubtitle.text}`;
+            // Get display text based on selected language
+            const displayText = getDisplayText(latestSubtitle.text, _language ?? null);
+            const text = `${latestSubtitle.participantName ? latestSubtitle.participantName : "CMC ATIer"}: ${displayText}`;
             paragraphs.push(_renderParagraph(latestSubtitle.id, text, classes));
         }
     } else {
@@ -374,6 +423,7 @@ function _renderParagraph(id: string, text: string, classes: any): ReactElement 
 function mapStateToProps(state: IReduxState) {
     const { clientHeight } = state['features/base/responsive-ui'];
     const { showSubtitlesOnStage = true } = state['features/base/settings'];
+    const { _language } = state['features/subtitles'];
 
     return {
         ..._abstractMapStateToProps(state),
@@ -381,7 +431,8 @@ function mapStateToProps(state: IReduxState) {
         _clientHeight: clientHeight,
         _shiftUp: state['features/toolbox'].shiftUp,
         _toolboxVisible: isToolboxVisible(state),
-        showSubtitlesOnStage
+        showSubtitlesOnStage,
+        _language
     };
 }
 

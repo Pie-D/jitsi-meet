@@ -13,6 +13,7 @@ interface IProps {
         senderId: string;
     }>;
     messages: ISubtitle[];
+    isBilingualMode?: boolean;
 }
 
 /**
@@ -46,7 +47,7 @@ const useStyles = makeStyles()(() => {
  *
  * @returns {JSX.Element} - A React component displaying subtitles messages with scroll functionality.
  */
-export function SubtitlesMessagesContainer({ messages, groups }: IProps) {
+export function SubtitlesMessagesContainer({ messages, groups, isBilingualMode = false }: IProps) {
     const { classes } = useStyles();
     const [ hasNewMessages, setHasNewMessages ] = useState(false);
     const [ isScrolledToBottom, setIsScrolledToBottom ] = useState(true);
@@ -139,7 +140,8 @@ export function SubtitlesMessagesContainer({ messages, groups }: IProps) {
                     <SubtitlesGroup
                         key = { `${group.senderId}-${group.messages[0].timestamp}` }
                         messages = { group.messages }
-                        senderId = { group.senderId } />
+                        senderId = { group.senderId }
+                        isBilingualMode = { isBilingualMode } />
                 ))}
                 { !isScrolledToBottom && hasNewMessages && (
                     <NewMessagesButton
