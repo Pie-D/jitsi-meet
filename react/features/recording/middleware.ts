@@ -32,6 +32,9 @@ import { TRACK_ADDED } from '../base/tracks/actionTypes';
 import { hideNotification, showErrorNotification, showNotification } from '../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE } from '../notifications/constants';
 import { isRecorderTranscriptionsRunning } from '../transcribing/functions';
+import { getWhipLink } from '../base/util/cMeetUtils';
+import { startGstStream, stopGstStream } from '../base/util/gstStreamUtils';
+import { isGstStreamConnected } from '../base/util/gstStreamUtils';
 
 import { RECORDING_SESSION_UPDATED, START_LOCAL_RECORDING, STOP_LOCAL_RECORDING } from './actionTypes';
 import {
@@ -264,6 +267,11 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
                     dispatch(playSound(soundID));
                 }
 
+                // Tự động bật speech to text khi recording to server bắt đầu
+                if (mode === JitsiRecordingConstants.mode.FILE) {
+                    _autoStartSpeechToText(state, dispatch);
+                }
+
                 if (typeof APP !== 'undefined') {
                     APP.API.notifyRecordingStatusChanged(
                         true, mode, undefined, isRecorderTranscriptionsRunning(state));
@@ -295,6 +303,11 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
             if (soundOff && soundOn) {
                 dispatch(stopSound(soundOn));
                 dispatch(playSound(soundOff));
+            }
+
+            // Tự động tắt speech to text khi recording to server dừng
+            if (mode === JitsiRecordingConstants.mode.FILE) {
+                _autoStopSpeechToText(state);
             }
 
             if (typeof APP !== 'undefined') {
@@ -429,4 +442,99 @@ function _showExplicitConsentDialog(recorderSession: any, dispatch: IStore['disp
         dispatch(setVideoMuted(true));
         dispatch(openDialog(RecordingConsentDialog));
     });
+}
+
+/**
+ * Tự động bật speech to text khi recording to server bắt đầu.
+ *
+ * @private
+ * @param {IReduxState} state - The Redux state.
+ * @param {Function} dispatch - The Redux dispatch function.
+ * @returns {void}
+ */
+async function _autoStartSpeechToText(state: any, dispatch: IStore['dispatch']) {
+    try {
+        // Kiểm tra xem speech to text đã được bật chưa
+        if (isGstStreamConnected(state)) {
+            console.log('Speech to text already running, skipping auto-start');
+            return;
+        }
+
+        const conference = getCurrentConference(state);
+        console.log("Conference for auto-start speech to text :", conference);
+        if (!conference) {
+            console.log('Cannot auto-start speech to text: conference not found');
+            return;
+        }
+
+        const token = conference.connection?.token;
+        const roomJid = conference.room?.roomjid?.split('@')[0];
+
+        if (!token || !roomJid) {
+            console.log('Cannot auto-start speech to text: missing token or roomJid');
+            return;
+        }
+
+        // Decode JWT token để lấy context token
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            console.log('Cannot auto-start speech to text: invalid token format');
+            return;
+        }
+
+        const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        const contextToken = decoded?.context?.token || null;
+
+        // Lấy WHIP link
+        const whipLink = await getWhipLink(contextToken, roomJid);
+        if (!whipLink) {
+            console.log('Cannot auto-start speech to text: failed to get WHIP link');
+            return;
+        }
+
+        // Start GST stream
+        const isStart = await startGstStream(roomJid, whipLink);
+        if (isStart) {
+            console.log('Auto-started speech to text for recording');
+        } else {
+            console.warn('Failed to auto-start speech to text for recording');
+        }
+    } catch (error) {
+        console.error('Error auto-starting speech to text:', error);
+    }
+}
+
+/**
+ * Tự động tắt speech to text khi recording to server dừng.
+ *
+ * @private
+ * @param {IReduxState} state - The Redux state.
+ * @returns {void}
+ */
+async function _autoStopSpeechToText(state: any) {
+    try {
+        // Kiểm tra xem speech to text có đang chạy không
+        // if (!isGstStreamConnected(state)) {
+        //     console.log('Speech to text not running, skipping auto-stop');
+        //     return;
+        // }
+
+        const conference = getCurrentConference(state);
+        if (!conference) {
+            console.log('Cannot auto-stop speech to text: conference not found');
+            return;
+        }
+
+        const roomJid = conference.room?.roomjid?.split('@')[0];
+        if (!roomJid) {
+            console.log('Cannot auto-stop speech to text: missing roomJid');
+            return;
+        }
+
+        // Stop GST stream
+        await stopGstStream(roomJid);
+        console.log('Auto-stopped speech to text for recording');
+    } catch (error) {
+        console.error('Error auto-stopping speech to text:', error);
+    }
 }

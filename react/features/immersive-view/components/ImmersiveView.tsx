@@ -367,13 +367,13 @@ export default function ImmersiveView() {
             return;
         }
 
-        console.log('🔍 [ImmersiveView] Current immersive state:', {
-            enabled: immersive?.enabled,
-            templateId: immersive?.templateId,
-            slotCount: immersive?.slotCount,
-            assignments: immersive?.assignments,
-            isOwner
-        });
+        // console.log('🔍 [ImmersiveView] Current immersive state:', {
+        //     enabled: immersive?.enabled,
+        //     templateId: immersive?.templateId,
+        //     slotCount: immersive?.slotCount,
+        //     assignments: immersive?.assignments,
+        //     isOwner
+        // });
 
         const current: { [slotIndex: number]: string } = { ...(immersive?.assignments || {}) };
         let changed = false;

@@ -331,8 +331,10 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
     const isOnStage = Boolean(Object.values(immersive?.assignments || {}).includes(participant?.id ?? ''));
 
     const roomOwnerId = state['features/base/conference']?.conference?.room?.roomOwner;
-    const _isOwner = Boolean(participant) && (isOwnerParticipant(participant) || isRoomOwner(participant, roomOwnerId));
-
+    const _isOwner = isRoomOwner(participant, roomOwnerId);
+    // if(participant?.local){
+    //     console.log("Participant ID :", participantID, " Owner ID : ", roomOwnerId, " isOwner : ", _isOwner);
+    // }
     return {
         _audioMediaState,
         _audioTrack,

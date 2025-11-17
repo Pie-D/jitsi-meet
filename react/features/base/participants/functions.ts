@@ -1,6 +1,6 @@
 // @ts-expect-error
 import { getGravatarURL } from '@jitsi/js-utils/avatar';
-
+import {env} from "../../../../ENV";
 import { IReduxState, IStore } from '../../app/types';
 import { isVisitorChatParticipant } from '../../chat/functions';
 import { isStageFilmstripAvailable } from '../../filmstrip/functions';
@@ -689,11 +689,28 @@ export function isOwnerParticipant(participant?: IParticipant) {
 
     return Boolean(value);
 }
+// export function roomExistsOwner(participant?: IParticipant){
+//     const features = participant?.features as any;
 
-export function isRoomOwner(participant?: IParticipant, roomOwner?: string) {
-    return Boolean(participant) && (
-        participant!.id === roomOwner || isOwnerParticipant(participant!)
-    );
+//     if (!features) {
+//         return false;
+//     }
+
+//     const value = features.isRoomExists;
+
+//     if (typeof value === 'string') {
+//         return value.toLowerCase() === 'true';
+//     }
+
+//     return Boolean(value);
+// }
+
+export function isRoomOwner(participant?: IParticipant, roomOwner?: string) : boolean {
+    // console.log("Participants :", participant);
+    // return Boolean(participant) && (
+    //     (participant!.id === roomOwner && !roomExistsOwner(participant!)) || isOwnerParticipant(participant!)
+    // );
+    return Boolean(participant) && (participant!.id === roomOwner);
 }
 /**
  * Returns the dominant speaker participant.

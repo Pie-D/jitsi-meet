@@ -356,6 +356,13 @@ const Chat = ({
         };
     }, [ onDragMouseUp, onChatResize ]);
 
+    // Tự động chuyển về tab CHAT khi CCTab bị disable và đang ở tab CLOSED_CAPTIONS
+    useEffect(() => {
+        if (!_isCCTabEnabled && _focusedTab === ChatTabs.CLOSED_CAPTIONS) {
+            dispatch(setFocusedTab(ChatTabs.CHAT));
+        }
+    }, [ _isCCTabEnabled, _focusedTab, dispatch ]);
+
     // Load RocketChat messages when component mounts
     useEffect(() => {
         const loadInitialMessages = async () => {

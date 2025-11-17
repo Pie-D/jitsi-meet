@@ -16,8 +16,7 @@ let immersiveViewListenerRegistered = false;
 function isSenderOwner(state: any, participantId: string) {
     const participant = getParticipantByIdOrUndefined(state, participantId);
     const roomOwnerId = state['features/base/conference']?.conference?.room?.roomOwner;
-
-    return Boolean(participant) && (isOwnerParticipant(participant) || isRoomOwner(participant, roomOwnerId));
+    return isRoomOwner(participant, roomOwnerId);
 }
 
 /**

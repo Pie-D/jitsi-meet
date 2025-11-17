@@ -5,6 +5,7 @@ import {
     REMOVE_CACHED_TRANSCRIPT_MESSAGE,
     REMOVE_TRANSCRIPT_MESSAGE,
     SET_REQUESTING_SUBTITLES,
+    SET_STAGE_BILINGUAL_MODE,
     SET_SUBTITLES_ERROR,
     STORE_SUBTITLE,
     TOGGLE_REQUESTING_SUBTITLES,
@@ -21,6 +22,7 @@ const defaultState = {
     _transcriptMessages: new Map(),
     _requestingSubtitles: false,
     _language: null,
+    _isStageBilingualMode: false,
     messages: [],
     subtitlesHistory: [],
     _hasError: false
@@ -30,6 +32,7 @@ export interface ISubtitlesState {
     _cachedTranscriptMessages: Map<string, ITranscriptMessage>;
     _displaySubtitles: boolean;
     _hasError: boolean;
+    _isStageBilingualMode: boolean;
     _language: string | null;
     _requestingSubtitles: boolean;
     _transcriptMessages: Map<string, ITranscriptMessage>;
@@ -57,6 +60,11 @@ ReducerRegistry.register<ISubtitlesState>('features/subtitles', (
             _language: action.language,
             _requestingSubtitles: action.enabled,
             _hasError: false
+        };
+    case SET_STAGE_BILINGUAL_MODE:
+        return {
+            ...state,
+            _isStageBilingualMode: action.enabled
         };
     case TOGGLE_REQUESTING_SUBTITLES:
         return {

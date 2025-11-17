@@ -1526,7 +1526,10 @@
         "subtitlesOff": "Tắt",
         "failed": "Tính năng đang bảo trì",
         "tr": "TR",
-        "translateTo": "Dịch sang"
+        "translateTo": "Dịch sang",
+        "bilingual": "Song ngữ",
+        "translation": "Dịch",
+        "hideSubtitles": "Ẩn"
     },
     "unpinParticipant": "{{participantName}} - Bỏ ghim",
     "userMedia": {
