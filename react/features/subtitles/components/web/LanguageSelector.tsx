@@ -24,7 +24,7 @@ const useStyles = makeStyles()(theme => {
         },
         select: {
             flex: 1,
-            minWidth: 200
+            minWidth: 100
         },
         label: {
             ...theme.typography.bodyShortRegular,
