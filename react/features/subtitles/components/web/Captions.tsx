@@ -52,6 +52,11 @@ interface IProps extends IAbstractCaptionsProps {
     _language?: string | null;
 
     /**
+     * Whether bilingual mode is enabled for stage subtitles.
+     */
+    _isStageBilingualMode?: boolean;
+
+    /**
      * An object containing the CSS classes.
      */
     classes?: Partial<Record<keyof ReturnType<typeof styles>, string>>;
@@ -171,6 +176,25 @@ const styles = (theme: Theme, props: IProps) => {
             fontStyle: 'italic', 
             color: '#ccc', // Màu chữ nhẹ hơn để phân biệt
             fontWeight: 'bold' as const
+        },
+        bilingualContainer: {
+            display: 'flex',
+            flexDirection: 'column' as const,
+            gap: '4px',
+            marginTop: '4px'
+        },
+        bilingualLine: {
+            display: 'grid',
+            gridTemplateColumns: 'auto auto 1fr',
+            columnGap: '6px',
+            alignItems: 'baseline'
+        },
+        bilingualTag: {
+            fontWeight: 'bold' as const,
+            textTransform: 'uppercase' as const
+        },
+        bilingualSpeakerPlaceholder: {
+            visibility: 'hidden' as const
         }
     };
 };
@@ -264,6 +288,37 @@ function parseMessageText(text: string): { vi?: string; en?: string } | null {
     return null;
 }
 
+interface IBilingualLine {
+    label: string;
+    text: string;
+}
+
+function getBilingualLines(text: string): IBilingualLine[] {
+    const parsedText = parseMessageText(text);
+
+    if (parsedText === null) {
+        return [];
+    }
+
+    const lines: IBilingualLine[] = [];
+
+    if (parsedText.vi) {
+        lines.push({
+            label: 'vi',
+            text: parsedText.vi
+        });
+    }
+
+    if (parsedText.en) {
+        lines.push({
+            label: 'en',
+            text: parsedText.en
+        });
+    }
+
+    return lines;
+}
+
 /**
  * Gets the display text based on selected language
  * @param {string} text - The original text (might be JSON)
@@ -293,7 +348,15 @@ const Captions = (props: IProps) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const { classes = {} } = props;  // Dùng trực tiếp prop classes từ props
 
-    const { _displaySubtitles, _requestingSubtitles, _transcripts, _subtitlesHistory, showSubtitlesOnStage, _language } = props;
+    const {
+        _displaySubtitles,
+        _requestingSubtitles,
+        _transcripts,
+        _subtitlesHistory,
+        showSubtitlesOnStage,
+        _language,
+        _isStageBilingualMode
+    } = props;
 
     // Tự động cuộn xuống dưới khi có phụ đề mới (chỉ cho ccTab)
     useEffect(() => {
@@ -328,16 +391,69 @@ const Captions = (props: IProps) => {
     const paragraphs: ReactElement[] = [];
 
     if (showSubtitlesOnStage) {
+        
         // Chế độ showSubtitlesOnStage: chỉ hiển thị phụ đề mới nhất
         const latestSubtitle = dataToRender
             .filter(s => s.isTranscription)
             .sort((a, b) => b.timestamp - a.timestamp)[0];
         
         if (latestSubtitle) {
-            // Get display text based on selected language
-            const displayText = getDisplayText(latestSubtitle.text, _language ?? null);
-            const text = `${latestSubtitle.participantName ? latestSubtitle.participantName : "CMC ATIer"}: ${displayText}`;
-            paragraphs.push(_renderParagraph(latestSubtitle.id, text, classes));
+            // Hàm kiểm tra xem có phải là email không
+        const isEmail = (str: string): boolean => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(str);
+
+        // Hàm xử lý tên để rút gọn
+        const abbreviateName = (name: string): string => {
+            // Chia tên thành các phần
+            const nameParts = name.trim().split(' ');
+
+            // Nếu tên có hơn 1 phần (họ + tên), lấy chữ cái đầu của mỗi phần
+           const initials = nameParts
+                        .slice(0, -1)
+                        .map((word: string) => word[0].toUpperCase())
+                        .join("");
+                    const lastName = nameParts[nameParts.length - 1][0].toUpperCase() + nameParts[nameParts.length - 1].slice(1);
+                    const shortName = `${initials}.${lastName}`;
+
+            // Ghép các chữ cái đầu và tên đầy đủ lại thành tên viết tắt
+            return shortName;
+        };
+
+        // Kiểm tra participantName và xử lý phù hợp
+        let participantNameT = latestSubtitle.participantName ? latestSubtitle.participantName : 'CMC ATIer';
+
+        if (isEmail(participantNameT)) {
+            // Nếu là email, lấy phần trước dấu '@'
+            participantNameT = participantNameT.split('@')[0];
+        } else {
+            // Nếu không phải email, rút gọn tên
+            participantNameT = abbreviateName(participantNameT);
+        }
+            if (_isStageBilingualMode) {
+                const lines = getBilingualLines(latestSubtitle.text);
+
+                if (lines.length > 0) {
+                    paragraphs.push(
+                        _renderBilingualParagraph(
+                            latestSubtitle.id,
+                            latestSubtitle.participantName ? participantNameT : 'CMC ATIer',
+                            lines,
+                            classes
+                        )
+                    );
+                } else {
+                    const fallbackText = getDisplayText(latestSubtitle.text, _language ?? null);
+                    const text = `${latestSubtitle.participantName ? participantNameT : "CMC ATIer"}: ${fallbackText}`;
+                    paragraphs.push(_renderParagraph(latestSubtitle.id, text, classes));
+                }
+            } else {
+                // Get display text based on selected language
+                const displayText = getDisplayText(
+                    latestSubtitle.text,
+                    _language ?? null
+                );
+                const text = `${latestSubtitle.participantName ? participantNameT : "CMC ATIer"}: ${displayText}`;
+                paragraphs.push(_renderParagraph(latestSubtitle.id, text, classes));
+            }
         }
     } else {
         // Chế độ ccTab: hiển thị tất cả phụ đề tuần tự
@@ -394,6 +510,12 @@ function _renderParagraph(id: string, text: string, classes: any): ReactElement 
         color: '#ccc',
         fontWeight: 'bold' as const
     };
+    const speakerPlaceholderStyles = {
+        visibility: 'hidden' as const,
+        fontStyle: 'italic',
+        color: '#ccc',
+        fontWeight: 'bold' as const
+    };
 
     return (
         <div 
@@ -412,6 +534,100 @@ function _renderParagraph(id: string, text: string, classes: any): ReactElement 
     );
 }
 
+function _renderBilingualParagraph(
+        id: string,
+        speaker: string,
+        lines: IBilingualLine[],
+        classes: any): ReactElement {
+    const fallbackStyles = {
+        background: 'rgba(0, 0, 0, 0.8)',
+        borderRadius: '4px',
+        padding: '8px',
+        marginBottom: '2px',
+        color: '#fff',
+        lineHeight: 1.2,
+        overflowWrap: 'break-word' as const,
+        textShadow: '0px 0px 1px rgba(0,0,0,0.3), 0px 1px 1px rgba(0,0,0,0.3), 1px 0px 1px rgba(0,0,0,0.3)'
+    };
+    const speakerStyles = {
+        fontStyle: 'italic',
+        color: '#ccc',
+        fontWeight: 'bold' as const
+    };
+    const speakerPlaceholderStyles = {
+        visibility: 'hidden' as const,
+        fontStyle: 'italic',
+        color: '#ccc',
+        fontWeight: 'bold' as const
+    };
+    const bilingualContainerStyles = {
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '4px',
+        marginTop: '4px'
+    };
+    const bilingualLineStyles = {
+        display: 'flex',
+        gap: '6px',
+        alignItems: 'baseline'
+    };
+    const bilingualTagStyles = {
+        fontWeight: 'bold' as const,
+        textTransform: 'uppercase' as const
+    };
+
+    const [ firstLine, ...remainingLines ] = lines;
+
+    return (
+        <div
+            key = { id }
+            className = { classes?.subtitleMessage || '' }
+            style = { !classes?.subtitleMessage ? fallbackStyles : undefined }>
+            {firstLine && (
+                <div
+                    className = { classes?.bilingualLine || '' }
+                    style = { !classes?.bilingualLine ? bilingualLineStyles : undefined }>
+                    <span
+                        className = { classes?.speakerName || '' }
+                        style = { !classes?.speakerName ? speakerStyles : undefined }>
+                        { speaker }:
+                    </span>
+                    <span
+                        className = { classes?.bilingualTag || '' }
+                        style = { !classes?.bilingualTag ? bilingualTagStyles : undefined }>
+                        [{ firstLine.label }]
+                    </span>
+                    <span>{ firstLine.text }</span>
+                </div>
+            )}
+            {remainingLines.length > 0 && (
+                <div
+                    className = { classes?.bilingualContainer || '' }
+                    style = { !classes?.bilingualContainer ? bilingualContainerStyles : undefined }>
+                    {remainingLines.map(line => (
+                        <div
+                            key = { `${id}-${line.label}` }
+                            className = { classes?.bilingualLine || '' }
+                            style = { !classes?.bilingualLine ? bilingualLineStyles : undefined }>
+                    <span
+                        className = { classes?.bilingualSpeakerPlaceholder || '' }
+                        style = { !classes?.bilingualSpeakerPlaceholder ? speakerPlaceholderStyles : undefined }>
+                        { speaker }:
+                    </span>
+                    <span
+                        className = { classes?.bilingualTag || '' }
+                        style = { !classes?.bilingualTag ? bilingualTagStyles : undefined }>
+                        [{ line.label }]
+                    </span>
+                            <span>{ line.text }</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 /**
  * Maps (parts of) the redux state to the associated {@code }'s
  * props.
@@ -423,7 +639,7 @@ function _renderParagraph(id: string, text: string, classes: any): ReactElement 
 function mapStateToProps(state: IReduxState) {
     const { clientHeight } = state['features/base/responsive-ui'];
     const { showSubtitlesOnStage = true } = state['features/base/settings'];
-    const { _language } = state['features/subtitles'];
+    const { _language, _isStageBilingualMode } = state['features/subtitles'];
 
     return {
         ..._abstractMapStateToProps(state),
@@ -432,7 +648,8 @@ function mapStateToProps(state: IReduxState) {
         _shiftUp: state['features/toolbox'].shiftUp,
         _toolboxVisible: isToolboxVisible(state),
         showSubtitlesOnStage,
-        _language
+        _language,
+        _isStageBilingualMode
     };
 }
 

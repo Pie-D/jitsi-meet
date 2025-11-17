@@ -4,6 +4,7 @@ import {
     REMOVE_CACHED_TRANSCRIPT_MESSAGE,
     REMOVE_TRANSCRIPT_MESSAGE,
     SET_REQUESTING_SUBTITLES,
+    SET_STAGE_BILINGUAL_MODE,
     SET_SUBTITLES_ERROR,
     STORE_SUBTITLE,
     TOGGLE_REQUESTING_SUBTITLES,
@@ -103,6 +104,22 @@ export function setRequestingSubtitles(
         displaySubtitles,
         enabled,
         language
+    };
+}
+
+/**
+ * Signals that subtitles on stage should show both languages or not.
+ *
+ * @param {boolean} enabled - Whether bilingual mode is enabled.
+ * @returns {{
+ *     type: SET_STAGE_BILINGUAL_MODE,
+ *     enabled: boolean
+ * }}
+ */
+export function setStageBilingualMode(enabled: boolean) {
+    return {
+        type: SET_STAGE_BILINGUAL_MODE,
+        enabled
     };
 }
 
