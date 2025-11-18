@@ -343,7 +343,7 @@ class LargeVideo extends Component<IProps> {
         // If we are in speaker/stage view (non-immersive) and the large video has no
         // playable video (camera off), use the custom background image.
         if (!this.props._immersiveEnabled && !this.props._isLargeVideoPlayable) {
-            styles.backgroundImage = 'linear-gradient(to bottom, transparent 70%, rgba(0,0,0,0.7)), url(images/template-immersive/cmc-ati2.png)';
+            styles.backgroundImage = 'linear-gradient(to bottom, transparent 70%, rgba(0,0,0,0.7)), url(images/template-immersive/botruong-bg.png)';
             styles.backgroundSize = 'cover';
             styles.backgroundRepeat = 'no-repeat';
             styles.backgroundPosition = 'top';
