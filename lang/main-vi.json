@@ -636,7 +636,8 @@
         "title": "Chia sẻ",
         "tooltip": "Chia sẻ liên kết và thông tin quay số của cuộc họp này",
         "upgradeOptions": "Vui lòng kiểm tra các tùy chọn nâng cấp trên",
-        "whiteboardError": "Lỗi tải bảng trắng. Vui lòng thử lại sau."
+        "whiteboardError": "Lỗi tải bảng trắng. Vui lòng thử lại sau.",
+        "subject" : "Cuộc họp"
     },
     "inlineDialogFailure": {
         "msg": "Chúng tôi đã gặp một chút vấn đề.",
@@ -1527,7 +1528,7 @@
         "failed": "Tính năng đang bảo trì",
         "tr": "TR",
         "translateTo": "Dịch sang",
-        "bilingual": "Song ngữ",
+        "bilingual": "VI/EN",
         "translation": "Dịch",
         "hideSubtitles": "Ẩn"
     },

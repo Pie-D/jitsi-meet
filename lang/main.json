@@ -641,7 +641,8 @@
         "title": "Share",
         "tooltip": "Share link and dial-in info for this meeting",
         "upgradeOptions": "Please check the upgrade options on",
-        "whiteboardError": "Error loading the whiteboard. Please try again later."
+        "whiteboardError": "Error loading the whiteboard. Please try again later.",
+        "subject": "Conference"
     },
     "inlineDialogFailure": {
         "msg": "We stumbled a bit.",
@@ -1534,7 +1535,7 @@
         "subtitlesOff": "Off",
         "tr": "TR",
         "translateTo": "Translate to",
-        "bilingual": "Bilingual",
+        "bilingual": "VI/EN",
         "translation": "Translate",
         "hideSubtitles": "Hide"
     },
