@@ -362,10 +362,10 @@ export default function ImmersiveView() {
     // - Initialize on first enable
     // - Remove left participants
     // - Auto-fill empty slots with newly available video tracks
-    useEffect(() => {
-        if (!immersive?.enabled || !tpl) {
-            return;
-        }
+useEffect(() => {
+    if (!immersive?.enabled || !tpl || !isOwner) {
+        return;
+    }
 
         // console.log('🔍 [ImmersiveView] Current immersive state:', {
         //     enabled: immersive?.enabled,
@@ -430,7 +430,7 @@ export default function ImmersiveView() {
         if (changed) {
             dispatch(setImmersiveAssignments(current));
         }
-    }, [dispatch, immersive?.enabled, tpl?.id, participantIds.join(","), tracks, immersive?.assignments, baseSlots.length]);
+    }, [dispatch, immersive?.enabled, tpl?.id, participantIds.join(","), tracks, immersive?.assignments, baseSlots.length, isOwner]);
 
     const handleDragOver = (e: React.DragEvent) => e.preventDefault();
     const handleDragStart = (index: number) => () => {
