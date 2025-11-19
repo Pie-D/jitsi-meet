@@ -28,7 +28,7 @@ export class RocketChat {
         };
 
         document.addEventListener('rocketChatRoomIdUpdated', event => {
-            const newRoomId = event.detail.rocketChatRoomId;
+            const newRoomId = event.detail.roomId;
 
             this.updateRoomId(newRoomId);
         });

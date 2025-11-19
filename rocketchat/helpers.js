@@ -2,6 +2,8 @@
 /* eslint-disable no-empty-function */
 import { addMessage } from '../react/features/chat/actions.any';
 
+import { Utils } from './utils';
+
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const logger = require('./logger').getLogger('RocketChat:Helpers');
 
@@ -33,7 +35,7 @@ export const Helpers = {
                 const message = msg.fields.args[0];
 
                 if (!message.customFields?.fromJitsi && !message.t) {
-                    const newMessage = this.formatMessage(message, localParticipantName);
+                    const newMessage = Utils.formatMessage(message, localParticipantName);
 
                     store.dispatch(addMessage({
                         ...newMessage,

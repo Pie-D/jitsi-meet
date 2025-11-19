@@ -97,6 +97,7 @@ export class WebSocketConnectionManager {
                             const data = JSON.parse(message);
 
                             if (data.rocketChatRoomId) {
+                                logger.log('[C-Meet] RocketChat roomId updated:', data.rocketChatRoomId);
                                 document.dispatchEvent(new CustomEvent('timeSheetEnd', {
                                     detail: { isChatDisabled: false }
                                 }));
