@@ -24,7 +24,8 @@ export class RocketChat {
         this.userContext = {
             username: localParticipant.name,
             userId: localParticipant.id,
-            displayName: localParticipant.name
+            displayName: localParticipant.name,
+            position: null
         };
 
         document.addEventListener('rocketChatRoomIdUpdated', event => {
@@ -57,9 +58,13 @@ export class RocketChat {
                     this.rocketChatUserId = data.data.userId;
                     this.rocketChatAuthToken = data.data.authToken;
                     this.rocketChatType = ROCKET_CHAT_USER_TYPES.USER;
-                    this.userContext = {
-                        username: decodedToken?.context?.user?.name
-                    };
+                    this.userContext.username = decodedToken?.context?.user?.name;
+
+                    try {
+                        await this.getMeetingPosition();
+                    } catch (error) {
+                        logger.error('Failed to fetch meeting position', error);
+                    }
 
                     logger.log('Rocket.Chat login successful as user');
 
@@ -70,6 +75,7 @@ export class RocketChat {
             this.rocketChatUserId = this.config.botUserId;
             this.rocketChatAuthToken = this.config.botToken;
             this.rocketChatType = ROCKET_CHAT_USER_TYPES.BOT;
+            this.userContext.position = 'Thư ký';
 
             logger.log('Rocket.Chat login successful as bot');
 
@@ -80,6 +86,7 @@ export class RocketChat {
             this.rocketChatUserId = this.config.botUserId;
             this.rocketChatAuthToken = this.config.botToken;
             this.rocketChatType = ROCKET_CHAT_USER_TYPES.BOT;
+            this.userContext.position = 'Thư ký';
 
             return false;
         }
@@ -205,9 +212,20 @@ export class RocketChat {
                 return;
             }
 
+            if (!this.userContext?.position) {
+                try {
+                    await this.getMeetingPosition();
+                } catch (error) {
+                    logger.error('Failed to fetch meeting position before sending message', error);
+                }
+            }
+
+            const position = this.userContext?.position || 'Không có chức danh';
+
             const baseBody = {
                 roomId: `#${this.rocketChatRoomId}`,
                 text: message,
+                position,
                 customFields: {
                     participantId: this.localParticipant.id,
                     fromJitsi: true
@@ -230,6 +248,17 @@ export class RocketChat {
             return res.message._id;
         } catch (error) {
             logger.error('Failed to send message to Rocket.Chat:', error);
+        }
+    }
+
+    async getMeetingPosition() {
+        const url = `${this.config.endpoints.getMeetingPosition}/${this.cmeetMeetingId}`;
+        const res = await Utils.makeRequest('GET', url);
+
+        if (res?.data) {
+            this.userContext.position = res.data.position;
+        } else {
+            logger.error('Failed to get meeting position', res);
         }
     }
 
