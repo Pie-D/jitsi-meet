@@ -8,7 +8,6 @@ import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { SEND_MESSAGE } from '../chat/actionTypes';
 import { addMessage } from '../chat/actions.any';
 
-// Wait until the connection token is available (e.g. after CONFERENCE_JOINED settles)
 async function waitForConnectionToken(getState: () => any, maxWaitMs = 10000, intervalMs = 100): Promise<string> {
     const start = Date.now();
 
@@ -39,13 +38,11 @@ MiddlewareRegistry.register(store => next => action => {
         (async () => {
             try {
                 const roomName = getRoomName(store.getState()) || '';
-                // Ensure token is available before init
                 let token = await waitForConnectionToken(store.getState);
 
-                // In some flows the token may still be missing briefly; try one last immediate read
                 if (!token) {
-
                     const conferenceState = store.getState()['features/base/conference'] as IConferenceState;
+
                     token = conferenceState?.conference?.connection?.token || '';
                 }
 

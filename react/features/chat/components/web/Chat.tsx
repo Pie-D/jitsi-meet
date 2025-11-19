@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { connect, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
-import { sendMessageToRocketChat, syncRocketChatMessages } from '../../../../../rocketchat/index';
+import { syncRocketChatMessages } from '../../../../../rocketchat/index';
 import { IReduxState } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
 import { IconInfo, IconMessage, IconShareDoc, IconSubtitles } from '../../../base/icons/svg';

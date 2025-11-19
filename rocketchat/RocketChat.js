@@ -26,6 +26,12 @@ export class RocketChat {
             userId: localParticipant.id,
             displayName: localParticipant.name
         };
+
+        document.addEventListener('rocketChatRoomIdUpdated', event => {
+            const newRoomId = event.detail.rocketChatRoomId;
+
+            this.updateRoomId(newRoomId);
+        });
     }
 
     async loginToRocketChat(token) {
@@ -118,7 +124,7 @@ export class RocketChat {
                 return false;
             }
 
-            const data = await res.json();
+            const data = res;
 
             if (data && data.members && Array.isArray(data.members)) {
                 logger.log('Current username:', this.userContext.username);
@@ -149,8 +155,30 @@ export class RocketChat {
         this.wsManager.connectCMeet(this.cmeetMeetingId);
     }
 
+    connectCMeetRoomWatcher() {
+        this.wsManager.connectCMeet(this.cmeetMeetingId);
+    }
+
     setRocketChatRoomId(roomId) {
         this.rocketChatRoomId = roomId;
+    }
+
+    updateRoomId(newRoomId) {
+        if (!newRoomId || newRoomId === this.rocketChatRoomId) {
+            return;
+        }
+
+        logger.log(`[Rocket.Chat] Updating roomId from ${this.rocketChatRoomId} → ${newRoomId}`);
+
+        this.rocketChatRoomId = newRoomId;
+
+        // Reconnect WS RocketChat với roomId mới
+        this.wsManager.reconnectRocketChatWithNewRoom(
+            this.store,
+            this.rocketChatAuthToken,
+            newRoomId,
+            this.userContext?.username
+        );
     }
 
     async loadchat(offset = 0, limit = 30, deliverMessage) {

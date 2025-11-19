@@ -37,37 +37,56 @@ export async function initRocketChat(
     meetingId: string,
     localParticipant: any
 ): Promise<RocketChat | false> {
-    try {
-        if (!meetingId) {
-            logger.warn('Meeting ID is required');
-            return false;
-        }
-
-        const rocketChat = new RocketChat(store, meetingId, localParticipant);
-        const rocketChatRoomId = await rocketChat.getRocketChatRoomId();
-
-        if (!rocketChatRoomId) {
-            logger.warn('Not found RocketChat room ID');
-            await rocketChat.loginToRocketChat(token);
-            rocketChat.connectWebSocket();
-
-            instance = rocketChat;
-            return rocketChat;
-        }
-
-        rocketChat.setRocketChatRoomId(rocketChatRoomId);
-
-        await rocketChat.loginToRocketChat(token);
-        await rocketChat.checkUserInRocketChatRoom();
-        rocketChat.connectWebSocket();
-
-        instance = rocketChat;
-
-        return rocketChat;
-    } catch (error) {
-        logger.error('Failed to init RocketChat', error);
+    if (!meetingId) {
+        logger.warn('Meeting ID is required');
         return false;
     }
+
+    const rocketChat = new RocketChat(store, meetingId, localParticipant);
+    instance = rocketChat;
+
+    let rocketChatRoomId: string | null = null;
+
+    // Lấy room id của RocketChat từ C-Meet
+    try {
+        rocketChatRoomId = await rocketChat.getRocketChatRoomId();
+
+        if (rocketChatRoomId) {
+            rocketChat.setRocketChatRoomId(rocketChatRoomId);
+        } else {
+            logger.warn('Not found RocketChat room ID');
+            // Nếu không có room id thì connect vào websocket của C-Meet để đợi room id mới
+            rocketChat.connectCMeetRoomWatcher();
+        }
+    } catch (error) {
+        logger.error('Failed to get RocketChat room ID', error);
+        rocketChat.connectCMeetRoomWatcher();
+    }
+
+    // Nếu có room id thì login vào RocketChat
+    try {
+        await rocketChat.loginToRocketChat(token);
+    } catch (error) {
+        logger.error('Failed to login to RocketChat', error);
+    }
+
+    // Connect WebSocket
+    try {
+        rocketChat.connectWebSocket();
+    } catch (error) {
+        logger.error('Failed to connect WebSocket', error);
+    }
+
+    // Check user in RocketChat room
+    if (rocketChatRoomId) {
+        try {
+            await rocketChat.checkUserInRocketChatRoom();
+        } catch (err) {
+            logger.error('Failed to check user in RocketChat room', err);
+        }
+    }
+
+    return rocketChat;
 }
 
 export function stopRocketChat(): void {
