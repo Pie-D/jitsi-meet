@@ -115,7 +115,8 @@ export default function ImmersiveView() {
     //     const raw = features?.owner ?? features?.isOwner;
     //     return typeof raw === 'string' ? raw.toLowerCase() === 'true' : Boolean(raw);
     // });
-    const isOwner = useSelector(isLocalRoomOwner);
+    // const isOwner = useSelector(isLocalRoomOwner);
+    const isOwner = useSelector(isLocalParticipantModerator);
     const [dragIndex, setDragIndex] = useState<number | null>(null);
     const rootRef = React.useRef<HTMLDivElement>(null);
     

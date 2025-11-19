@@ -187,10 +187,11 @@ function ParticipantItem({
                 </div>
                 {local ? <span>&nbsp;({youText})</span> : null}
             </div>
-            {isOwner && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
+            {/* {isOwner && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
                 {t('videothumbnail.host')}
-            </div>}
-            {!isOwner && isModerator && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
+            </div>} */}
+            {/* {!isOwner && isModerator && !disableModeratorIndicator && <div className = { classes.moderatorLabel }> */}
+             {isModerator && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
                 {t('videothumbnail.moderator')}
             </div>}
         </>

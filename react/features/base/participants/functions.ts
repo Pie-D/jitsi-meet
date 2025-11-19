@@ -780,7 +780,8 @@ export function isLocalRoomOwner(stateful: IStateful) {
     if (!local) {
         return false;
     }
-    return isRoomOwner(local, state2?.conference?.room?.roomOwner);
+    // return isRoomOwner(local, state2?.conference?.room?.roomOwner);
+    return isParticipantModerator(local);
 }
 /**
  * Resolves the first loadable avatar URL for a participant.

@@ -1,7 +1,7 @@
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { IStore } from '../app/types';
 import { AnyAction } from 'redux';
-import { getParticipantByIdOrUndefined, isOwnerParticipant, isRoomOwner, isLocalParticipantModerator } from '../base/participants/functions';
+import { getParticipantByIdOrUndefined, isOwnerParticipant, isRoomOwner, isLocalParticipantModerator, isParticipantModerator } from '../base/participants/functions';
 import { JitsiConferenceEvents } from '../../../../lib-jitsi-meet/JitsiConferenceEvents';
 import {
     setImmersiveAssignments,
@@ -16,7 +16,14 @@ let immersiveViewListenerRegistered = false;
 function isSenderOwner(state: any, participantId: string) {
     const participant = getParticipantByIdOrUndefined(state, participantId);
     const roomOwnerId = state['features/base/conference']?.conference?.room?.roomOwner;
-    return isRoomOwner(participant, roomOwnerId);
+    
+    // Kiểm tra tên người gửi khác "misster"
+    // if (participant?.name === 'misster') {
+    //     return false;
+    // }
+    
+    // return isRoomOwner(participant, roomOwnerId);
+    return isParticipantModerator(participant);
 }
 
 /**
