@@ -6,6 +6,7 @@ import { AppRegistry } from 'react-native';
 
 import { App } from './features/app/components/App.native';
 import { _initLogging } from './features/base/logging/functions';
+import './features/immersive-view/reducer';
 
 /**
  * React Native doesn't support specifying props to the main/root component (in

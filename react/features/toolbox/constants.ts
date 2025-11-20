@@ -64,23 +64,23 @@ export const THRESHOLDS = [
 export const NATIVE_THRESHOLDS = [
     {
         width: 560,
-        order: [ 'microphone', 'camera', 'chat', 'desktop', 'raisehand', 'tileview', 'overflowmenu', 'hangup' ]
+        order: [ 'microphone', 'camera', 'immersive', 'chat', 'desktop', 'raisehand', 'tileview', 'overflowmenu', 'hangup' ]
     },
     {
         width: 500,
-        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'tileview', 'overflowmenu', 'hangup' ]
+        order: [ 'microphone', 'camera', 'immersive', 'chat', 'raisehand', 'tileview', 'overflowmenu', 'hangup' ]
     },
     {
         width: 440,
-        order: [ 'microphone', 'camera', 'chat', 'raisehand', 'overflowmenu', 'hangup' ]
+        order: [ 'microphone', 'camera', 'immersive', 'chat', 'raisehand', 'overflowmenu', 'hangup' ]
     },
     {
         width: 380,
-        order: [ 'microphone', 'camera', 'chat', 'overflowmenu', 'hangup' ]
+        order: [ 'microphone', 'camera', 'immersive', 'chat', 'overflowmenu', 'hangup' ]
     },
     {
         width: 320,
-        order: [ 'microphone', 'camera', 'overflowmenu', 'hangup' ]
+        order: [ 'microphone', 'camera', 'immersive', 'overflowmenu', 'hangup' ]
     }
 ];
 
@@ -97,6 +97,7 @@ export const MAIN_TOOLBAR_BUTTONS_PRIORITY = [
     'reactions',
     'participants-pane',
     'tileview',
+    'immersive',
     'overflowmenu',
     'hangup',
     'invite',
@@ -191,6 +192,7 @@ export const NATIVE_TOOLBAR_BUTTONS: NativeToolbarButton[] = [
     'camera',
     'chat',
     'hangup',
+    'immersive',
     'microphone',
     'overflowmenu',
     'raisehand',
@@ -206,6 +208,7 @@ export const VISITORS_MODE_BUTTONS: ToolbarButton[] = [
     'closedcaptions',
     'fullscreen',
     'hangup',
+    'immersive',
     'participants-pane',
     'raisehand',
     'settings',

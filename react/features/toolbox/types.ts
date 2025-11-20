@@ -29,6 +29,7 @@ export type ToolbarButton = 'camera' |
     'hangup' |
     'help' |
     'highlight' |
+    'immersive' |
     'invite' |
     'linktosalesforce' |
     'livestreaming' |
@@ -87,6 +88,7 @@ export type NativeToolbarButton = 'camera' |
     'raisehand' |
     'desktop' |
     'tileview' |
+    'immersive' |
     'overflowmenu' |
     'hangup';
 

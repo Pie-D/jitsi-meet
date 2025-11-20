@@ -19,7 +19,7 @@ export interface IImmersiveState {
 
 const DEFAULT_STATE: IImmersiveState = {
     enabled: false,
-    templateId: undefined,
+    templateId: 'cati',
     followActiveSpeaker: false,
     assignments: {},
     slotCount: DEFAULT_IMMERSIVE_SLOT_COUNT

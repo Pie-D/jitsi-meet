@@ -11,6 +11,7 @@ import { customButtonPressed } from '../../actions.native';
 import { getVisibleNativeButtons, isToolboxVisible } from '../../functions.native';
 import { useNativeToolboxButtons } from '../../hooks.native';
 import { IToolboxNativeButton } from '../../types';
+// import ImmersiveViewButton from '../native/ImmersiveViewButton';
 
 import styles from './styles';
 
@@ -91,17 +92,20 @@ function Toolbox(props: IProps) {
 
         return (
             <>
-                {
-                    mainMenuButtons?.map(({ Content, key, text, ...rest }: IToolboxNativeButton) => (
-                        <Content
-                            { ...rest }
-                            /* eslint-disable react/jsx-no-bind */
-                            handleClick = { () => dispatch(customButtonPressed(key, text)) }
-                            isToolboxButton = { true }
-                            key = { key }
-                            styles = { key === 'hangup' ? hangupButtonStyles : buttonStylesBorderless } />
-                    ))
-                }
+                    { mainMenuButtons
+                        ?.filter((btn: any) => btn && btn.Content)
+                        .map(({ Content, key, text, ...rest }: IToolboxNativeButton) => (
+                        // Guard: skip if Content is not a valid component
+                        Content ? <Content
+                        { ...rest }
+                        /* eslint-disable react/jsx-no-bind */
+                        handleClick = { () => dispatch(customButtonPressed(key, text)) }
+                        isToolboxButton = { true }
+                        key = { key }
+                            styles = { key === 'hangup' ? hangupButtonStyles : buttonStylesBorderless } /> : null
+                    )) }
+
+                { /* Removed forced ImmersiveViewButton to avoid prop type mismatch; button comes via hooks/native thresholds */ }
             </>
         );
     };
@@ -117,6 +121,8 @@ function Toolbox(props: IProps) {
                 pointerEvents = 'box-none'
                 style = { style as ViewStyle }>
                 { renderToolboxButtons() }
+
+                { /* ImmersiveView button will come from mainMenuButtons via hooks */ }
             </SafeAreaView>
         </View>
     );

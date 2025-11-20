@@ -6,8 +6,8 @@ import TileViewButton from '../video-layout/components/TileViewButton';
 import { iAmVisitor } from '../visitors/functions';
 
 import AudioMuteButton from './components/native/AudioMuteButton';
-import CustomOptionButton from './components/native/CustomOptionButton';
 import HangupContainerButtons from './components/native/HangupContainerButtons';
+import ImmersiveViewButton from './components/native/ImmersiveViewButton';
 import OverflowMenuButton from './components/native/OverflowMenuButton';
 import ScreenSharingButton from './components/native/ScreenSharingButton';
 import VideoMuteButton from './components/native/VideoMuteButton';
@@ -48,6 +48,12 @@ const raisehand = {
 const tileview = {
     key: 'tileview',
     Content: TileViewButton,
+    group: 2
+};
+
+const immersive = {
+    key: 'immersive',
+    Content: ImmersiveViewButton,
     group: 2
 };
 
@@ -122,6 +128,15 @@ function getTileViewButton() {
 }
 
 /**
+ * A hook that returns the immersive view button.
+ *
+ *  @returns {Object | undefined}
+ */
+function getImmersiveViewButton() {
+    return immersive;
+}
+
+/**
  * A hook that returns the overflow menu button.
  *
  *  @returns {Object | undefined}
@@ -143,6 +158,7 @@ export function useNativeToolboxButtons(
     const chatButton = getChatButton();
     const screenSharingButton = getScreenSharingButton();
     const tileViewButton = getTileViewButton();
+    const immersiveViewButton = getImmersiveViewButton();
     const overflowMenuButton = getOverflowMenuButton();
 
     const buttons: { [key in NativeToolbarButton]?: IToolboxNativeButton; } = {
@@ -152,6 +168,7 @@ export function useNativeToolboxButtons(
         desktop: screenSharingButton,
         raisehand,
         tileview: tileViewButton,
+        immersive: immersiveViewButton,
         overflowmenu: overflowMenuButton,
         hangup
     };
@@ -160,19 +177,8 @@ export function useNativeToolboxButtons(
     buttonKeys.forEach(
         key => typeof buttons[key] === 'undefined' && delete buttons[key]);
 
-    const customButtons = _customToolbarButtons?.reduce((prev, { backgroundColor, icon, id, text }) => {
-        prev[id] = {
-            backgroundColor,
-            key: id,
-            id,
-            Content: CustomOptionButton,
-            group: 4,
-            icon,
-            text
-        };
-
-        return prev;
-    }, {} as { [key: string]: ICustomToolbarButton; });
+    // Temporarily ignore custom toolbar buttons to avoid invalid icon crashes
+    const customButtons = {} as { [key: string]: ICustomToolbarButton; };
 
     return {
         ...buttons,

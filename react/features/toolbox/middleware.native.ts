@@ -27,11 +27,20 @@ MiddlewareRegistry.register(store => next => action => {
         const { dispatch } = store;
         const state = store.getState();
 
-        const toolbarButtons = getToolbarButtons(state, NATIVE_TOOLBAR_BUTTONS);
+        let toolbarButtons = getToolbarButtons(state, NATIVE_TOOLBAR_BUTTONS);
+
+        // Ensure immersive button is available by default on native
+        if (!toolbarButtons.includes('immersive')) {
+            toolbarButtons = [ ...toolbarButtons, 'immersive' ];
+        }
 
         if (action.type !== I_AM_VISITOR_MODE) {
             dispatch(setMainToolbarThresholds(NATIVE_THRESHOLDS));
         }
+
+        // Debug: log final toolbar buttons composition
+        // eslint-disable-next-line no-console
+        console.log('Toolbox buttons (native):', toolbarButtons);
 
         dispatch({
             type: SET_TOOLBAR_BUTTONS,

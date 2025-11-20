@@ -1,12 +1,14 @@
 import { useFocusEffect } from '@react-navigation/native';
 import React, { useCallback } from 'react';
 import {
-    BackHandler,
-    NativeModules,
-    SafeAreaView,
-    View,
-    ViewStyle
-} from 'react-native';
+        BackHandler,
+        NativeModules,
+        SafeAreaView,
+        Text,
+        TouchableOpacity,
+        View,
+        ViewStyle
+    } from 'react-native';
 import { EdgeInsets, withSafeAreaInsets } from 'react-native-safe-area-context';
 import { connect, useDispatch } from 'react-redux';
 
@@ -30,6 +32,9 @@ import Filmstrip from '../../../filmstrip/components/native/Filmstrip';
 import TileView from '../../../filmstrip/components/native/TileView';
 import { FILMSTRIP_SIZE } from '../../../filmstrip/constants';
 import { isFilmstripVisible } from '../../../filmstrip/functions.native';
+import ImmersiveView from '../../../immersive-view/components/ImmersiveView.native';
+import '../../../immersive-view/reducer';
+import { setImmersiveEnabled, setImmersiveTemplate } from '../../../immersive-view/actions';
 import CalleeInfoContainer from '../../../invite/components/callee-info/CalleeInfoContainer';
 import LargeVideo from '../../../large-video/components/LargeVideo.native';
 import { getIsLobbyVisible } from '../../../lobby/functions';
@@ -217,6 +222,10 @@ class Conference extends AbstractConference<IProps, State> {
         if (_audioOnlyEnabled && _startCarMode) {
             navigation.navigate(screen.conference.carmode);
         }
+        // Đảm bảo không bật Immersive khi vừa vào phòng để tránh nền đen
+        this.props.dispatch(setImmersiveEnabled(false));
+        // Buộc hiển thị Toolbox để xác thực overlay UI
+        this.props.dispatch(setToolboxVisible(true));
     }
 
     /**
@@ -241,6 +250,8 @@ class Conference extends AbstractConference<IProps, State> {
             }
 
             navigate(screen.conference.main);
+
+            // Immersive auto-enable disabled temporarily for debugging render error
         }
     }
 
@@ -274,9 +285,11 @@ class Conference extends AbstractConference<IProps, State> {
             <Container
                 style = { [
                     styles.conference,
-                    _brandingStyles
+                    _brandingStyles,
+                    { backgroundColor: '#ffffff' }
                 ] }>
-                <BrandingImageBackground />
+                { /* Tạm tắt để tránh phủ nền đen khi join */ }
+                { /* <BrandingImageBackground /> */ }
                 { this._renderContent() }
             </Container>
         );
@@ -362,7 +375,9 @@ class Conference extends AbstractConference<IProps, State> {
             _largeVideoParticipantId,
             _reducedUI,
             _shouldDisplayTileView,
-            _toolboxVisible
+        _toolboxVisible,
+        _immersiveEnabled,
+        _hasAnyVideoTrack
         } = this.props;
 
         let alwaysOnTitleBarStyles;
@@ -383,36 +398,39 @@ class Conference extends AbstractConference<IProps, State> {
 
         return (
             <>
-                {/*
-                  * The LargeVideo is the lowermost stacking layer.
-                  */
-                    _shouldDisplayTileView
-                        ? <TileView onClick = { this._onClick } />
-                        : <LargeVideo onClick = { this._onClick } />
+                {/* Video area */}
+                    { this.props._immersiveEnabled
+                        ? null
+                        : ((_shouldDisplayTileView || !_hasAnyVideoTrack)
+                            ? <TileView onClick = { this._onClick } />
+                            : <LargeVideo onClick = { this._onClick } />)
+                    }
+                    {/* Immersive overlay renders only when enabled */}
+                    <ImmersiveView />
+
+                {/* If there is a ringing call, show the callee's info. */}
+                <CalleeInfoContainer />
+
+                {/* The activity/loading indicator goes above everything, except the toolbox/toolbars and the dialogs. */}
+                { _connecting
+                    && <TintedView>
+                        <LoadingIndicator />
+                    </TintedView>
                 }
 
                 {/*
-                  * If there is a ringing call, show the callee's info.
-                  */
-                    <CalleeInfoContainer />
-                }
-
-                {/*
-                  * The activity/loading indicator goes above everything, except
-                  * the toolbox/toolbars and the dialogs.
-                  */
-                    _connecting
-                        && <TintedView>
-                            <LoadingIndicator />
-                        </TintedView>
-                }
-
+                  * Main container for overlay elements - Improved layout structure
+                  */}
                 <View
                     pointerEvents = 'box-none'
                     style = { styles.toolboxAndFilmstripContainer as ViewStyle }>
 
+                    {/* Captions support */}
                     <Captions onPress = { this._onClick } />
 
+                    {/*
+                      * Display name and participant info - Better organization
+                      */}
                     {
                         _shouldDisplayTileView
                         || (_isDisplayNameVisible && (
@@ -423,18 +441,31 @@ class Conference extends AbstractConference<IProps, State> {
                         ))
                     }
 
+                    {/* Lonely meeting experience - when no other participants */}
                     { !_shouldDisplayTileView && <LonelyMeetingExperience /> }
 
+                    {/*
+                      * Filmstrip and Toolbox - Core conference controls
+                      * Improved layout similar to web version
+                      */}
                     {
                         _shouldDisplayTileView
                         || <>
+                            {/* Participant thumbnails */}
                             <Filmstrip />
-                            { this._renderNotificationsContainer() }
-                            <Toolbox />
+                            
+                        {/* Conference notifications */}
+                        { this._renderNotificationsContainer() }
+                        
+                        {/* Main control toolbox */}
+                        <Toolbox />
                         </>
                     }
                 </View>
 
+                {/*
+                  * Title bar with navigation controls - Top overlay layer
+                  */}
                 <SafeAreaView
                     pointerEvents = 'box-none'
                     style = {
@@ -443,6 +474,11 @@ class Conference extends AbstractConference<IProps, State> {
                             : styles.titleBarSafeViewTransparent) as ViewStyle }>
                     <TitleBar _createOnPress = { this._createOnPress } />
                 </SafeAreaView>
+
+                {/*
+                  * Expanded labels and always-on elements - Additional info layer
+                  * Positioned below title bar
+                  */}
                 <SafeAreaView
                     pointerEvents = 'box-none'
                     style = {
@@ -458,20 +494,26 @@ class Conference extends AbstractConference<IProps, State> {
                     <View
                         pointerEvents = 'box-none'
                         style = { alwaysOnTitleBarStyles as ViewStyle }>
-                        {/* eslint-disable-next-line react/jsx-no-bind */}
+                        {/* Always visible labels for quick info access */}
                         <AlwaysOnLabels createOnPress = { this._createOnPress } />
                     </View>
                 </SafeAreaView>
 
+                {/* Connection quality indicator */}
                 <TestConnectionInfo />
 
+                {/*
+                  * Tile view specific controls - Shown only in grid/tile view mode
+                  */}
                 {
-                    _shouldDisplayTileView
-                    && <>
-                        { this._renderNotificationsContainer() }
-                        <Toolbox />
-                    </>
+                _shouldDisplayTileView
+                && <>
+                    { this._renderNotificationsContainer() }
+                    <Toolbox />
+                </>
                 }
+
+                {/* no debug button */}
             </>
         );
     }
@@ -565,6 +607,10 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
         background: backgroundColor
     } : undefined;
 
+    // detect if there is any unmuted video track to decide LargeVideo vs TileView
+    const tracks = (state['features/base/tracks'] as any[]) || [];
+    const hasAnyVideoTrack = Boolean(tracks.find((t: any) => t?.mediaType === 'video' && !t?.muted));
+
     return {
         ...abstractMapStateToProps(state),
         _aspectRatio: aspectRatio,
@@ -580,7 +626,9 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
         _reducedUI: reducedUI,
         _showLobby: getIsLobbyVisible(state),
         _startCarMode: startCarMode,
-        _toolboxVisible: isToolboxVisible(state)
+        _toolboxVisible: isToolboxVisible(state),
+        _immersiveEnabled: Boolean(state['features/immersive-view']?.enabled),
+        _hasAnyVideoTrack: hasAnyVideoTrack
     };
 }
 

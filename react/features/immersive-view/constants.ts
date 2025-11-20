@@ -1,4 +1,4 @@
-export const IMMERSIVE_ALLOWED_SLOT_COUNTS = [ 4, 8, 12, 16 ] as const;
+export const IMMERSIVE_ALLOWED_SLOT_COUNTS = [ 5, 4, 8, 12, 16 ] as const;
 
 export type ImmersiveSlotCount = typeof IMMERSIVE_ALLOWED_SLOT_COUNTS[number];
 

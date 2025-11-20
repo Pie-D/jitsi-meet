@@ -179,6 +179,11 @@ export default function Icon(props: IProps) {
         'aria-hidden': true
     };
 
+    // Guard: avoid render crash if icon source is undefined/invalid
+    if (!IconComponent || typeof IconComponent !== 'function') {
+        return null;
+    }
+
     return (
         <Container
             { ...rest }

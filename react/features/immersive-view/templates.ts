@@ -10,17 +10,17 @@ export const IMMERSIVE_TEMPLATES: Record<string, IImmersiveTemplate> = {
     cati: {
         id: "cati",
         name: "CATI",
-        backgroundUrl: "images/template-immersive/cmc-ati.png",
+        backgroundUrl: "local:cmc",
     },
     cati2: {
         id: "cati2",
         name: "CATI 2",
-        backgroundUrl: "images/template-immersive/cmc-ati2.png",
+        backgroundUrl: "local:cmc",
     },
     cati3: {
         id: "cati3",
         name: "CATI 3",
-        backgroundUrl: "images/template-immersive/cmc-ati3.png",
+        backgroundUrl: "local:cmc",
     },
 };
 
@@ -30,7 +30,23 @@ export const IMMERSIVE_TEMPLATES: Record<string, IImmersiveTemplate> = {
  * for both 3-based and 4-based configurations.
  */
 export function generateGridSlots(count: number, allowedCounts: number[]): ISlot[] {
-    const cols = Math.ceil(Math.sqrt(count));
+    if (count === 5) {
+        const marginX = 0; // tối đa bề ngang
+        const gap = 0; // không khoảng cách giữa các khung
+        const slots: ISlot[] = [];
+        const slotW = (100 - marginX * 2 - gap * 4) / 5;
+        const slotH = slotW; // square inside canvas
+        const y = (100 - slotH) / 2;
+
+        for (let i = 0; i < 5; i++) {
+            const x = marginX + i * (slotW + gap);
+            slots.push({ x, y, w: slotW, h: slotH });
+        }
+        return slots;
+    }
+    // Arrange primarily in a horizontal row (16:9 friendly). If too many, wrap to 2 rows.
+    const maxPerRow = Math.max(3, Math.ceil(Math.sqrt(count + 1))); // bias horizontal
+    const cols = Math.min(count, maxPerRow);
     const rows = Math.ceil(count / cols);
 
     const margin = 4; // khoảng cách lề ngoài (%)
@@ -50,8 +66,9 @@ export function generateGridSlots(count: number, allowedCounts: number[]): ISlot
         const r = Math.floor(i / cols);
         const c = i % cols;
 
-        const w = cellW * scale - 5;
-        const h = cellH * scale - 5;
+        // Keep slot area wide; inner content will enforce 16:9
+        const w = cellW * scale - 2;
+        const h = cellH * scale - 6;
 
         const x = margin + c * (cellW + gap) + (cellW * (1 - scale)) / 2;
         const yBase = margin + r * (cellH + gap) + (cellH * (1 - scale)) / 2;
