@@ -72,7 +72,7 @@ org.gradle.jvmargs=-Xmx6144m
 
 ## Chi tiết đầy đủ
 
-Xem file `BUILD_AAR_DETAILED_GUIDE.md` để biết chi tiết từng bước.
+Xem file `BUILD_AAR_DETAILED_GUIDE.md` để biết chi tiết từng bước. ss
 
 
 
