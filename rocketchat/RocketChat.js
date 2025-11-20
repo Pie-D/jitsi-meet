@@ -27,6 +27,7 @@ export class RocketChat {
             displayName: localParticipant.name,
             position: null
         };
+        this.cmeetToken = null;
 
         document.addEventListener('rocketChatRoomIdUpdated', event => {
             const newRoomId = event.detail.roomId;
@@ -42,6 +43,7 @@ export class RocketChat {
                 const cmeetToken = decodedToken?.context?.token;
 
                 if (cmeetToken) {
+                    this.cmeetToken = cmeetToken;
                     const url = this.config.endpoints.login;
                     const data = await Utils.makeRequest('POST', url, {
                         serviceName: 'keycloak',
@@ -273,7 +275,9 @@ export class RocketChat {
 
     async getMeetingPosition() {
         const url = `${this.config.endpoints.getMeetingPosition}/${this.cmeetMeetingId}`;
-        const res = await Utils.makeRequest('GET', url);
+        const res = await Utils.makeRequest('GET', url, null, {
+            'Authorization': `Bearer ${this.cmeetToken}`
+        });
 
         if (res?.data) {
             this.userContext.position = res.data.position;
