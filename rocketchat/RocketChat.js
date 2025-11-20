@@ -212,6 +212,13 @@ export class RocketChat {
                 return;
             }
 
+            if (!this.rocketChatRoomId) {
+                logger.error('Cannot send message: Rocket.Chat room ID is not set');
+
+                return;
+            }
+
+            // Kiểm tra và lấy position nếu chưa có
             if (!this.userContext?.position) {
                 try {
                     await this.getMeetingPosition();
@@ -222,30 +229,43 @@ export class RocketChat {
 
             const position = this.userContext?.position || 'Không có chức danh';
 
-            const baseBody = {
-                roomId: `#${this.rocketChatRoomId}`,
-                text: message,
-                position,
-                customFields: {
-                    participantId: this.localParticipant.id,
-                    fromJitsi: true
-                }
-            };
+            // Kiểm tra WebSocket đã kết nối chưa
+            const ws = this.wsManager.wsRocketChat;
 
-            if (this.rocketChatType === ROCKET_CHAT_USER_TYPES.BOT && this.userContext?.username) {
-                baseBody.alias = this.userContext.username;
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                logger.error('Cannot send message: WebSocket is not connected');
+
+                return;
             }
 
-            const url = `${this.config.endpoints.postMessage}`;
+            // Tạo params cho sendMessage method
+            const params = {
+                rid: this.rocketChatRoomId,
+                msg: message,
+                position
+            };
 
-            const res = await Utils.makeRequest('POST', url, baseBody, {
-                'X-User-Id': this.rocketChatUserId,
-                'X-Auth-Token': this.rocketChatAuthToken
-            });
+            // Thêm customFields nếu cần
+            params.customFields = {
+                participantId: this.localParticipant.id,
+                fromJitsi: true
+            };
 
-            logger.log(`Sent message to Rocket.Chat: ${res.message._id}`);
+            // Nếu là bot và có username, thêm alias
+            if (this.rocketChatType === ROCKET_CHAT_USER_TYPES.BOT && this.userContext?.username) {
+                params.alias = this.userContext.username;
+                params.position = 'Thư ký';
+            }
 
-            return res.message._id;
+            // Gửi message qua WebSocket
+            const wsMessage = {
+                msg: 'method',
+                method: 'sendMessage',
+                id: '423',
+                params: [ params ]
+            };
+
+            ws.send(JSON.stringify(wsMessage));
         } catch (error) {
             logger.error('Failed to send message to Rocket.Chat:', error);
         }
@@ -257,6 +277,7 @@ export class RocketChat {
 
         if (res?.data) {
             this.userContext.position = res.data.position;
+            logger.log('Fetched meeting position:', this.userContext.position);
         } else {
             logger.error('Failed to get meeting position', res);
         }
