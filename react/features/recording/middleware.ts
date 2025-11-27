@@ -18,7 +18,7 @@ import {
     setVideoUnmutePermissions
 } from '../base/media/actions';
 import { MEDIA_TYPE } from '../base/media/constants';
-import { PARTICIPANT_UPDATED } from '../base/participants/actionTypes';
+import { PARTICIPANT_LEFT, PARTICIPANT_UPDATED } from '../base/participants/actionTypes';
 import { updateLocalRecordingStatus } from '../base/participants/actions';
 import { PARTICIPANT_ROLE } from '../base/participants/constants';
 import { getLocalParticipant, getParticipantDisplayName } from '../base/participants/functions';
@@ -31,6 +31,7 @@ import {
 import { TRACK_ADDED } from '../base/tracks/actionTypes';
 import { hideNotification, showErrorNotification, showNotification } from '../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE } from '../notifications/constants';
+import { setRequestingSubtitles } from '../subtitles/actions.any';
 import { isRecorderTranscriptionsRunning } from '../transcribing/functions';
 import { getWhipLink } from '../base/util/cMeetUtils';
 import { startGstStream, stopGstStream } from '../base/util/gstStreamUtils';
@@ -55,11 +56,13 @@ import LocalRecordingManager from './components/Recording/LocalRecordingManager'
 import {
     LIVE_STREAMING_OFF_SOUND_ID,
     LIVE_STREAMING_ON_SOUND_ID,
+    RECORDING_METADATA_ID,
     RECORDING_OFF_SOUND_ID,
     RECORDING_ON_SOUND_ID,
     START_RECORDING_NOTIFICATION_ID
 } from './constants';
 import {
+    getActiveSession,
     getResourceId,
     getSessionById,
     registerRecordingAudioFiles,
@@ -343,6 +346,72 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
         }
 
         return next(action);
+    }
+
+    case PARTICIPANT_LEFT: {
+        const { id } = action.participant;
+        const state = getState();
+        const conference = getCurrentConference(state);
+
+        if (!conference) {
+            break;
+        }
+
+        // Helper function để so sánh initiator với participant ID
+        // initiator có thể là JitsiParticipant object (có method getId()) hoặc là string (JID resource)
+        const isInitiator = (initiator: any, participantId: string): boolean => {
+            if (!initiator) {
+                return false;
+            }
+
+            // Xử lý tương tự như trong shouldRequireRecordingConsent
+            // initiator?.getId?.() ?? initiator
+            const initiatorId = typeof initiator === 'object' && typeof initiator.getId === 'function'
+                ? initiator.getId()
+                : (typeof initiator === 'string' ? getResourceId(initiator) : initiator);
+
+            // So sánh với participant ID vừa rời
+            // initiator có thể là JID resource hoặc participant ID
+            return initiatorId === participantId || (typeof initiator === 'string' && initiator === participantId);
+        };
+
+        // Kiểm tra recording session đang chạy (FILE mode)
+        const activeFileSession = getActiveSession(state, JitsiRecordingConstants.mode.FILE);
+
+        if (activeFileSession && activeFileSession.initiator) {
+            if (isInitiator(activeFileSession.initiator, id)) {
+                logger.info(`Người bật recording (${id}) đã rời phòng, tự động tắt recording`);
+                
+                // Tự động stop recording
+                if (activeFileSession.id) {
+                    conference.stopRecording(activeFileSession.id);
+                    
+                    // Tự động tắt speech to text khi recording dừng
+                    _autoStopSpeechToText(state);
+                    
+                    // Tắt transcription metadata
+                    dispatch(setRequestingSubtitles(false, false, null));
+                    conference.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
+                        isTranscribingEnabled: false
+                    });
+                }
+            }
+        }
+
+        // Kiểm tra live streaming session đang chạy (STREAM mode)
+        const activeStreamSession = getActiveSession(state, JitsiRecordingConstants.mode.STREAM);
+
+        if (activeStreamSession && activeStreamSession.initiator) {
+            if (isInitiator(activeStreamSession.initiator, id)) {
+                logger.info(`Người bật live streaming (${id}) đã rời phòng, tự động tắt live streaming`);
+                
+                if (activeStreamSession.id) {
+                    conference.stopRecording(activeStreamSession.id);
+                }
+            }
+        }
+
+        break;
     }
     }
 
