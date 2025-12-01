@@ -202,6 +202,24 @@ const useStyles = makeStyles()((theme: Theme) => {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap'
+        },
+        chatMessageFooterSystem: {
+            display: 'none',
+        },
+        timestampSystem: {
+            display: 'none',
+        },
+        messageSystemTitle: {
+            fontStyle: 'italic',
+            fontWeight: 'bold',
+        },
+        systemMessageSign: {
+            width: '4px',
+            maxHeight: '100%',
+            backgroundColor: '#007bff',
+            marginRight: theme.spacing(2),
+            borderRadius: '2px',
+            display: 'inline-block'
         }
     };
 });
@@ -219,6 +237,7 @@ const ChatMessage = ({
     const { classes, cx } = useStyles();
     const [ isHovered, setIsHovered ] = useState(false);
     const [ isReactionsOpen, setIsReactionsOpen ] = useState(false);
+    const systemMessageTitle = 'Tin nhắn hệ thống';
 
     const handleMouseEnter = useCallback(() => {
         setIsHovered(true);
@@ -349,94 +368,123 @@ const ChatMessage = ({
 
     return (
         <div
-            className = { cx(classes.chatMessageWrapper, className) }
-            id = { message.messageId }
-            onMouseEnter = { handleMouseEnter }
-            onMouseLeave = { handleMouseLeave }
-            tabIndex = { -1 }>
-            <div className = { classes.sideBySideContainer }>
-                {!shouldDisplayMenuOnRight && (
-                    <div className = { classes.optionsButtonContainer }>
-                        {isHovered && <MessageMenu
-                            displayName = { message.displayName }
-                            enablePrivateChat = { Boolean(enablePrivateChat) }
-                            isFileMessage = { isFileMessage(message) }
-                            isFromVisitor = { message.isFromVisitor }
-                            isLobbyMessage = { message.lobbyChat }
-                            message = { message.message }
-                            participantId = { message.participantId } />}
-                    </div>
-                )}
-                <div
-                    className = { cx(
-                        'chatmessage',
-                        classes.chatMessage,
-                        className,
-                        message.privateMessage && 'privatemessage',
-                        message.lobbyChat && !knocking && 'lobbymessage',
-                        isFileMessage(message) && 'file'
-                    ) }>
-                    <div className = { classes.replyWrapper }>
-                        <div className = { cx('messagecontent', classes.messageContent) }>
-                            {showDisplayName && _renderDisplayName()}
-                            <div className = { cx('usermessage', classes.userMessage) }>
-                                {isFileMessage(message) ? (
-                                    <FileMessage
-                                        message = { message }
-                                        screenReaderHelpText = { message.messageType === MESSAGE_TYPE_LOCAL
-                                            ? t<string>('chat.fileAccessibleTitleMe')
-                                            : t<string>('chat.fileAccessibleTitle', {
-                                                user: message.displayName
-                                            })
-                                        } />
-                                ) : (
-                                    <Message
-                                        screenReaderHelpText = { message.messageType === MESSAGE_TYPE_LOCAL
-                                            ? t<string>('chat.messageAccessibleTitleMe')
-                                            : t<string>('chat.messageAccessibleTitle', {
-                                                user: message.displayName
-                                            }) }
-                                        text = { getMessageText(message) } />
-                                )}
-                                {(message.privateMessage || (message.lobbyChat && !knocking))
-                                    && _renderPrivateNotice()}
-                                <div className = { classes.chatMessageFooter }>
-                                    <div className = { classes.chatMessageFooterLeft }>
-                                        {message.reactions && message.reactions.size > 0 && (
-                                            <>
-                                                {renderReactions}
-                                            </>
-                                        )}
-                                    </div>
-                                    {_renderTimestamp()}
+            className={cx(classes.chatMessageWrapper, className)}
+            id={message.messageId}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            tabIndex={-1}>
+            <div className={classes.sideBySideContainer}>
+                {message.messageType === 'system' ? (
+                    <div
+                        className={ cx(
+                            'chatmessage',
+                            classes.chatMessage,
+                            'systemmessage'
+                        ) }>
+                        <div className={ classes.messageContent }>
+                            <div
+                                className={ cx(
+                                    'usermessage',
+                                    classes.userMessage,
+                                    'systemmessage'
+                                ) }>
+                                <div className={ classes.systemMessageSign }/>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span className={ classes.messageSystemTitle }>
+                                            { systemMessageTitle }
+                                        </span>
+                                    <Message text={ getMessageText(message) }/>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                {shouldDisplayMenuOnRight && (
-                    <div className = { classes.sideBySideContainer }>
-                        {!message.privateMessage && !message.lobbyChat
-                        && !message.isReaction && <div>
-                            <div className = { classes.optionsButtonContainer }>
-                                {isHovered && <ReactButton
-                                    messageId = { message.messageId }
-                                    receiverId = { '' } />}
-                            </div>
-                        </div>}
-                        <div>
-                            <div className = { classes.optionsButtonContainer }>
+                ) : (
+                    <>
+                        {!shouldDisplayMenuOnRight && (
+                            <div className = {classes.optionsButtonContainer}>
                                 {isHovered && <MessageMenu
-                                    displayName = { message.displayName }
-                                    enablePrivateChat = { Boolean(enablePrivateChat) }
-                                    isFileMessage = { isFileMessage(message) }
-                                    isFromVisitor = { message.isFromVisitor }
-                                    isLobbyMessage = { message.lobbyChat }
-                                    message = { message.message }
-                                    participantId = { message.participantId } />}
+                                    displayName={message.displayName}
+                                    enablePrivateChat={Boolean(enablePrivateChat)}
+                                    isFileMessage={isFileMessage(message)}
+                                    isFromVisitor={message.isFromVisitor}
+                                    isLobbyMessage={message.lobbyChat}
+                                    message={message.message}
+                                    participantId={message.participantId}/>
+                                }
+                            </div>
+                        )}
+                        <div
+                            className={ cx(
+                                'chatmessage',
+                                classes.chatMessage,
+                                className,
+                                message.privateMessage && 'privatemessage',
+                                message.lobbyChat && !knocking && 'lobbymessage',
+                                isFileMessage(message) && 'file'
+                            ) }>
+                            <div className={classes.replyWrapper}>
+                                <div className={cx('messagecontent', classes.messageContent)}>
+                                    {showDisplayName && _renderDisplayName()}
+                                    <div className={cx('usermessage', classes.userMessage)}>
+                                        {isFileMessage(message) ? (
+                                            <FileMessage
+                                                message={message}
+                                                screenReaderHelpText={message.messageType === MESSAGE_TYPE_LOCAL
+                                                    ? t<string>('chat.fileAccessibleTitleMe')
+                                                    : t<string>('chat.fileAccessibleTitle', {
+                                                        user: message.displayName
+                                                    })
+                                                }/>
+                                        ) : (
+                                            <Message
+                                                screenReaderHelpText={message.messageType === MESSAGE_TYPE_LOCAL
+                                                    ? t<string>('chat.messageAccessibleTitleMe')
+                                                    : t<string>('chat.messageAccessibleTitle', {
+                                                        user: message.displayName
+                                                    })}
+                                                text={getMessageText(message)}/>
+                                        )}
+                                        {(message.privateMessage || (message.lobbyChat && !knocking))
+                                            && _renderPrivateNotice()}
+                                        <div className={classes.chatMessageFooter}>
+                                            <div className={classes.chatMessageFooterLeft}>
+                                                {message.reactions && message.reactions.size > 0 && (
+                                                    <>
+                                                        {renderReactions}
+                                                    </>
+                                                )}
+                                            </div>
+                                            {_renderTimestamp()}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        {shouldDisplayMenuOnRight && (
+                            <div className={classes.sideBySideContainer}>
+                                {!message.privateMessage && !message.lobbyChat
+                                    && !message.isReaction && <div>
+                                        <div className={classes.optionsButtonContainer}>
+                                            {isHovered && <ReactButton
+                                                messageId={message.messageId}
+                                                receiverId={''}/>}
+                                        </div>
+                                    </div>}
+                                <div>
+                                    <div className={classes.optionsButtonContainer}>
+                                        {isHovered && <MessageMenu
+                                            displayName={message.displayName}
+                                            enablePrivateChat={Boolean(enablePrivateChat)}
+                                            isFileMessage={isFileMessage(message)}
+                                            isFromVisitor={message.isFromVisitor}
+                                            isLobbyMessage={message.lobbyChat}
+                                            message={message.message}
+                                            participantId={message.participantId}/>}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
         </div>
