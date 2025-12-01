@@ -12,7 +12,8 @@ export const ROCKET_CHAT_CONFIG = Object.freeze({
         postMessage: `${env.ROCKET_CHAT_API_URL}/chat.postMessage`,
         roomMembers: `${env.ROCKET_CHAT_API_URL}/groups.members`,
         roomHistory: `${env.ROCKET_CHAT_API_URL}/groups.history`,
-        getRoomId: `${env.CMEET_URL}/api/meeting-time-sheet/rocket-chat`
+        getRoomId: `${env.CMEET_URL}/api/meeting-time-sheet/rocket-chat`,
+        getMeetingPosition: `${env.CMEET_URL}/api/meeting-participant-member/meeting-position`
     },
     wsConfig: {
         maxReconnectAttempts: 5,

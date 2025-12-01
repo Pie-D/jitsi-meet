@@ -504,7 +504,7 @@
         "token": "mã thông báo",
         "tokenAuthFailed": "Rất tiếc, bạn không được phép tham gia cuộc gọi này.",
         "tokenAuthFailedReason": {
-            "audInvalid": "Giá trị `aud` không hợp lệ. Nó nên là `jitsi`.",
+            "audInvalid": "Giá trị `aud` không hợp lệ. Nó nên là `C-Meet`.",
             "contextNotFound": "Đối tượng `context` bị thiếu trong dữ liệu đầu vào.",
             "expInvalid": "Giá trị `exp` không hợp lệ.",
             "featureInvalid": "Tính năng không hợp lệ: {{feature}}, có khả năng chưa được triển khai.",
@@ -912,6 +912,8 @@
         "tokenExpired": "Mã thông báo đã hết hạn. Vui lòng đăng nhập lại.",
         "sttEnabled": "STT đã được bật.",
         "sttDisabled": "STT đã được tắt.",
+        "sttErrored": "STT đã gặp lỗi.",
+        "sttExists": "Một phiên STT đã hoạt động. Vui lòng dừng phiên hiện tại trước khi bắt đầu một phiên mới.",
         "cannotdemoteOwner": "Bạn không có quyền di chuyển chủ phòng cuộc họp sang phòng chờ."
     },
     "participantsPane": {
@@ -1516,7 +1518,8 @@
         "ccButtonTooltip": "Chạy/Dừng phụ đề",
         "expandedLabel": "Phiên âm đang bật",
         "failedToStart": "Khởi chạy phiên âm thất bại",
-        "labelToolTip": "Cuộc họp đang được phiên âm",
+        "labelTooltip": "Cuộc họp đang được phiên âm",
+        "labelTooltipExtra": "Ngoài ra, bản ghi sẽ được cung cấp sau.",
         "openClosedCaptions": "Bật phụ đề",
         "original": "Bản gốc",
         "sourceLanguageDesc": "Hiện tại ngôn ngữ của cuộc họp được đặt là <b>{{sourceLanguage}}</b>. <br/> Bạn có thể thay đổi nó từ",

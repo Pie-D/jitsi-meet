@@ -262,9 +262,7 @@ export function getRecordButtonProps(state: IReduxState) {
     const dropboxEnabled = isDropboxEnabled(state);
     const recordingEnabled = recordingService?.enabled || dropboxEnabled;
 
-    if (localRecordingEnabled) {
-        visible = true;
-    } else if (isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)) {
+    if (isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)) {
         visible = recordingEnabled;
     }
 

@@ -65,6 +65,16 @@ export class WebSocketConnectionManager {
         return ws;
     }
 
+    reconnectRocketChatWithNewRoom(store, authToken, newRoomId, username) {
+        if (this.wsRocketChat) {
+            logger.log('[Rocket.Chat] Closing existing WS because roomId changed...');
+            this.wsRocketChat.close();
+        }
+
+        this.connectRocketChat(store, authToken, newRoomId, username);
+    }
+
+
     connectCMeet(meetingId) {
         const topic = `/topic/timesheet-rocketchat/${meetingId}`;
         const client = new Client({
@@ -87,8 +97,13 @@ export class WebSocketConnectionManager {
                             const data = JSON.parse(message);
 
                             if (data.rocketChatRoomId) {
+                                logger.log('[C-Meet] RocketChat roomId updated:', data.rocketChatRoomId);
                                 document.dispatchEvent(new CustomEvent('timeSheetEnd', {
                                     detail: { isChatDisabled: false }
+                                }));
+
+                                document.dispatchEvent(new CustomEvent('rocketChatRoomIdUpdated', {
+                                    detail: { roomId: data.rocketChatRoomId }
                                 }));
                             }
                         }

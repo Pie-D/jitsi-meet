@@ -59,28 +59,55 @@ export const startGstStream = async (meetingId: string, whipLink: string): Promi
     //     logger.warn('GST stream already connected for meeting:', meetingId);
     //     return;
     // }
-    const response = await fetch(
-        `${env.GST_STREAM_URL}`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                roomId: meetingId,
-                domain: env.DOMAIN,
-                whipEndpoint: whipLink,
-                xmppDomain: env.XMPP_DOMAIN
-            })
-        });
+    try {
+        const response = await fetch(
+            `${env.GST_STREAM_URL}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    roomId: meetingId,
+                    domain: env.DOMAIN,
+                    whipEndpoint: whipLink,
+                    nickname: 'CMEET-BOT-RECORDING',
+                    isRecord: true,
+                    xmppDomain: env.XMPP_DOMAIN
+                })
+            });
     
-    if(!response.ok) {
-        toast.error('Khởi động GST stream thất bại');
+        if (!response.ok) {
+            logger.error('Error starting GST stream:', response);
+            toast.error(i18next.t('notify.sttErrored'));
+            return false;
+        }
+
+        // Parse JSON đồng bộ (await)
+        const data = await response.json();
+
+        // ---- Xử lý mã lỗi từ API ----
+        if (data.code === 1206) {
+            logger.info(`Cmeet-bot is already running for room: ${meetingId}`);
+            toast.info(i18next.t('notify.sttExists'));
+            return false;
+        }
+
+        if (data.code === 1500) {
+            logger.error(`Cmeet-bot encountered an error for room: ${meetingId}`, data);
+            toast.error(i18next.t('notify.sttErrored'));
+            return false;
+        }
+
+        // Thành công
+        toast.success(i18next.t('notify.sttEnabled'));
+        return true;
+
+    } catch (error) {
+        logger.error('Error starting GST stream:', error);
+        toast.error(i18next.t('notify.sttErrored'));
         return false;
     }
-
-    toast.success(i18next.t('notify.sttEnabled'));
-    return true;
 }
 
 
@@ -99,7 +126,7 @@ export const startGstStream = async (meetingId: string, whipLink: string): Promi
 export const stopGstStream = async (meetingId: string): Promise<void> => {
     try {
         await fetch(
-            `${env.GST_STREAM_URL}/stop?roomId=${meetingId}`,
+            `${env.GST_STREAM_URL}/stop?roomId=${meetingId}_record`,
             {
                 method: 'POST'
             });
