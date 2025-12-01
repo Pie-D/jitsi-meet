@@ -101,6 +101,7 @@ public class JitsiMeetOngoingConferenceService extends Service implements Ongoin
 
     public static void launch(Context context, HashMap<String, Object> extraData) {
         List<String> permissionsList = new ArrayList<>();
+        Activity activity = (Activity) context;
 
         PermissionListener listener = new PermissionListener() {
             @Override
@@ -136,7 +137,7 @@ public class JitsiMeetOngoingConferenceService extends Service implements Ongoin
 
         if (permissionsArray.length > 0) {
             JitsiMeetActivityDelegate.requestPermissions(
-                (Activity) context,
+                activity,
                 permissionsArray,
                 PERMISSIONS_REQUEST_CODE,
                 listener
@@ -161,12 +162,20 @@ public class JitsiMeetOngoingConferenceService extends Service implements Ongoin
             stopSelf();
             JitsiMeetLogger.w(TAG + " Couldn't start service, notification is null");
         } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK | ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
-            } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
-                startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
-            } else {
-                startForeground(NOTIFICATION_ID, notification);
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK | ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE);
+                } else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.Q) {
+                    startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK);
+                } else {
+                    startForeground(NOTIFICATION_ID, notification);
+                }
+            } catch (Exception e) {
+                // Handle ForegroundServiceStartNotAllowedException when app is in background and cannot start foreground service.
+                // See: https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start#wiu-restrictions
+                JitsiMeetLogger.w(TAG + " Failed to start foreground service", e);
+                stopSelf();
+                return;
             }
         }
 

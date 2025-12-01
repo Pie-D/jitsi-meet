@@ -1,6 +1,7 @@
 import AllureReporter from '@wdio/allure-reporter';
 import { multiremotebrowser } from '@wdio/globals';
 import { Buffer } from 'buffer';
+import fs from 'fs';
 import { glob } from 'glob';
 import path from 'node:path';
 import process from 'node:process';
@@ -9,7 +10,7 @@ import pretty from 'pretty';
 import { getTestProperties, loadTestFiles } from './helpers/TestProperties';
 import { config as testsConfig } from './helpers/TestsConfig';
 import WebhookProxy from './helpers/WebhookProxy';
-import { getLogs, initLogger, logInfo } from './helpers/browserLogger';
+import { getLogs, initLogger, logInfo, saveLogs } from './helpers/browserLogger';
 import { IContext } from './helpers/types';
 import { generateRoomName } from './helpers/utils';
 
@@ -162,6 +163,18 @@ export const config: WebdriverIO.MultiremoteConfig = {
         webdriver: 'info'
     },
 
+    // Can be used to debug chromedriver, depends on chromedriver and wdio-chromedriver-service
+    // services: [
+    //     [ 'chromedriver', {
+    //         // Pass the --verbose flag to Chromedriver
+    //         args: [ '--verbose' ],
+    //         // Optionally, define a file to store the logs instead of stdout
+    //         logFileName: 'wdio-chromedriver.log',
+    //         // Optionally, define a directory for the log file
+    //         outputDir: 'test-results',
+    //     } ]
+    // ],
+
     // Set directory to store all logs into
     outputDir: TEST_RESULTS_DIR,
 
@@ -261,9 +274,8 @@ export const config: WebdriverIO.MultiremoteConfig = {
             globalAny.ctx.webhooksProxy.connect();
         }
 
-        if (testProperties.useWebhookProxy && !globalAny.ctx.webhooksProxy) {
-            console.warn(`WebhookProxy is not available, skipping ${testName}`);
-            globalAny.ctx.skipSuiteTests = 'WebhooksProxy is not required but not available';
+        if (testProperties.requireWebhookProxy && !globalAny.ctx.webhooksProxy) {
+            throw new Error('The test requires WebhookProxy, but it is not available.');
         }
     },
 
@@ -359,35 +371,67 @@ export const config: WebdriverIO.MultiremoteConfig = {
             logInfo(multiremotebrowser.getInstance(instance), `---=== End test ${test.title} ===---`));
 
         if (error) {
+
+            // skip all remaining tests in the suite
+            ctx.skipSuiteTests = `Test "${test.title}" has failed.`;
+
+            // make sure all browsers are at the main app in iframe (if used), so we collect debug info
+            await Promise.all(multiremotebrowser.instances.map(async (instance: string) => {
+                // @ts-ignore
+                await ctx[instance]?.switchToIFrame();
+            }));
+
             const allProcessing: Promise<any>[] = [];
+            const attachments: { content: string | Buffer; filename: string; type: string; }[] = [];
 
             multiremotebrowser.instances.forEach((instance: string) => {
                 const bInstance = multiremotebrowser.getInstance(instance);
 
                 allProcessing.push(bInstance.takeScreenshot().then(shot => {
-                    AllureReporter.addAttachment(
-                        `Screenshot-${instance}`,
-                        Buffer.from(shot, 'base64'),
-                        'image/png');
+                    attachments.push({
+                        filename: `${instance}-screenshot`,
+                        content: Buffer.from(shot, 'base64'),
+                        type: 'image/png' });
                 }));
 
                 // @ts-ignore
                 allProcessing.push(bInstance.execute(() => typeof APP !== 'undefined' && APP.connection?.getLogs())
                     .then(logs =>
-                        logs && AllureReporter.addAttachment(
-                            `debug-logs-${instance}`,
-                            JSON.stringify(logs, null, '    '),
-                            'text/plain'))
+                        logs && attachments.push({
+                            filename: `${instance}-debug-logs`,
+                            content: JSON.stringify(logs, null, '    '),
+                            type: 'text/plain' }))
                     .catch(e => console.error('Failed grabbing debug logs', e)));
 
-                AllureReporter.addAttachment(`console-logs-${instance}`, getLogs(bInstance) || '', 'text/plain');
+                allProcessing.push(
+                    bInstance.execute(() => window.APP?.debugLogs?.logs?.join('\n')).then(res => {
+                        if (res) {
+                            saveLogs(bInstance, res);
+                        }
+
+                        attachments.push({
+                            filename: `${instance}-console-logs`,
+                            content: getLogs(bInstance) || '',
+                            type: 'text/plain' });
+                    }));
 
                 allProcessing.push(bInstance.getPageSource().then(source => {
-                    AllureReporter.addAttachment(`html-source-${instance}`, pretty(source), 'text/plain');
+                    attachments.push({
+                        filename: `${instance}-html-source`,
+                        content: pretty(source),
+                        type: 'text/plain' });
                 }));
             });
 
             await Promise.allSettled(allProcessing);
+            attachments.sort(
+                (a, b) => {
+                    return a.filename < b.filename ? -1 : 1;
+                }).forEach(
+                a => {
+                    AllureReporter.addAttachment(a.filename, a.content, a.type);
+                }
+            );
         }
     },
 
@@ -432,6 +476,15 @@ export const config: WebdriverIO.MultiremoteConfig = {
                 }
 
                 console.log('Allure report successfully generated');
+
+                // An ugly hack to sort by test order by default in the allure report.
+                const content = fs.readFileSync(`${TEST_RESULTS_DIR}/allure-report/index.html`, 'utf8');
+                const modifiedContent = content.replace('<body>',
+                    '<body><script>localStorage.setItem("ALLURE_REPORT_SETTINGS_SUITES", \'{"treeSorting":{"sorter":"sorter.order","ascending":true}}\')</script>'
+                );
+
+                fs.writeFileSync(`${TEST_RESULTS_DIR}/allure-report/index.html`, modifiedContent);
+
                 resolve();
             });
         });

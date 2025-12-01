@@ -56,7 +56,7 @@ const ViewSettingsContent = () => {
     const selectImmersive = useCallback(() => {
         dispatch(setTileView(false));
         dispatch(toggleViewSettings());
-        dispatch(openDialog(ImmersiveSetupDialog));
+        dispatch(openDialog('immersiveSetupDialog', ImmersiveSetupDialog));
     }, [ dispatch ]);
 
     return (

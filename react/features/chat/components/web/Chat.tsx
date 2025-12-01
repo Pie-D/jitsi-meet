@@ -7,7 +7,7 @@ import { syncRocketChatMessages } from '../../../../../rocketchat/index';
 import { IReduxState } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
 import { IconInfo, IconMessage, IconShareDoc, IconSubtitles } from '../../../base/icons/svg';
-import { getLocalParticipant, getRemoteParticipants } from '../../../base/participants/functions';
+import { getLocalParticipant, getRemoteParticipants, isPrivateChatEnabledSelf } from '../../../base/participants/functions';
 import Select from '../../../base/ui/components/web/Select';
 import Tabs from '../../../base/ui/components/web/Tabs';
 import { arePollsDisabled } from '../../../conference/functions.any';
@@ -25,7 +25,7 @@ import {
     toggleChat,
 } from '../../actions.web';
 import { CHAT_SIZE, ChatTabs, OPTION_GROUPCHAT, SMALL_WIDTH_THRESHOLD } from '../../constants';
-import { getChatMaxSize } from '../../functions';
+import { getChatMaxSize, getFocusedTab, isChatDisabled } from '../../functions';
 import { IChatProps as AbstractProps } from '../../types';
 
 import ChatHeader from './ChatHeader';
@@ -41,12 +41,17 @@ interface IProps extends AbstractProps {
     /**
      * The currently focused tab.
      */
-    _focusedTab: ChatTabs;
+    _focusedTab?: ChatTabs;
 
     /**
      * True if the CC tab is enabled and false otherwise.
      */
     _isCCTabEnabled: boolean;
+
+    /**
+     * True if chat is disabled.
+     */
+    _isChatDisabled: boolean;
 
     /**
      * True if file sharing tab is enabled.
@@ -217,6 +222,7 @@ const Chat = ({
     _isOpen,
     _isPollsEnabled,
     _isCCTabEnabled,
+    _isChatDisabled,
     _isFileSharingTabEnabled,
     _focusedTab,
     _isResizing,
@@ -230,6 +236,11 @@ const Chat = ({
     t,
 }: IProps) => {
     const [ offset, setOffset ] = useState(0);
+    // If no tabs are available, don't render the chat panel at all.
+    if (_isChatDisabled && !_isPollsEnabled && !_isCCTabEnabled && !_isFileSharingTabEnabled) {
+        return null;
+    }
+
     const { classes, cx } = useStyles({ _isResizing, width: _width });
     const [ isMouseDown, setIsMouseDown ] = useState(false);
     const [ mousePosition, setMousePosition ] = useState<number | null>(null);
@@ -243,6 +254,7 @@ const Chat = ({
     );
     const privateMessageRecipient = useSelector((state: IReduxState) => state['features/chat'].privateMessageRecipient);
     const participants = useSelector(getRemoteParticipants);
+    const isPrivateChatAllowed = useSelector((state: IReduxState) => isPrivateChatEnabledSelf(state));
 
     const options = useMemo(() => {
         const o = Array.from(participants?.values() || [])
@@ -286,13 +298,9 @@ const Chat = ({
             // Add visual feedback that we're dragging
             document.body.style.cursor = 'col-resize';
 
-            // Disable text selection during resize
-            document.body.style.userSelect = 'none';
-
-            console.log('Chat resize: Mouse down', { clientX: e.clientX, initialWidth: _width });
-        },
-        [ _width, dispatch ]
-    );
+        // Disable text selection during resize
+        document.body.style.userSelect = 'none';
+    }, [ _width, dispatch ]);
 
     /**
      * Drag handle mouse up handler.
@@ -307,8 +315,6 @@ const Chat = ({
             // Restore cursor and text selection
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
-
-            console.log('Chat resize: Mouse up');
         }
     }, [ isMouseDown, dispatch ]);
 
@@ -318,15 +324,12 @@ const Chat = ({
      * @param {MouseEvent} e - The mousemove event.
      * @returns {void}
      */
-    const onChatResize = useCallback(
-        throttle(
-            (e: MouseEvent) => {
-                // console.log('Chat resize: Mouse move', { clientX: e.clientX, isMouseDown, mousePosition, _width });
-                if (isMouseDown && mousePosition !== null && dragChatWidth !== null) {
-                    // For chat panel resizing on the left edge:
-                    // - Dragging left (decreasing X coordinate) should make the panel wider
-                    // - Dragging right (increasing X coordinate) should make the panel narrower
-                    const diff = e.clientX - mousePosition;
+    const onChatResize = useCallback(throttle((e: MouseEvent) => {
+        if (isMouseDown && mousePosition !== null && dragChatWidth !== null) {
+            // For chat panel resizing on the left edge:
+            // - Dragging left (decreasing X coordinate) should make the panel wider
+            // - Dragging right (increasing X coordinate) should make the panel narrower
+            const diff = e.clientX - mousePosition;
 
                     const newWidth = Math.max(Math.min(dragChatWidth + diff, maxChatWidth), CHAT_SIZE);
 
@@ -470,7 +473,7 @@ const Chat = ({
         return (
             <>
                 {renderTabs()}
-                <div
+                {!_isChatDisabled && (<div
                     aria-labelledby = { ChatTabs.CHAT }
                     className = { cx(
                         classes.chatPanel,
@@ -484,15 +487,18 @@ const Chat = ({
                         loadMoreMessages = { loadMoreMessages }
                         messages = { _messages } />
                     <MessageRecipient />
-                    <Select
-                        containerClassName = { cx(classes.privateMessageRecipientsList) }
-                        id = 'select-chat-recipient'
-                        onChange = { onSelectedRecipientChange }
-                        options = { options }
-                        value = { privateMessageRecipient?.id || OPTION_GROUPCHAT } />
-                    <ChatInput onSend = { handleMessage } />
-                </div>
-                {_isPollsEnabled && (
+                    {isPrivateChatAllowed && (
+                        <Select
+                            containerClassName = { cx(classes.privateMessageRecipientsList) }
+                            id = 'select-chat-recipient'
+                            onChange = { onSelectedRecipientChange }
+                            options = { options }
+                            value = { privateMessageRecipient?.id || OPTION_GROUPCHAT } />
+                    )}
+                    <ChatInput
+                        onSend = { onSendMessage } />
+                </div>) }
+                { _isPollsEnabled && (
                     <>
                         <div
                             aria-labelledby = { ChatTabs.POLLS }
@@ -536,18 +542,27 @@ const Chat = ({
      * @returns {ReactElement}
      */
     function renderTabs() {
-        _isPollsEnabled = false;
-        let tabs = [
-            {
+        // The only way focused tab will be undefined is when no tab is enabled. Therefore this function won't be
+        // executed because Chat component won't render anything. This should never happen but adding the check
+        // here to make TS happy (when passing the _focusedTab in the selected prop for Tabs).
+        if (!_focusedTab) {
+            return null;
+        }
+
+        let tabs = [];
+
+        // Only add chat tab if chat is not disabled.
+        if (!_isChatDisabled) {
+            tabs.push({
                 accessibilityLabel: t('chat.tabs.chat'),
                 countBadge:
                     _focusedTab !== ChatTabs.CHAT && _unreadMessagesCount > 0 ? _unreadMessagesCount : undefined,
                 id: ChatTabs.CHAT,
                 controlsId: `${ChatTabs.CHAT}-panel`,
                 icon: IconMessage,
-                title: t('chat.tabs.chat'),
-            },
-        ];
+                title: t('chat.tabs.chat')
+            });
+        }
 
         if (_isPollsEnabled) {
             tabs.push({
@@ -620,6 +635,8 @@ const Chat = ({
             {_showNamePrompt ? (
                 <DisplayNameForm
                     isCCTabEnabled = { _isCCTabEnabled }
+                    isChatDisabled = { _isChatDisabled }
+                    isFileSharingEnabled = { _isFileSharingTabEnabled }
                     isPollsEnabled = { _isPollsEnabled } />
             ) : (
                 renderChat()
@@ -660,7 +677,7 @@ const Chat = ({
  * }}
  */
 function _mapStateToProps(state: IReduxState, _ownProps: any) {
-    const { isOpen, focusedTab, messages, unreadMessagesCount, unreadFilesCount, width, isResizing } = state['features/chat'];
+    const { isOpen, messages, unreadMessagesCount, unreadFilesCount, width, isResizing } = state['features/chat'];
     const { unreadPollsCount } = state['features/polls'];
     const _localParticipant = getLocalParticipant(state);
 
@@ -669,8 +686,9 @@ function _mapStateToProps(state: IReduxState, _ownProps: any) {
         _isOpen: isOpen,
         _isPollsEnabled: !arePollsDisabled(state),
         _isCCTabEnabled: isCCTabEnabled(state),
+        _isChatDisabled: isChatDisabled(state),
         _isFileSharingTabEnabled: isFileSharingEnabled(state),
-        _focusedTab: focusedTab,
+        _focusedTab: getFocusedTab(state),
         _messages: messages,
         _unreadMessagesCount: unreadMessagesCount,
         _unreadPollsCount: unreadPollsCount,

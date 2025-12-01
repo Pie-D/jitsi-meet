@@ -18,12 +18,14 @@ describe('Desktop sharing', () => {
         await ensureTwoParticipants({
             configOverwrite: {
                 p2p: {
+                    backToP2PDelay: 3,
                     enabled: true
                 }
             }
         });
         const { p1, p2 } = ctx;
 
+        await p1.waitForP2PIceConnected();
         await p2.getToolbar().clickDesktopSharingButton();
 
         // Check if a remote screen share tile is created on p1.
@@ -53,15 +55,24 @@ describe('Desktop sharing', () => {
     it('p2p to jvb switch', async () => {
         await ctx.p2.getToolbar().clickDesktopSharingButton();
 
-        await ensureThreeParticipants();
+        await ensureThreeParticipants({
+            configOverwrite: {
+                p2p: {
+                    enabled: true
+                }
+            }
+        });
         const { p1, p2, p3 } = ctx;
+        const p2EndpointId = await p2.getEndpointId();
 
         // Check if a remote screen share tile is created on all participants.
         await checkForScreensharingTile(p2, p1);
         await checkForScreensharingTile(p2, p2);
-        await checkForScreensharingTile(p2, p2);
+        await checkForScreensharingTile(p2, p3);
 
-        expect(await p3.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        await p1.getFilmstrip().assertNoGapsInFilmstrip();
+        await p3.getFilmstrip().assertNoGapsInFilmstrip();
+        await p3.waitForParticipantOnLargeVideo(`${p2EndpointId}-v1`);
     });
 
     /**
@@ -72,12 +83,16 @@ describe('Desktop sharing', () => {
 
         await p3.hangup();
 
+        // Wait for p1 and p2 to switch back to p2p.
+        await p1.waitForP2PIceConnected();
+        await p2.waitForP2PIceConnected();
+
         // Check if a remote screen share tile is created on p1 and p2 after switching back to p2p.
         await checkForScreensharingTile(p2, p1);
         await checkForScreensharingTile(p2, p2);
 
         // The video should be playing.
-        expect(await p1.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        await p1.waitForParticipantOnLargeVideo(`${await p2.getEndpointId()}-v1`);
 
         // Start desktop share on p1.
         await p1.getToolbar().clickDesktopSharingButton();
@@ -86,13 +101,17 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p1, p1);
         await checkForScreensharingTile(p1, p2);
 
-        await ensureThreeParticipants();
+        await ensureThreeParticipants({
+            configOverwrite: {
+                p2p: {
+                    backToP2PDelay: 3,
+                    enabled: true
+                }
+            }
+        });
 
         await checkForScreensharingTile(p1, p3);
         await checkForScreensharingTile(p2, p3);
-
-        // The large video should be playing on p3.
-        expect(await p3.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
     });
 
     /**
@@ -108,6 +127,10 @@ describe('Desktop sharing', () => {
 
         await p3.hangup();
 
+        // Wait for p1 and p2 to switch back to p2p.
+        await p1.waitForP2PIceConnected();
+        await p2.waitForP2PIceConnected();
+
         // Start share on both p1 and p2.
         await p1.getToolbar().clickDesktopSharingButton();
         await p2.getToolbar().clickDesktopSharingButton();
@@ -117,13 +140,34 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p2, p1);
 
         // Add p3 back to the conference and check if p1 and p2's shares are visible on p3.
-        await ensureThreeParticipants();
+        await ensureThreeParticipants({
+            configOverwrite: {
+                p2p: {
+                    backToP2PDelay: 3,
+                    enabled: true
+                }
+            }
+        });
 
         await checkForScreensharingTile(p1, p3);
         await checkForScreensharingTile(p2, p3);
 
-        // The large video should be playing on p3.
-        expect(await p3.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        // Add another participant to verify multiple screenshares are visible without gaps in filmstrip.
+        await ensureFourParticipants({
+            configOverwrite: {
+                filmstrip: {
+                    stageFilmstripParticipants: 2
+                },
+                startWithAudioMuted: true
+            }
+        });
+
+        const { p4 } = ctx;
+
+        await checkForScreensharingTile(p1, p4);
+        await checkForScreensharingTile(p2, p4);
+        await p3.getFilmstrip().assertNoGapsInFilmstrip();
+        await p4.getFilmstrip().assertNoGapsInFilmstrip();
     });
 
     /**
@@ -137,6 +181,7 @@ describe('Desktop sharing', () => {
         await ensureOneParticipant({
             configOverwrite: {
                 p2p: {
+                    backToP2PDelay: 3,
                     enabled: true
                 }
             }
@@ -151,8 +196,19 @@ describe('Desktop sharing', () => {
         await p1.getToolbar().clickStopDesktopSharingButton();
 
         // Call switches to jvb.
-        await ensureThreeParticipants();
+        await ensureThreeParticipants({
+            configOverwrite: {
+                p2p: {
+                    backToP2PDelay: 3,
+                    enabled: true
+                }
+            }
+        });
         const { p2, p3 } = ctx;
+        const p1EndpointId = await p1.getEndpointId();
+        const p1ScreenShareTileId = `${p1EndpointId}-v1`;
+        const p2EndpointId = await p2.getEndpointId();
+        const p2ScreenShareTileId = `${p2EndpointId}-v1`;
 
         // p1 starts share again when call switches to jvb.
         await p1.getToolbar().clickDesktopSharingButton();
@@ -161,22 +217,26 @@ describe('Desktop sharing', () => {
         await checkForScreensharingTile(p1, p2);
         await checkForScreensharingTile(p1, p3);
 
-        expect(await p2.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
-        expect(await p3.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        await p2.waitForParticipantOnLargeVideo(p1ScreenShareTileId);
+        await p3.waitForParticipantOnLargeVideo(p1ScreenShareTileId);
 
         // p3 leaves the call.
         await p3.hangup();
 
+        // Wait for p1 and p2 to switch back to p2p.
+        await p1.waitForP2PIceConnected();
+        await p2.waitForP2PIceConnected();
+
         // Make sure p2 see's p1's share after the call switches back to p2p.
         await checkForScreensharingTile(p1, p2);
-        expect(await p2.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        await p2.waitForParticipantOnLargeVideo(p1ScreenShareTileId);
 
         // p2 starts share when in p2p.
         await p2.getToolbar().clickDesktopSharingButton();
 
         // Makes sure p2's share is visible on p1.
         await checkForScreensharingTile(p2, p1);
-        expect(await p1.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+        await p1.waitForParticipantOnLargeVideo(p2ScreenShareTileId);
     });
 
     /**
@@ -300,6 +360,11 @@ describe('Desktop sharing', () => {
 
         // And the video should be playing
         expect(await p4.execute(() => JitsiMeetJS.app.testing.isLargeVideoReceived())).toBe(true);
+
+        // Check that there are no gaps in the filmstrip when participant joins during screensharing
+        await p1.getFilmstrip().assertNoGapsInFilmstrip();
+        await p2.getFilmstrip().assertNoGapsInFilmstrip();
+        await p4.getFilmstrip().assertNoGapsInFilmstrip();
 
         const p1EndpointId = await p1.getEndpointId();
         const p2EndpointId = await p2.getEndpointId();
