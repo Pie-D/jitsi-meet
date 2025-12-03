@@ -130,15 +130,15 @@ function _setPasswordFailed(store: IStore, next: Function, action: AnyAction) {
         let descriptionKey;
         let titleKey;
 
-        if (error === JitsiConferenceErrors.PASSWORD_NOT_SUPPORTED) {
-            logger.warn('room passwords not supported');
-            descriptionKey = 'dialog.passwordNotSupported';
-            titleKey = 'dialog.passwordNotSupportedTitle';
-        } else {
-            logger.warn('setting password failed', error);
-            descriptionKey = 'dialog.lockMessage';
-            titleKey = 'dialog.lockTitle';
-        }
+        // if (error === JitsiConferenceErrors.PASSWORD_NOT_SUPPORTED) {
+        //     logger.warn('room passwords not supported');
+        //     descriptionKey = 'dialog.passwordNotSupported';
+        //     titleKey = 'dialog.passwordNotSupportedTitle';
+        // } else {
+        //     logger.warn('setting password failed', error);
+        //     descriptionKey = 'dialog.lockMessage';
+        //     titleKey = 'dialog.lockTitle';
+        // }
         APP.store.dispatch(showErrorNotification({
             descriptionKey,
             titleKey

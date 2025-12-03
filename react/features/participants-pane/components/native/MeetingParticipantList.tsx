@@ -35,8 +35,7 @@ const MeetingParticipantList = () => {
     const dispatch = useDispatch();
     const inviteOthersControl = useSelector(getInviteOthersControl);
     const isAddPeopleFeatureEnabled = useSelector(addPeopleFeatureControl);
-    const keyExtractor
-        = useCallback((e: undefined, i: number) => i.toString(), []);
+    const keyExtractor = useCallback((id: string) => id?.toString?.() ?? '', []);
     const localParticipant = useSelector(getLocalParticipant);
     const _iAmVisitor = useSelector(iAmVisitor);
     const onInvite = useCallback(() => {
@@ -48,19 +47,14 @@ const MeetingParticipantList = () => {
         setSearchString(text), []);
     const participantsCount = useSelector(getParticipantCountWithFake);
     const remoteParticipants = useSelector(getRemoteParticipants);
-    const renderParticipant = ({ item/* , index, separators */ }: any) => {
+    const renderParticipant = ({ item }: { item: string }) => {
         const participant = item === localParticipant?.id
             ? localParticipant : remoteParticipants.get(item);
 
-        if (participantMatchesSearch(participant, searchString)) {
-            return (
-                <MeetingParticipantItem
-                    key = { item }
-                    participant = { participant } />
-            );
-        }
-
-        return null;
+        return (
+            <MeetingParticipantItem
+                participant = { participant } />
+        );
     };
     const showInviteButton = useSelector(shouldRenderInviteButton);
     const sortedRemoteParticipants = useSelector(
@@ -105,9 +99,14 @@ const MeetingParticipantList = () => {
                 placeholder = { t('participantsPane.search') }
                 value = { searchString } />
             <FlatList
-                data = { _iAmVisitor
+                data = { (_iAmVisitor
                     ? [ ...sortedRemoteParticipants ]
-                    : [ localParticipant?.id, ...sortedRemoteParticipants ] as Array<any>
+                    : [ localParticipant?.id, ...sortedRemoteParticipants ] as Array<string>)
+                    .filter(id => {
+                        const participant = id === localParticipant?.id
+                            ? localParticipant : remoteParticipants.get(id);
+                        return participantMatchesSearch(participant, searchString);
+                    })
                 }
                 keyExtractor = { keyExtractor }
 

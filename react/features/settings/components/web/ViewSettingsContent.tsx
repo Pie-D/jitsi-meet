@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../app/types';
+import { isMobileBrowser } from '../../../base/environment/utils';
 import ContextMenu from '../../../base/ui/components/web/ContextMenu';
 import ContextMenuItem from '../../../base/ui/components/web/ContextMenuItem';
 import ContextMenuItemGroup from '../../../base/ui/components/web/ContextMenuItemGroup';
@@ -14,8 +15,9 @@ import { IconGalleryView, IconImmersiveView, IconSpeakerView } from '../../../ba
 import { setImmersiveEnabled, setImmersiveTemplate } from '../../../immersive-view/actions';
 import ImmersiveSetupDialog from '../../../immersive-view/components/ImmersiveSetupDialog';
 import { openDialog } from '../../../base/dialog/actions';
+import { IReduxState as IState } from '../../../app/types';
 import '../../../immersive-view/reducer';
-
+import {isLocalParticipantModerator, isLocalRoomOwner} from '../../../base/participants/functions';
 const useStyles = makeStyles()(() => ({
     container: {
         position: 'relative',
@@ -31,6 +33,13 @@ const ViewSettingsContent = () => {
     const dispatch = useDispatch();
     const isTile = useSelector(shouldDisplayTileView);
     const immersiveEnabled = useSelector((state: IReduxState) => state['features/immersive-view']?.enabled);
+    // const isOwner = useSelector((state: IState) => {
+    //     const features: any = state['features/base/participants'].local?.features as any;
+    //     const raw = features?.owner ?? features?.isOwner;
+    //     return typeof raw === 'string' ? raw.toLowerCase() === 'true' : Boolean(raw);
+    // });
+    const isOwner = useSelector(isLocalRoomOwner);
+    const isMobile = isMobileBrowser();
 
     const selectTile = useCallback(() => {
         dispatch(setImmersiveEnabled(false));
@@ -72,14 +81,17 @@ const ViewSettingsContent = () => {
                     selected={isTile && !immersiveEnabled} 
                     text={t('toolbar.galleryView')} />
 
-                {/* immersive view */}
-                <ContextMenuItem
-                    accessibilityLabel={t('toolbar.immersiveView')}
-                    icon={IconImmersiveView}
-                    onClick={selectImmersive}
-                    role='menuitem'
-                    selected={immersiveEnabled}
-                    text={t('toolbar.immersiveView')} />
+                {/* immersive view - chỉ owner mới có thể sử dụng và chỉ trên desktop */}
+                {isOwner && !isMobile && (
+
+                    <ContextMenuItem
+                        accessibilityLabel={t('toolbar.immersiveView')}
+                        icon={IconImmersiveView}
+                        onClick={selectImmersive}
+                        role='menuitem'
+                        selected={immersiveEnabled}
+                        text={t('toolbar.immersiveView')} />
+                )}
 
             </ContextMenuItemGroup>
         </ContextMenu>

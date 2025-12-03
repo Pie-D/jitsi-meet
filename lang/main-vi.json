@@ -357,7 +357,7 @@
         "kickMessage": "Bạn có thể liên hệ với {{participantDisplayName}} để biết thêm chi tiết.",
         "kickParticipantButton": "Đuổi ra",
         "kickParticipantDialog": "Bạn có chắc muốn đuổi người này ra?",
-        "kickParticipantTitle": "Tắt tiếng của người tham dự này?",
+        "kickParticipantTitle": "Xóa người dùng khỏi cuộc họp?",
         "kickSystemTitle": "Ối! Bạn bị đuổi khỏi cuộc họp rồi",
         "kickTitle": "Ôi! {{participantDisplayName}} đã đuổi bạn ra khỏi cuộc họp",
         "learnMore": "tìm hiểu thêm",
@@ -504,7 +504,7 @@
         "token": "mã thông báo",
         "tokenAuthFailed": "Rất tiếc, bạn không được phép tham gia cuộc gọi này.",
         "tokenAuthFailedReason": {
-            "audInvalid": "Giá trị `aud` không hợp lệ. Nó nên là `jitsi`.",
+            "audInvalid": "Giá trị `aud` không hợp lệ. Nó nên là `C-Meet`.",
             "contextNotFound": "Đối tượng `context` bị thiếu trong dữ liệu đầu vào.",
             "expInvalid": "Giá trị `exp` không hợp lệ.",
             "featureInvalid": "Tính năng không hợp lệ: {{feature}}, có khả năng chưa được triển khai.",
@@ -636,7 +636,8 @@
         "title": "Chia sẻ",
         "tooltip": "Chia sẻ liên kết và thông tin quay số của cuộc họp này",
         "upgradeOptions": "Vui lòng kiểm tra các tùy chọn nâng cấp trên",
-        "whiteboardError": "Lỗi tải bảng trắng. Vui lòng thử lại sau."
+        "whiteboardError": "Lỗi tải bảng trắng. Vui lòng thử lại sau.",
+        "subject" : "Cuộc họp"
     },
     "inlineDialogFailure": {
         "msg": "Chúng tôi đã gặp một chút vấn đề.",
@@ -904,7 +905,16 @@
         "waitingVisitors": "Khách đang trong hàng đợi: {{waitingVisitors}}",
         "waitingVisitorsTitle": "Cuộc họp vẫn chưa diễn ra!",
         "whiteboardLimitDescription": "Vui lòng lưu tiến độ của bạn, vì giới hạn người dùng sẽ sớm được đạt và bảng trắng sẽ đóng.",
-        "whiteboardLimitTitle": "Sử dụng bảng trắng"
+        "whiteboardLimitTitle": "Sử dụng bảng trắng",
+        "cannotKickOwner": "Bạn không có quyền đuổi chủ phòng cuộc họp ra ngoài.",
+        "speechContinued": "Luồng bóc băng chưa kết thúc. Vui lòng thử lại sau.",
+        "speechFailed": "Dịch vụ STT hiện không khả dụng. Vui lòng thử lại sau.",
+        "tokenExpired": "Mã thông báo đã hết hạn. Vui lòng đăng nhập lại.",
+        "sttEnabled": "STT đã được bật.",
+        "sttDisabled": "STT đã được tắt.",
+        "sttErrored": "STT đã gặp lỗi.",
+        "sttExists": "Một phiên STT đã hoạt động. Vui lòng dừng phiên hiện tại trước khi bắt đầu một phiên mới.",
+        "cannotdemoteOwner": "Bạn không có quyền di chuyển chủ phòng cuộc họp sang phòng chờ."
     },
     "participantsPane": {
         "actions": {
@@ -1492,8 +1502,8 @@
         "talkWhileMutedPopup": "Đang nói chuyện? Bạn đang tắt tiếng.",
         "tileViewToggle": "Cài đặt hiển thị",
         "viewSettings": "Chọn chế độ hiển thị",
-        "speakerView": "Người nói",
-        "galleryView": "Thư viện",
+        "speakerView": "Hiển thị người nói",
+        "galleryView": "Hiển thị thư viện",
         "immersiveView": "Chế độ nhập vai",
         "toggleCamera": "Mở/Đóng camera",
         "unmute": "Bỏ tắt tiếng",
@@ -1508,7 +1518,8 @@
         "ccButtonTooltip": "Chạy/Dừng phụ đề",
         "expandedLabel": "Phiên âm đang bật",
         "failedToStart": "Khởi chạy phiên âm thất bại",
-        "labelToolTip": "Cuộc họp đang được phiên âm",
+        "labelTooltip": "Cuộc họp đang được phiên âm",
+        "labelTooltipExtra": "Ngoài ra, bản ghi sẽ được cung cấp sau.",
         "openClosedCaptions": "Bật phụ đề",
         "original": "Bản gốc",
         "sourceLanguageDesc": "Hiện tại ngôn ngữ của cuộc họp được đặt là <b>{{sourceLanguage}}</b>. <br/> Bạn có thể thay đổi nó từ",
@@ -1519,7 +1530,10 @@
         "subtitlesOff": "Tắt",
         "failed": "Tính năng đang bảo trì",
         "tr": "TR",
-        "translateTo": "Dịch sang"
+        "translateTo": "Dịch sang",
+        "bilingual": "VI/EN",
+        "translation": "Dịch",
+        "hideSubtitles": "Ẩn"
     },
     "unpinParticipant": "{{participantName}} - Bỏ ghim",
     "userMedia": {
@@ -1572,6 +1586,7 @@
         "kick": "Đẩy ra",
         "mirrorVideo": "Phản chiếu video của tôi",
         "moderator": "Quản trị viên",
+        "host": "Chủ phòng",
         "mute": "Người tham dự đã bị tắt tiếng",
         "muted": "Đã tắt tiếng",
         "pinToStage": "Ghim vào sân khấu",
@@ -1698,6 +1713,8 @@
     "secondTitle": "Thư viện mẫu ",
     "start": "Bắt đầu",
     "slots": "ô",
-    "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này"
+    "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này",
+    "accessDenied": "Không có quyền truy cập",
+    "ownerOnly": "Chỉ Chủ phòng mới có thể cấu hình chế độ nhập vai"
   }
 }

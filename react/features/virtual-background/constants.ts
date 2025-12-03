@@ -26,12 +26,12 @@ export const IMAGES: Array<Image> = [
     {
         tooltip: 'image1',
         id: '1',
-        src: 'images/virtual-background/background-1.jpg'
+        src: 'images/virtual-background/botruong.png'
     },
     {
         tooltip: 'image2',
         id: '2',
-        src: 'images/virtual-background/background-2.jpg'
+        src: 'images/virtual-background/hinhnenao.png'
     },
     {
         tooltip: 'image3',
@@ -57,5 +57,15 @@ export const IMAGES: Array<Image> = [
         tooltip: 'image7',
         id: '7',
         src: 'images/virtual-background/background-7.jpg'
+    },
+    {
+        tooltip: 'image8',
+        id: '8',
+        src: 'images/virtual-background/background-1.jpg'
+    },
+    {
+        tooltip: 'image9',
+        id: '9',
+        src: 'images/virtual-background/background-2.jpg'
     }
 ];

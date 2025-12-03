@@ -141,7 +141,6 @@ export const CONFERENCE_TIMESTAMP_CHANGED = 'CONFERENCE_TIMESTAMP_CHANGED';
  */
 export const CONFERENCE_UNIQUE_ID_SET = 'CONFERENCE_UNIQUE_ID_SET';
 
-// export const CONFERENCE_ROOM_OWNER_SET = 'CONFERENCE_ROOM_OWNER_SET';
 /**
  * The type of (redux) action which signals that the end-to-end RTT against a specific remote participant has changed.
  *
@@ -374,3 +373,13 @@ export const SET_ASSUMED_BANDWIDTH_BPS = 'SET_ASSUMED_BANDWIDTH_BPS';
  * }
  */
 export const UPDATE_CONFERENCE_METADATA = 'UPDATE_CONFERENCE_METADATA';
+
+/**
+ * The type of (redux) action which signals that the room owner has been set.
+ *
+ * {
+ *     type: CONFERENCE_ROOM_OWNER_SET,
+ *     ownerId: string
+ * }
+ */
+export const CONFERENCE_ROOM_OWNER_SET = 'CONFERENCE_ROOM_OWNER_SET';

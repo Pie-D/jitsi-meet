@@ -31,7 +31,7 @@ import { connect, connectionDisconnected, disconnect, setPreferVisitor } from '.
 import { validateJwt } from '../jwt/functions';
 import { JitsiConferenceErrors, JitsiConferenceEvents, JitsiConnectionErrors } from '../lib-jitsi-meet';
 import { MEDIA_TYPE } from '../media/constants';
-import { PARTICIPANT_UPDATED, PIN_PARTICIPANT } from '../participants/actionTypes';
+import { PARTICIPANT_JOINED, PARTICIPANT_UPDATED, PIN_PARTICIPANT } from '../participants/actionTypes';
 import { PARTICIPANT_ROLE } from '../participants/constants';
 import {
     getLocalParticipant,
@@ -54,6 +54,7 @@ import {
     SET_PENDING_SUBJECT_CHANGE,
     SET_ROOM
 } from './actionTypes';
+import { PARTICIPANT_ROLE_CHANGED } from '../participants/actionTypes';
 import {
     authStatusChanged,
     conferenceFailed,
@@ -137,6 +138,12 @@ MiddlewareRegistry.register(store => next => action => {
 
     case SET_ASSUMED_BANDWIDTH_BPS:
         return _setAssumedBandwidthBps(store, next, action);
+
+    case PARTICIPANT_JOINED:
+        return _participantJoined(store, next, action);
+
+    case PARTICIPANT_ROLE_CHANGED:
+        return _participantRoleChanged(store, next, action);
     }
 
     return next(action);
@@ -827,4 +834,76 @@ function _setAssumedBandwidthBps({ getState }: IStore, next: Function, action: A
     }
 
     return next(action);
+}
+
+/**
+ * Notifies the feature base/conference that the action {@code PARTICIPANT_JOINED}
+ * is being dispatched within a specific redux store.
+ * Refetches disco info when a participant joins with moderator role to update roomOwner
+ * (handles case where Prosody reassigns owner when participant with affiliation=owner joins).
+ *
+ * @param {Store} store - The redux store in which the specified {@code action}
+ * is being dispatched.
+ * @param {Dispatch} next - The redux {@code dispatch} function to dispatch the
+ * specified {@code action} to the specified {@code store}.
+ * @param {Action} action - The redux action {@code PARTICIPANT_JOINED} which is
+ * being dispatched in the specified {@code store}.
+ * @private
+ * @returns {Object} The value returned by {@code next(action)}.
+ */
+function _participantJoined({ getState }: IStore, next: Function, action: AnyAction) {
+    const result = next(action);
+    const state = getState();
+    const conference = getCurrentConference(state);
+    const { participant } = action;
+
+    // Refetch disco info when a remote participant joins with moderator role
+    // This handles the case where Prosody reassigns owner when participant with
+    // affiliation=owner joins (role is already moderator from start, no ROLE_CHANGED event)
+    if (conference && participant && !participant.local && participant.role === PARTICIPANT_ROLE.MODERATOR) {
+        const chatRoom = (conference as any).room;
+        if (chatRoom && typeof chatRoom.discoRoomInfo === 'function') {
+            // Use a small delay to ensure Prosody has finished processing the join
+            setTimeout(() => {
+                logger.info(`Participant ${participant.id} joined with moderator role, refetching disco info to update roomOwner`);
+                chatRoom.discoRoomInfo();
+            }, 500);
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Notifies the feature base/conference that the action {@code PARTICIPANT_ROLE_CHANGED}
+ * is being dispatched within a specific redux store.
+ * Refetches disco info when a participant becomes moderator to update roomOwner
+ * (in case Prosody reassigned owner after initial join).
+ *
+ * @param {Store} store - The redux store in which the specified {@code action}
+ * is being dispatched.
+ * @param {Dispatch} next - The redux {@code dispatch} function to dispatch the
+ * specified {@code action} to the specified {@code store}.
+ * @param {Action} action - The redux action {@code PARTICIPANT_ROLE_CHANGED} which is
+ * being dispatched in the specified {@code store}.
+ * @private
+ * @returns {Object} The value returned by {@code next(action)}.
+ */
+function _participantRoleChanged({ getState }: IStore, next: Function, action: AnyAction) {
+    const result = next(action);
+    const state = getState();
+    const conference = getCurrentConference(state);
+    const { participant } = action;
+
+    // Refetch disco info when a participant becomes moderator to get updated roomOwner
+    // This handles the case where Prosody reassigns owner after initial join
+    if (conference && participant?.role === PARTICIPANT_ROLE.MODERATOR) {
+        const chatRoom = (conference as any).room;
+        if (chatRoom && typeof chatRoom.discoRoomInfo === 'function') {
+            logger.info(`Participant ${participant.id} became moderator, refetching disco info to update roomOwner`);
+            chatRoom.discoRoomInfo();
+        }
+    }
+
+    return result;
 }

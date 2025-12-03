@@ -82,7 +82,7 @@
     },
     "calendarSync": {
         "addMeetingURL": "Add a meeting link",
-        "confirmAddLink": "Do you want to add a Jitsi link to this event?",
+        "confirmAddLink": "Do you want to add a C-Meet link to this event?",
         "error": {
             "appConfiguration": "Calendar integration is not properly configured.",
             "generic": "An error has occurred. Please check your calendar settings or try refreshing the calendar.",
@@ -506,7 +506,7 @@
         "token": "token",
         "tokenAuthFailed": "Sorry, you're not allowed to join this call.",
         "tokenAuthFailedReason": {
-            "audInvalid": "Invalid `aud` value. It should be `jitsi`.",
+            "audInvalid": "Invalid `aud` value. It should be `C-Meet`.",
             "contextNotFound": "The `context` object is missing from the payload.",
             "expInvalid": "Invalid `exp` value.",
             "featureInvalid": "Invalid feature: {{feature}}, most likely not implemented yet.",
@@ -641,7 +641,8 @@
         "title": "Share",
         "tooltip": "Share link and dial-in info for this meeting",
         "upgradeOptions": "Please check the upgrade options on",
-        "whiteboardError": "Error loading the whiteboard. Please try again later."
+        "whiteboardError": "Error loading the whiteboard. Please try again later.",
+        "subject": "Conference"
     },
     "inlineDialogFailure": {
         "msg": "We stumbled a bit.",
@@ -817,7 +818,7 @@
         "desktopMutedRemotelyTitle": "Your screen sharing has been stopped by {{participantDisplayName}}",
         "disabledIframe": "Embedding is only meant for demo purposes, so this call will disconnect in {{timeout}} minutes.",
         "disabledIframeSecondaryNative": "Embedding {{domain}} is only meant for demo purposes, so this call will disconnect in {{timeout}} minutes.",
-        "disabledIframeSecondaryWeb": "Embedding {{domain}} is only meant for demo purposes, so this call will disconnect in {{timeout}} minutes. Please use <a href='{{jaasDomain}}' rel='noopener noreferrer' target='_blank'>Jitsi as a Service</a> for production embedding!",
+        "disabledIframeSecondaryWeb": "Embedding {{domain}} is only meant for demo purposes, so this call will disconnect in {{timeout}} minutes. Please use <a href='{{jaasDomain}}' rel='noopener noreferrer' target='_blank'>C-Meet as a Service</a> for production embedding!",
         "disconnected": "disconnected",
         "displayNotifications": "Display notifications for",
         "dontRemindMe": "Do not remind me",
@@ -909,7 +910,16 @@
         "waitingVisitors": "Viewers waiting in queue: {{waitingVisitors}}",
         "waitingVisitorsTitle": "The meeting is not live yet!",
         "whiteboardLimitDescription": "Please save your progress, as the user limit will soon be reached and the whiteboard will close.",
-        "whiteboardLimitTitle": "Whiteboard usage"
+        "whiteboardLimitTitle": "Whiteboard usage",
+        "cannotKickOwner": "You cannot kick the meeting host out.",
+        "speechContinued": "The STT stream has not ended. Please try again later.",
+        "speechFailed": "STT service is currently unavailable. Please try again later.",
+        "tokenExpired": "Token has expired. Please log in again.",
+        "sttEnabled" : "STT is enabled.",
+        "sttDisabled" : "STT is disabled.",
+        "sttErrored": "STT encountered an error.",
+        "sttExists": "An STT session is already active. Please stop the current session before starting a new one.",
+        "cannotdemoteOwner": "You cannot move the meeting host to viewer."
     },
     "participantsPane": {
         "actions": {
@@ -1499,8 +1509,8 @@
         "talkWhileMutedPopup": "Trying to speak? You are muted.",
         "tileViewToggle": "Display settings",
         "viewSettings": "Select display mode",
-        "speakerView": "Speaker view",
-        "galleryView": "Library view",
+        "speakerView": "Display speaker view",
+        "galleryView": "Display library view",
         "immersiveView": "Immersive view",
         "toggleCamera": "Toggle camera",
         "unmute": "Unmute microphone",
@@ -1526,7 +1536,10 @@
         "subtitles": "Subtitles",
         "subtitlesOff": "Off",
         "tr": "TR",
-        "translateTo": "Translate to"
+        "translateTo": "Translate to",
+        "bilingual": "VI/EN",
+        "translation": "Translate",
+        "hideSubtitles": "Hide"
     },
     "unpinParticipant": "{{participantName}} - Unpin",
     "userMedia": {
@@ -1579,6 +1592,7 @@
         "kick": "Kick out",
         "mirrorVideo": "Mirror my video",
         "moderator": "Moderator",
+        "host": "Host",
         "mute": "Participant is muted",
         "muted": "Muted",
         "pinToStage": "Pin to stage",
@@ -1662,7 +1676,7 @@
         "headerSubtitle": "Secure and high quality meetings",
         "headerTitle": "C-Meet",
         "info": "Dial-in info",
-        "jitsiOnMobile": "Jitsi on mobile – download our apps and start a meeting from anywhere",
+        "jitsiOnMobile": "C-Meet on mobile – download our apps and start a meeting from anywhere",
         "join": "CREATE / JOIN",
         "logo": {
             "calendar": "Calendar logo",
@@ -1705,6 +1719,8 @@
    "secondTitle": "Sample Library",
     "start": "Start",
     "slots": "slots",
-    "description": "This layout will be the same for everyone. Participants can be arranged freely within this view."
+    "description": "This layout will be the same for everyone. Participants can be arranged freely within this view.",
+    "accessDenied": "Access denied",
+    "ownerOnly": "Only the host can configure immersive view"
   }
 }

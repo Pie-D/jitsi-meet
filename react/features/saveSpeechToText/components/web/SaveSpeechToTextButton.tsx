@@ -7,13 +7,12 @@ import { setOverflowMenuVisible } from '../../../toolbox/actions.web';
 import { setSaveSpeechToTextOpen } from '../../actionTypes';
 import { startGstStream, stopGstStream } from '../../../base/util/gstStreamUtils';
 import { IJitsiConference } from '../../../base/conference/reducer';
-// import { isLocalRoomOwner } from '../../../base/participants/functions';
-import { isLocalParticipantModerator } from '../../../base/participants/functions';
+import { isOwnerParticipant, isLocalRoomOwner, isLocalParticipantModerator } from '../../../base/participants/functions';
 import { getWhipLink } from '../../../base/util/cMeetUtils';
 import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 import { env } from '../../../../../ENV';
-
+import { toState } from '../../../base/redux/functions';
 interface IProps extends AbstractButtonProps {
     _toggled: boolean;
     _conference?: IJitsiConference;
@@ -42,8 +41,9 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
     override async _handleClick() {
         const { dispatch, _toggled, _conference } = this.props;
         if(!_toggled) {
+            console.log('SaveSpeechToTextButton clicked', _conference);
             const token = _conference?.connection.token;
-            
+            const roomJid = _conference?.room?.roomjid.split('@')[0];
             if (!token) {
                 return null;
             }
@@ -56,23 +56,23 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 
             const decoded = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
 
-            const whipLink = await getWhipLink(decoded?.context?.token || null, _conference.room.cmeetMeetingId);
+            const whipLink = await getWhipLink(decoded?.context?.token || null, roomJid as string);
             if(whipLink == undefined) return;
 
-            const isStart = await startGstStream(_conference.room.cmeetMeetingId, whipLink);
+            const isStart = await startGstStream(roomJid as string, whipLink);
             if(!isStart) return;
 
             this.stompClient.onConnect = (frame: any) => {
                 this.stompClient.publish({
-                    destination: '/app/conference/' + _conference.room.cmeetMeetingId,
+                    destination: '/app/conference/' + roomJid as string,
                     body: JSON.stringify({
-                        roomId: _conference.room.cmeetMeetingId
+                        roomId: roomJid as string
                     }),
                 });
             };
             this.stompClient.activate();
         } else {
-            const roomId = _conference?.room.cmeetMeetingId;
+            const roomId = _conference?.room?.roomjid.split('@')[0];
             if(!roomId) return null;
             stopGstStream(roomId);
             this.stompClient.deactivate();
@@ -88,12 +88,24 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
 }
 
 function _mapStateToProps(state: IReduxState) {
-    // const isOwner = isParticipantModerator(state);
-    const isOwner = isLocalParticipantModerator(state);
+    const isOwner = isLocalRoomOwner(state);
+    // const state1 = toState(state)['features/base/participants'];
+    // const { local } = state1;
+    // console.log('SaveSpeechToTextButton _mapStateToProps', local);
+    // if (!local) {
+    //     return {
+    //     _toggled: state['features/saveSpeechToText'].isOpen,
+    //     _conference: state['features/base/conference'].conference,
+    //     visible: false
+    //     };
+    // }
+    // const isOwner = isOwnerParticipant(local);
+    // console.log('isOwnerParticipant:', isOwner);
+    // const isOwner = isLocalParticipantModerator(state);
     return {
         _toggled: state['features/saveSpeechToText'].isOpen,
         _conference: state['features/base/conference'].conference,
-        visible: isOwner 
+        visible: false
     };
 }
 

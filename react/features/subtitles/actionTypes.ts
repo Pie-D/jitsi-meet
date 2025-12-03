@@ -57,6 +57,11 @@ export const SET_REQUESTING_SUBTITLES
     = 'SET_REQUESTING_SUBTITLES';
 
 /**
+ * Action toggling bilingual display for stage subtitles.
+ */
+export const SET_STAGE_BILINGUAL_MODE = 'SET_STAGE_BILINGUAL_MODE';
+
+/**
  * Action to store received subtitles in history.
  */
 export const STORE_SUBTITLE = 'STORE_SUBTITLE';

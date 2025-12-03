@@ -12,7 +12,7 @@ import { normalizeAccents } from '../../../base/util/strings.web';
 import { getBreakoutRooms, getCurrentRoomId, isInBreakoutRoom } from '../../../breakout-rooms/functions';
 import { isButtonEnabled, showOverflowDrawer } from '../../../toolbox/functions.web';
 import { iAmVisitor } from '../../../visitors/functions';
-import { getSortedParticipantIds, isCurrentRoomRenamable, shouldRenderInviteButton } from '../../functions';
+import { getSortedParticipantIds, isCurrentRoomRenamable, shouldRenderInviteButton, participantMatchesSearch } from '../../functions';
 import { useParticipantDrawer } from '../../hooks';
 import RenameButton from '../breakout-rooms/components/web/RenameButton';
 
@@ -96,6 +96,14 @@ function MeetingParticipants({
 
     const { classes: styles } = useStyles();
 
+    const normalizedSearch = normalizeAccents(searchString);
+    const filteredIds = useSelector((state: IReduxState) =>
+        sortedParticipantIds.filter(id => {
+            const p = getParticipantById(state, id);
+            return participantMatchesSearch(p, normalizedSearch);
+        })
+    );
+
     return (
         <>
             <span
@@ -130,9 +138,9 @@ function MeetingParticipants({
                     openDrawerForParticipant = { openDrawerForParticipant }
                     overflowDrawer = { overflowDrawer }
                     participantActionEllipsisLabel = { participantActionEllipsisLabel }
-                    participantIds = { sortedParticipantIds }
+                    participantIds = { filteredIds }
                     raiseContextId = { raiseContext.entity }
-                    searchString = { normalizeAccents(searchString) }
+                    searchString = { normalizedSearch }
                     toggleMenu = { toggleMenu }
                     youText = { youText } />
             </div>

@@ -207,9 +207,11 @@ export default class MessageContainer extends Component<IProps, IState> {
      */
     _onChatScroll() {
         const container = this._messageListRef.current;
+
         if (!container) return;
 
         const firstUnreadMessage = this._findFirstUnreadMessage();
+
         if (firstUnreadMessage && firstUnreadMessage.id !== this.state.lastReadMessageId) {
             this.setState({ lastReadMessageId: firstUnreadMessage?.id });
         }
@@ -222,6 +224,7 @@ export default class MessageContainer extends Component<IProps, IState> {
                 requestAnimationFrame(() => {
                     const scrollHeightAfter = container.scrollHeight;
                     const scrollDifference = scrollHeightAfter - scrollHeightBefore;
+
                     container.scrollTop = scrollTopBefore + scrollDifference;
                 });
             }).catch(error => console.error('Failed to load more messages:', error));

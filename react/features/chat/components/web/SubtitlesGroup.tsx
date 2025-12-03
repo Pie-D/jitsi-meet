@@ -20,6 +20,11 @@ interface IProps {
      * The ID of the participant who sent these subtitles.
      */
     senderId: string;
+
+    /**
+     * Whether to display both languages (bilingual mode).
+     */
+    isBilingualMode?: boolean;
 }
 
 const useStyles = makeStyles()(theme => {
@@ -50,7 +55,7 @@ const useStyles = makeStyles()(theme => {
  * @param {IProps} props - The props for the component.
  * @returns {JSX.Element} - A React component rendering a group of subtitles.
  */
-export function SubtitlesGroup({ messages, senderId }: IProps) {
+export function SubtitlesGroup({ messages, senderId, isBilingualMode = false }: IProps) {
     const { classes } = useStyles();
 
     if (!messages.length) {
@@ -68,6 +73,7 @@ export function SubtitlesGroup({ messages, senderId }: IProps) {
                     <SubtitleMessage
                         key = { `${message.timestamp}-${message.id}` }
                         showDisplayName = { index === 0 }
+                        isBilingualMode = { isBilingualMode }
                         { ...message } />
                 ))}
             </div>

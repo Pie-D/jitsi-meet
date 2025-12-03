@@ -384,21 +384,25 @@ const ChatMessage = ({
             tabIndex = { -1 }>
             <div className = { classes.sideBySideContainer }>
                 {message.messageType === 'system' ? (
-                    <div className={cx(
-                        'chatmessage',
-                        classes.chatMessage,
-                        'systemmessage'
-                    )}>
-                        <div className={classes.messageContent}>
-                            <div className={cx(
-                                'usermessage',
-                                classes.userMessage,
-                                'systemmessage'
-                            )}>
-                                <div className={classes.systemMessageSign}></div>
-                                <div style={{display: 'flex', flexDirection: 'column'}}>
-                                    <span className={classes.messageSystemTitle}> {systemMessageTitle} </span>
-                                    <Message text={getMessageText(message)}/>
+                    <div
+                        className = { cx(
+                            'chatmessage',
+                            classes.chatMessage,
+                            'systemmessage'
+                        ) }>
+                        <div className = { classes.messageContent }>
+                            <div
+                                className = { cx(
+                                    'usermessage',
+                                    classes.userMessage,
+                                    'systemmessage'
+                                ) }>
+                                <div className = { classes.systemMessageSign } />
+                                <div style = {{ display: 'flex', flexDirection: 'column' }}>
+                                    <span className = { classes.messageSystemTitle }>
+                                        {systemMessageTitle}
+                                    </span>
+                                    <Message text = { getMessageText(message) } />
                                 </div>
                             </div>
                         </div>
@@ -406,45 +410,42 @@ const ChatMessage = ({
                 ) : (
                     <>
                         {!shouldDisplayMenuOnRight && (
-                            <div className={classes.optionsButtonContainer}>
+                            <div className = { classes.optionsButtonContainer }>
                                 {isHovered && (
                                     <MessageMenu
                                         displayName = { message.displayName }
-                                    enablePrivateChat = { Boolean(enablePrivateChat) }
-                                    isFileMessage = { isFileMessage(message) }
-                                    isFromVisitor = { message.isFromVisitor }
-                                    isLobbyMessage = { message.lobbyChat }
-                                    message = { message.message }
-                                    participantId = { message.participantId }
-                                    />
+                                        enablePrivateChat = { Boolean(enablePrivateChat) }
+                                        isFromVisitor = { message.isFromVisitor }
+                                        isLobbyMessage = { message.lobbyChat }
+                                        message = { message.message }
+                                        participantId = { message.participantId } />
                                 )}
                             </div>
                         )}
                         <div
-                            className={cx(
+                            className = { cx(
                                 'chatmessage',
                                 classes.chatMessage,
                                 className,
                                 message.privateMessage && 'privatemessage',
                                 message.lobbyChat && !knocking && 'lobbymessage'
-                            )}
-                        >
-                            <div className={classes.replyWrapper}>
-                                <div className={cx('messagecontent', classes.messageContent)}>
+                            ) }>
+                            <div className = { classes.replyWrapper }>
+                                <div className = { cx('messagecontent', classes.messageContent) }>
                                     {showDisplayName && _renderDisplayName()}
-                                    <div className={cx('usermessage', classes.userMessage)}>
-                                <span className="sr-only">
-                                    {message.displayName === message.recipient
-                                        ? t('chat.messageAccessibleTitleMe')
-                                        : t('chat.messageAccessibleTitle', {
-                                            user: message.displayName
-                                        })}
-                                </span>
-                                        <Message text={getMessageText(message)} />
-                                        {(message.privateMessage || (message.lobbyChat && !knocking)) &&
-                                            _renderPrivateNotice()}
-                                        <div className={classes.chatMessageFooter}>
-                                            <div className={classes.chatMessageFooterLeft}>
+                                    <div className = { cx('usermessage', classes.userMessage) }>
+                                        <span className = 'sr-only'>
+                                            {message.displayName === message.recipient
+                                                ? t('chat.messageAccessibleTitleMe')
+                                                : t('chat.messageAccessibleTitle', {
+                                                    user: message.displayName
+                                                })}
+                                        </span>
+                                        <Message text = { getMessageText(message) } />
+                                        {(message.privateMessage || (message.lobbyChat && !knocking))
+                                            && _renderPrivateNotice()}
+                                        <div className = { classes.chatMessageFooter }>
+                                            <div className = { classes.chatMessageFooterLeft }>
                                                 {message.reactions && message.reactions.size > 0 && (
                                                     <>{renderReactions}</>
                                                 )}
@@ -456,30 +457,28 @@ const ChatMessage = ({
                             </div>
                         </div>
                         {shouldDisplayMenuOnRight && (
-                            <div className={classes.sideBySideContainer}>
+                            <div className = { classes.sideBySideContainer }>
                                 {!message.privateMessage && (
                                     <div>
-                                        <div className={classes.optionsButtonContainer}>
+                                        <div className = { classes.optionsButtonContainer }>
                                             {isHovered && (
                                                 <ReactButton
-                                                    messageId={message.messageId}
-                                                    receiverId={''}
-                                                />
+                                                    messageId = { message.messageId }
+                                                    receiverId = { '' } />
                                             )}
                                         </div>
                                     </div>
                                 )}
                                 <div>
-                                    <div className={classes.optionsButtonContainer}>
+                                    <div className = { classes.optionsButtonContainer }>
                                         {isHovered && (
                                             <MessageMenu
-                                                 displayName = { message.displayName }
-                                    enablePrivateChat = { Boolean(enablePrivateChat) }
-                                    isFromVisitor = { message.isFromVisitor }
-                                    isLobbyMessage = { message.lobbyChat }
-                                    message = { message.message }
-                                    participantId = { message.participantId }
-                                            />
+                                                displayName = { message.displayName }
+                                                enablePrivateChat = { Boolean(enablePrivateChat) }
+                                                isFromVisitor = { message.isFromVisitor }
+                                                isLobbyMessage = { message.lobbyChat }
+                                                message = { message.message }
+                                                participantId = { message.participantId } />
                                         )}
                                     </div>
                                 </div>

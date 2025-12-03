@@ -49,9 +49,20 @@ interface IProps extends WithTranslation {
     isHighlighted?: boolean;
 
     /**
+     * Whether or not the participant is currently on stage (in ImmersiveView).
+     */
+    isOnStage?: boolean;
+
+    /**
      * Whether or not the participant is a moderator.
      */
     isModerator?: boolean;
+
+    /**
+     * Whether the participant is the room owner (super moderator).
+     * This is a custom flag propagated via JWT features.
+     */
+    isOwner?: boolean;
 
     /**
      * True if the participant is local.
@@ -139,6 +150,8 @@ function ParticipantItem({
     displayName,
     isHighlighted,
     isModerator,
+    isOwner,
+    isOnStage,
     local,
     onLeave,
     openDrawerForParticipant,
@@ -166,7 +179,6 @@ function ParticipantItem({
             participantId = { participantID }
             size = { 32 } />
     );
-
     const text = (
         <>
             <div className = { classes.nameContainer }>
@@ -175,7 +187,10 @@ function ParticipantItem({
                 </div>
                 {local ? <span>&nbsp;({youText})</span> : null}
             </div>
-            {isModerator && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
+            {isOwner && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
+                {t('videothumbnail.host')}
+            </div>}
+            {!isOwner && isModerator && !disableModeratorIndicator && <div className = { classes.moderatorLabel }>
                 {t('videothumbnail.moderator')}
             </div>}
         </>
@@ -199,6 +214,7 @@ function ParticipantItem({
             id = { `participant-item-${participantID}` }
             indicators = { indicators }
             isHighlighted = { isHighlighted }
+            isOnStage = { isOnStage }
             onClick = { !local && overflowDrawer ? onClick : undefined }
             onMouseLeave = { onLeave }
             textChildren = { text }

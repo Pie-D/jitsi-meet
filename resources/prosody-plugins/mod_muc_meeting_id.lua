@@ -12,6 +12,7 @@ local presence_check_status = main_util.presence_check_status;
 local extract_subdomain = main_util.extract_subdomain;
 
 local QUEUE_MAX_SIZE = 500;
+local timer = require "util.timer";
 
 module:depends("jitsi_permissions");
 
@@ -29,12 +30,12 @@ module:depends("jitsi_permissions");
 module:hook("muc-room-created", function(event)
     local room = event.room;
 
-    -- local stanza = event.stanza;
-    -- if stanza == nil then
-	-- module:log("warn", "stanze is nil");
-    -- else
-	-- module:log("info", "stanzae is not nil");
-    -- end
+    local stanza = event.stanza;
+    if stanza == nil then
+	module:log("warn", "stanze is nil");
+    else
+	module:log("info", "stanzae is not nil");
+    end
 
     if is_healthcheck_room(room.jid) then
         return;
@@ -44,49 +45,187 @@ module:hook("muc-room-created", function(event)
 
     module:log("debug", "Created meetingId:%s for %s",
         room._data.meetingId, room.jid);
-    --     for key,value in pairs(room) do
-    --         if type(value) == "table" then
-    --             module:log("info", "Key: %s -> Table (nested)", key)
-    --             for k, v in pairs(value) do
-    --                 module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-    --             end
-    --         else
-    --             module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-    --         end
-    --     end
-    --     for key,value in pairs(stanza) do
-    --         if type(value) == "table" then
-    --             module:log("info", "Key: %s -> Table (nested)", key)
-    --             for k, v in pairs(value) do
-    --                 module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-    --             end
-    --         else
-    --             module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-    --         end
-    --     end
-    --     for key, value in pairs(event) do
-    --         if type(value) == "table" then
-    --             module:log("info", "Key: %s -> Table (nested)", key)
-    --             for k, v in pairs(value) do
-    --                 module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-    --             end
-    --         else
-    --             module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-    --         end
-    --     end
-    -- end);
-    -- module:hook("muc-occupant-pre-join", function (event)
-    --     local room, occupant = event.room, event.occupant;
-    --     module:log('debug', 'dht - pre-join');
-    --     if is_healthcheck_room(room.jid) or is_admin(occupant.bare_jid) then
-    --         return;
-    --     end
-    --     module:log('debug', 'dht - %s', occupant.bare_jid);
-    --     if not room._data.owner then
-    --     local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-")
-    --     room._data.owner = jid_prefix;
-    --     end
-end);
+        for key,value in pairs(room) do
+            if type(value) == "table" then
+                module:log("info", "Key: %s -> Table (nested)", key)
+                for k, v in pairs(value) do
+                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+                end
+            else
+                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+            end
+        end
+        for key,value in pairs(stanza) do
+            if type(value) == "table" then
+                module:log("info", "Key: %s -> Table (nested)", key)
+                for k, v in pairs(value) do
+                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+                end
+            else
+                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+            end
+        end
+        for key, value in pairs(event) do
+            if type(value) == "table" then
+                module:log("info", "Key: %s -> Table (nested)", key)
+                for k, v in pairs(value) do
+                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+                end
+            else
+                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+            end
+        end
+    end);
+-- Hook set owner tạm thời cho người đầu tiên (chỉ khi chưa có logic JWT/affiliation).
+-- Lưu ý: room._data.owner sẽ có thể được cập nhật lại ở hook "muc-occupant-joined"
+-- khi chúng ta xác thực rằng occupant có affiliation = owner (được cấp từ server/JWT).
+    module:hook("muc-occupant-pre-join", function (event)
+        local room, occupant = event.room, event.occupant;
+        module:log('debug', 'tqd - pre-join');
+        if is_healthcheck_room(room.jid) or is_admin(occupant.bare_jid) then
+            return;
+        end
+        module:log('debug', 'tqd - %s', occupant.bare_jid);
+        if not room._data.owner then
+            local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-")
+            local new_owner = jid_prefix or occupant.bare_jid;
+            room._data.owner = new_owner;
+            module:log('info', '[ROOM_OWNER_SET] PRE-JOIN: Set initial room owner = %s (from occupant: %s, room: %s)', 
+                new_owner, occupant.bare_jid, room.jid);
+        else
+            module:log('debug', '[ROOM_OWNER_SET] PRE-JOIN: Room owner already exists = %s (occupant: %s, room: %s)', 
+                room._data.owner, occupant.bare_jid, room.jid);
+        end
+    end, 1); -- Priority 1 để chạy trước hook priority 8
+
+-- Tuỳ chọn cho phép ghi đè (reassign) owner khi có occupant với affiliation = owner vào sau.
+-- Có thể cấu hình trong prosody.cfg.lua: component "conference.example.com" ...
+--   cmeet_owner_reassign = true | false (mặc định: false)
+local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', true);
+
+-- Hook để đồng bộ hoá chủ phòng dựa trên affiliation thực tế (owner/admin) sau khi join.
+-- 1) Nếu occupant hiện tại có affiliation = owner/admin:
+--    - Nếu room._data.owner chưa có: set theo occupant này.
+--    - Nếu room._data.owner đã có và allow_owner_reassign = true: ghi đè bằng occupant này.
+-- 2) Đồng thời retry set affiliation = owner để chống race với các module khác
+--    (mod_token_affiliation, jitsi_permissions, ...).
+    module:hook("muc-occupant-joined", function(event)
+        local room, occupant = event.room, event.occupant;
+        if is_healthcheck_room(room.jid) or is_admin(occupant.bare_jid) then
+            return;
+        end
+
+    local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-") or occupant.bare_jid;
+
+    -- 1) Kiểm tra affiliation hiện tại của occupant
+    local current_aff = room:get_affiliation(occupant.bare_jid);
+
+    -- Nếu occupant đã có affiliation owner(do JWT hoặc backend cấp)
+    if current_aff == "owner"  then
+        module:log('info', '[ROOM_OWNER_CHECK] Occupant %s has affiliation = %s (room: %s)', 
+            occupant.bare_jid, current_aff, room.jid);
+        module:log('allow_owner_reassign: ', allow_owner_reassign);
+        -- 1.a) Chính sách cập nhật room._data.owner để client nhận qua disco info
+        if not room._data.owner then
+            room._data.owner = jid_prefix;
+            module:log('info', '[ROOM_OWNER_SET] JOINED (first owner): Set room owner = %s (occupant: %s, affiliation: %s, room: %s)', 
+                jid_prefix, occupant.bare_jid, current_aff, room.jid);
+        elseif allow_owner_reassign and room._data.owner ~= jid_prefix then
+            local old_owner = room._data.owner;
+            room._data.owner = jid_prefix;
+            module:log('info', '[ROOM_OWNER_REASSIGN] JOINED (immediate): Changed room owner from %s → %s (occupant: %s, affiliation: %s, room: %s)', 
+                old_owner, jid_prefix, occupant.bare_jid, current_aff, room.jid);
+        else
+            if not allow_owner_reassign then
+                module:log('debug', '[ROOM_OWNER_SKIP] JOINED: Reassign disabled, keeping owner = %s (occupant: %s has affiliation: %s, room: %s)', 
+                    room._data.owner, occupant.bare_jid, current_aff, room.jid);
+            else
+                module:log('debug', '[ROOM_OWNER_SKIP] JOINED: Owner unchanged = %s (occupant: %s already matches, affiliation: %s, room: %s)', 
+                    room._data.owner, occupant.bare_jid, current_aff, room.jid);
+            end
+        end
+
+        -- 1.b) Đánh dấu token_affiliation_checked để tránh race với mod_token_affiliation
+            if event.origin then
+                event.origin.token_affiliation_checked = true;
+            end
+
+        -- 1.c) Retry set affiliation=owner để bảo đảm quyền được áp dụng, tránh xung đột thứ tự hook
+            local i = 0;
+        local function ensure_owner_affiliation()
+            local aff = room:get_affiliation(occupant.bare_jid);
+            if aff ~= 'owner' then
+                module:log('info', 'Ensuring owner affiliation (retry %d) for %s', i, occupant.bare_jid);
+                room:set_affiliation(true, occupant.bare_jid, 'moderator');
+                end
+
+            if aff == 'owner' or i > 8 then
+                    return;
+                end
+
+                i = i + 1;
+            timer.add_task(0.2 * i, ensure_owner_affiliation);
+        end
+
+        ensure_owner_affiliation();
+        return;
+    end
+
+    -- 2) Nếu occupant CHƯA có affiliation owner/admin
+    --    2.a) Nếu trùng với room._data.owner tạm thời → retry promote lên owner như cũ.
+    --    2.b) Nếu KHÔNG trùng nhưng cho phép reassign → retry theo dõi affiliation;
+    --         khi affiliation chuyển thành owner/admin thì cập nhật room._data.owner (reassign) và dừng retry.
+    if room._data.owner and (occupant.bare_jid == room._data.owner or jid_prefix == room._data.owner) then
+        if event.origin then
+            event.origin.token_affiliation_checked = true;
+        end
+
+        local i = 0;
+        local function promote_owner()
+            local aff = room:get_affiliation(occupant.bare_jid);
+            if aff ~= 'owner' then
+                module:log('info', 'Promoting pre-join owner (retry %d) for %s', i, occupant.bare_jid);
+                room:set_affiliation(true, occupant.bare_jid, 'owner');
+            end
+            if aff == 'owner' or i > 8 then
+                return;
+            end
+            i = i + 1;
+            timer.add_task(0.2 * i, promote_owner);
+        end
+        promote_owner();
+    elseif allow_owner_reassign then
+        -- 2.b) Theo dõi occupant có affiliation owner/admin rồi sẽ gán owner
+        module:log('info', '[ROOM_OWNER_WATCH] Starting watch for occupant %s (current affiliation: %s, current owner: %s, room: %s)', 
+            occupant.bare_jid, current_aff, room._data.owner or 'none', room.jid);
+        local i2 = 0;
+        local function watch_and_reassign()
+            local aff2 = room:get_affiliation(occupant.bare_jid);
+            if aff2 == 'owner' or aff2 == 'admin' then
+                if room._data.owner ~= jid_prefix then
+                    local old_owner = room._data.owner;
+                    room._data.owner = jid_prefix;
+                    module:log('info', '[ROOM_OWNER_REASSIGN] JOINED (delayed, retry %d): Changed room owner from %s → %s (occupant: %s, affiliation: %s, room: %s)', 
+                        i2, old_owner, jid_prefix, occupant.bare_jid, aff2, room.jid);
+                else
+                    module:log('info', '[ROOM_OWNER_WATCH] Occupant %s now has affiliation %s, but owner already matches = %s (room: %s)', 
+                        occupant.bare_jid, aff2, jid_prefix, room.jid);
+                end
+                return;
+            end
+            if i2 > 8 then
+                module:log('warn', '[ROOM_OWNER_WATCH] Stopped watching after %d retries. Occupant %s still has affiliation: %s (expected owner/admin, room: %s)', 
+                    i2, occupant.bare_jid, aff2, room.jid);
+                return;
+            end
+            module:log('debug', '[ROOM_OWNER_WATCH] Retry %d: Occupant %s affiliation = %s (waiting for owner/admin, room: %s)', 
+                i2, occupant.bare_jid, aff2, room.jid);
+            i2 = i2 + 1;
+            timer.add_task(0.2 * i2, watch_and_reassign);
+        end
+        watch_and_reassign();
+        end
+    end, 5);
 
 -- Returns the meeting config Id form data.
 function getMeetingIdConfig(room)
@@ -98,27 +237,27 @@ function getMeetingIdConfig(room)
     };
 end
 
--- function getMeetingRoomOwmer(room)
---     local room_owner = room._data.owner or "Unknown";
---     module:log("debug", "dht room owner: %s", room_owner);
---     return {
--- 	name = "muc#roominfo_roomOwner";
--- 	type = "text-single";
--- 	lable = "The room owner id.";
--- 	value = room_owner;
---     };
--- end
+function getMeetingRoomOwner(room)
+    local room_owner = room._data.owner or "Unknown";
+    module:log("debug", "tqd room owner: %s", room_owner);
+    return {
+	name = "muc#roominfo_roomOwner";
+	type = "text-single";
+	lable = "The room owner id.";
+	value = room_owner;
+    };
+end
 -- add meeting Id to the disco info requests to the room
 module:hook("muc-disco#info", function(event)
     table.insert(event.form, getMeetingIdConfig(event.room));
-    -- table.insert(event.form, getMeetingRoomOwmer(event.room))
+    table.insert(event.form, getMeetingRoomOwner(event.room))
 end);
 
 -- add the meeting Id in the default config we return to jicofo
 module:hook("muc-config-form", function(event)
     table.insert(event.form, getMeetingIdConfig(event.room));
---     table.insert(event.form, getMeetingRoomOwmer(event.room));
--- end, 91-3);
+    table.insert(event.form, getMeetingRoomOwner(event.room));
+end, 91-3);
 
 -- disabled few options for room config, to not mess with visitor logic
 module:hook("muc-config-submitted/muc#roomconfig_moderatedroom", function()

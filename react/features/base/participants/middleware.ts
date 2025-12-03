@@ -95,7 +95,7 @@ import {
 import logger from './logger';
 import { PARTICIPANT_JOINED_FILE, PARTICIPANT_LEFT_FILE } from './sounds';
 import { IJitsiParticipant } from './types';
-
+import { toast } from 'react-toastify';
 import './subscriber';
 
 /**
@@ -161,7 +161,17 @@ MiddlewareRegistry.register(store => next => action => {
     }
 
     case KICK_PARTICIPANT: {
-        const { conference } = store.getState()['features/base/conference'];
+        const state = store.getState();
+        const { conference} = state['features/base/conference'];
+        const roomOwner = conference?.room?.roomOwner;
+        // console.log('conference :', conference, 'roomOwner :', roomOwner);
+        // console.log('action :', action);
+        // Chặn kick chủ phòng (owner)
+        if (roomOwner && action.id === roomOwner) {
+            logger.info('Blocking kick: target is room owner');
+            toast.error(i18n.t('notify.cannotKickOwner'));
+            break;
+        }
 
         conference?.kickParticipant(action.id);
         break;

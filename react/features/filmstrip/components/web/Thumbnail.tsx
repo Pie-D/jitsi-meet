@@ -1396,6 +1396,13 @@ function _mapStateToProps(state: IReduxState, ownProps: any): Object {
         && !screenshareParticipantIds.includes(id);
     const disableTintForeground = state['features/base/config'].disableCameraTintForeground ?? false;
 
+    // Determine if this participant is currently assigned to any immersive view slot
+    const immersiveState: any = state['features/immersive-view'];
+    const immersiveAssignments: string[] = immersiveState?.assignments
+        ? Object.values(immersiveState.assignments)
+        : [];
+    const _isOnImmersiveStage = Boolean(immersiveState?.enabled && id && immersiveAssignments.includes(id));
+
     return {
         _audioTrack,
         _currentLayout,
@@ -1421,7 +1428,8 @@ function _mapStateToProps(state: IReduxState, ownProps: any): Object {
         _videoObjectPosition: getVideoObjectPosition(state, participant?.id),
         _videoTrack,
         ...size,
-        _gifSrc: mode === 'chat' ? null : gifSrc
+        _gifSrc: mode === 'chat' ? null : gifSrc,
+        _isOnImmersiveStage
     };
 }
 

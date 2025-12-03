@@ -9,6 +9,10 @@ import {
     SET_IMMERSIVE_SLOT_COUNT
 } from './actionTypes';
 
+// Import middleware để sync qua XMPP
+import './middleware';
+import './xmppMiddleware';
+
 export interface IImmersiveState {
     enabled: boolean;
     templateId?: string;
@@ -43,6 +47,7 @@ ReducerRegistry.register<IImmersiveState>('features/immersive-view', (state = DE
             slotCount: action.slotCount
         };
     case SET_IMMERSIVE_ASSIGNMENTS:
+        // console.log('🔥 IMMERSIVE_SYNC: Redux state updated with assignments:', action.assignments);
         return {
             ...state,
             assignments: action.assignments

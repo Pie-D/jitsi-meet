@@ -5,7 +5,7 @@ import { makeStyles } from "tss-react/mui";
 
 import { getConferenceName } from "../../../base/conference/functions";
 import Tooltip from "../../../base/tooltip/components/Tooltip";
-
+import i18next from "i18next";
 const useStyles = makeStyles()((theme) => {
     return {
         container: {
@@ -44,7 +44,7 @@ const SubjectText = () => {
     return (
         <Tooltip content={subject} position="bottom">
             <div className={classes.container}>
-                <div className={clsx("subject-text--content", classes.content)}>Cuộc họp: {subject}</div>
+                <div className={clsx("subject-text--content", classes.content)}>{i18next.t("info.subject")}: {subject}</div>
             </div>
         </Tooltip>
     );
