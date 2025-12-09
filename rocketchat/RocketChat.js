@@ -280,7 +280,7 @@ export class RocketChat {
         });
 
         if (res?.data) {
-            this.userContext.position = res.data.position;
+            this.userContext.position = res.data.position ? res.data.position : res.data;
             logger.log('Fetched meeting position:', this.userContext.position);
         } else {
             logger.error('Failed to get meeting position', res);
