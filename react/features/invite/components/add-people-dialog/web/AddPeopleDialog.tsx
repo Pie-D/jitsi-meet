@@ -77,6 +77,11 @@ interface IProps extends WithTranslation {
     _inviteUrl: string;
 
     /**
+     * Địa chỉ Cisco (room@domain) để hiển thị/copy.
+     */
+    _ciscoAddress?: string;
+
+    /**
      * Whether the dial in limit has been exceeded.
      */
     _isDialInOverLimit?: boolean;
