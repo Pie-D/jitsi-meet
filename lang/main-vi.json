@@ -8,6 +8,7 @@
         "contacts": "liên lạc",
         "copyInvite": "Sao chép lời mời",
         "copyLink": "Sao chép liên kết cuộc họp",
+        "copyLinkCisco": "Sao chép liên hệ Cisco",
         "copyStream": "Sao chép liên kết phát trực tiếp",
         "countryNotSupported": "Chúng tôi chưa hỗ trợ đích đến này.",
         "countryReminder": "Nhớ đảm bảo bắt đầu bằng mã quốc gia!",
@@ -27,6 +28,7 @@
         "shareLink": "Chia sẻ đường dẫn để mời người khác tham dự cuộc họp",
         "shareStream": "Chia sẻ liên kết phát trực tiếp",
         "sipAddresses": "sip addresses",
+        "shareCiscoInvite" : "Chia sẻ để tham dự từ Cisco",
         "telephone": "Số: {{number}}",
         "title": "Mời người tham dự cuộc họp này",
         "yahooEmail": "Email Yahoo"

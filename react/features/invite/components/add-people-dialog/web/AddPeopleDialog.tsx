@@ -7,6 +7,8 @@ import { sendAnalytics } from '../../../../analytics/functions';
 import { IReduxState } from '../../../../app/types';
 import { getInviteURL } from '../../../../base/connection/functions';
 import { translate } from '../../../../base/i18n/functions';
+import { getRoomName } from '../../../../base/conference/functions';
+import { parseURIString } from '../../../../base/util/uri';
 import { JitsiRecordingConstants } from '../../../../base/lib-jitsi-meet';
 import Dialog from '../../../../base/ui/components/web/Dialog';
 import { StatusCode } from '../../../../base/util/uri';
@@ -24,6 +26,7 @@ import {
 } from '../../../functions';
 
 import CopyMeetingLinkSection from './CopyMeetingLinkSection';
+import CiscoMeetingLinkSection from './CiscoMeetingLinkSection';
 import DialInLimit from './DialInLimit';
 import DialInSection from './DialInSection';
 import InviteByEmailSection from './InviteByEmailSection';
@@ -114,6 +117,7 @@ function AddPeopleDialog({
     _inviteAppName,
     _inviteContactsVisible,
     _inviteUrl,
+    _ciscoAddress,
     _isDialInOverLimit,
     _liveStreamViewURL,
     _phoneNumber,
@@ -157,6 +161,7 @@ function AddPeopleDialog({
             <div className = 'invite-more-dialog'>
                 { _inviteContactsVisible && <InviteContactsSection /> }
                 {_urlSharingVisible ? <CopyMeetingLinkSection url = { _inviteUrl } /> : null}
+                { _ciscoAddress && <CiscoMeetingLinkSection address = { _ciscoAddress } /> }
                 {
                     _emailSharingVisible
                         ? <InviteByEmailSection
@@ -202,6 +207,11 @@ function mapStateToProps(state: IReduxState, ownProps: Partial<IProps>) {
     const dialIn = state['features/invite']; // @ts-ignore
     const phoneNumber = dialIn?.numbers ? _getDefaultPhoneNumber(dialIn.numbers) : undefined;
     const isDialInOverLimit = dialIn?.error?.status === StatusCode.PaymentRequired;
+    const inviteUrl = getInviteURL(state);
+    const roomName = getRoomName(state);
+    const parsedInviteUrl = parseURIString(inviteUrl);
+    const inviteDomain = parsedInviteUrl?.host || parsedInviteUrl?.hostname || parsedInviteUrl?.domain || '';
+    const ciscoAddress = roomName && inviteDomain ? `${roomName}@${inviteDomain}` : undefined;
 
     return {
         _dialIn: dialIn,
@@ -216,7 +226,8 @@ function mapStateToProps(state: IReduxState, ownProps: Partial<IProps>) {
             t: ownProps.t }),
         _inviteAppName: inviteAppName,
         _inviteContactsVisible: interfaceConfig.ENABLE_DIAL_OUT && !hideInviteContacts,
-        _inviteUrl: getInviteURL(state),
+        _inviteUrl: inviteUrl,
+        _ciscoAddress: ciscoAddress,
         _isDialInOverLimit: isDialInOverLimit,
         _liveStreamViewURL: currentLiveStreamingSession?.liveStreamViewURL,
         _phoneNumber: phoneNumber

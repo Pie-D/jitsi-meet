@@ -8,6 +8,7 @@
         "contacts": "contacts",
         "copyInvite": "Copy meeting invitation",
         "copyLink": "Copy meeting link",
+        "copyLinkCisco": "Copy Cisco contacts",
         "copyStream": "Copy live streaming link",
         "countryNotSupported": "We do not support this destination yet.",
         "countryReminder": "Calling outside the US? Please make sure you start with the country code!",
@@ -27,6 +28,7 @@
         "shareLink": "Share the meeting link to invite others",
         "shareStream": "Share the live streaming link",
         "sipAddresses": "sip addresses",
+        "shareCiscoInvite": "Share to join from Cisco",
         "telephone": "Telephone: {{number}}",
         "title": "Invite people to this meeting",
         "yahooEmail": "Yahoo Email"
