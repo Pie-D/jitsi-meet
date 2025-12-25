@@ -332,9 +332,7 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
 
     const roomOwnerId = state['features/base/conference']?.conference?.room?.roomOwner;
     const _isOwner = isRoomOwner(participant, roomOwnerId);
-    // if(participant?.local){
-    //     console.log("Participant ID :", participantID, " Owner ID : ", roomOwnerId, " isOwner : ", _isOwner);
-    // }
+        // console.log("Participant ID :", participant, " Owner ID : ", roomOwnerId, " isOwner : ", _isOwner);
     return {
         _audioMediaState,
         _audioTrack,

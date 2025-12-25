@@ -18,6 +18,27 @@ local timer = require "util.timer";
 
 module:depends("jitsi_permissions");
 
+-- Lấy định danh owner ổn định từ token (ưu tiên email trong context.user),
+-- fallback về bare_jid/prefix nếu không có.
+local function get_owner_key(event)
+    local origin = event.origin;
+    local occupant = event.occupant;
+    local context_user = origin and origin.jitsi_meet_context_user;
+    local granted_user_email = origin and origin.granted_jitsi_meet_context_user_email;
+    local token_user_email = context_user and (context_user.email or context_user.mail);
+
+    local owner_email = token_user_email or granted_user_email;
+
+    if owner_email then
+        return tostring(owner_email);
+    end
+
+    -- Fallback: dùng prefix của bare_jid (giữ hành vi cũ)
+    local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-");
+
+    return jid_prefix or occupant.bare_jid;
+end
+
 -- Common module for all logic that can be loaded under the conference muc component.
 --
 -- This module:
@@ -89,10 +110,9 @@ module:hook("muc-room-created", function(event)
         end
         module:log('debug', 'tqd - %s', occupant.bare_jid);
         if not room._data.owner then
-            local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-")
-            local new_owner = jid_prefix or occupant.bare_jid;
+            local new_owner = get_owner_key(event);
             room._data.owner = new_owner;
-            module:log('info', '[ROOM_OWNER_SET] PRE-JOIN: Set initial room owner = %s (from occupant: %s, room: %s)', 
+            module:log('info', '[ROOM_OWNER_SET] PRE-JOIN: Set initial room owner = %s (from occupant: %s, room: %s)',
                 new_owner, occupant.bare_jid, room.jid);
         else
             module:log('debug', '[ROOM_OWNER_SET] PRE-JOIN: Room owner already exists = %s (occupant: %s, room: %s)', 
@@ -103,7 +123,7 @@ module:hook("muc-room-created", function(event)
 -- Tuỳ chọn cho phép ghi đè (reassign) owner khi có occupant với affiliation = owner vào sau.
 -- Có thể cấu hình trong prosody.cfg.lua: component "conference.example.com" ...
 --   cmeet_owner_reassign = true | false (mặc định: false)
-local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', true);
+local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', false);
 
 -- Hook để đồng bộ hoá chủ phòng dựa trên affiliation thực tế (owner/admin) sau khi join.
 -- 1) Nếu occupant hiện tại có affiliation = owner/admin:
@@ -117,7 +137,7 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
             return;
         end
 
-    local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-") or occupant.bare_jid;
+    local owner_key = get_owner_key(event);
 
     -- 1) Kiểm tra affiliation hiện tại của occupant
     local current_aff = room:get_affiliation(occupant.bare_jid);
@@ -129,14 +149,14 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
         module:log('allow_owner_reassign: ', allow_owner_reassign);
         -- 1.a) Chính sách cập nhật room._data.owner để client nhận qua disco info
         if not room._data.owner then
-            room._data.owner = jid_prefix;
+            room._data.owner = owner_key;
             module:log('info', '[ROOM_OWNER_SET] JOINED (first owner): Set room owner = %s (occupant: %s, affiliation: %s, room: %s)', 
-                jid_prefix, occupant.bare_jid, current_aff, room.jid);
-        elseif allow_owner_reassign and room._data.owner ~= jid_prefix then
+                owner_key, occupant.bare_jid, current_aff, room.jid);
+        elseif allow_owner_reassign and room._data.owner ~= owner_key then
             local old_owner = room._data.owner;
-            room._data.owner = jid_prefix;
+            room._data.owner = owner_key;
             module:log('info', '[ROOM_OWNER_REASSIGN] JOINED (immediate): Changed room owner from %s → %s (occupant: %s, affiliation: %s, room: %s)', 
-                old_owner, jid_prefix, occupant.bare_jid, current_aff, room.jid);
+                old_owner, owner_key, occupant.bare_jid, current_aff, room.jid);
         else
             if not allow_owner_reassign then
                 module:log('debug', '[ROOM_OWNER_SKIP] JOINED: Reassign disabled, keeping owner = %s (occupant: %s has affiliation: %s, room: %s)', 
@@ -158,7 +178,7 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
             local aff = room:get_affiliation(occupant.bare_jid);
             if aff ~= 'owner' then
                 module:log('info', 'Ensuring owner affiliation (retry %d) for %s', i, occupant.bare_jid);
-                room:set_affiliation(true, occupant.bare_jid, 'moderator');
+                room:set_affiliation(true, occupant.bare_jid, 'owner');
                 end
 
             if aff == 'owner' or i > 8 then
@@ -177,7 +197,7 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
     --    2.a) Nếu trùng với room._data.owner tạm thời → retry promote lên owner như cũ.
     --    2.b) Nếu KHÔNG trùng nhưng cho phép reassign → retry theo dõi affiliation;
     --         khi affiliation chuyển thành owner/admin thì cập nhật room._data.owner (reassign) và dừng retry.
-    if room._data.owner and (occupant.bare_jid == room._data.owner or jid_prefix == room._data.owner) then
+    if room._data.owner and owner_key == room._data.owner then
         if event.origin then
             event.origin.token_affiliation_checked = true;
         end
@@ -204,14 +224,14 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
         local function watch_and_reassign()
             local aff2 = room:get_affiliation(occupant.bare_jid);
             if aff2 == 'owner' or aff2 == 'admin' then
-                if room._data.owner ~= jid_prefix then
+                if room._data.owner ~= owner_key then
                     local old_owner = room._data.owner;
-                    room._data.owner = jid_prefix;
+                    room._data.owner = owner_key;
                     module:log('info', '[ROOM_OWNER_REASSIGN] JOINED (delayed, retry %d): Changed room owner from %s → %s (occupant: %s, affiliation: %s, room: %s)', 
-                        i2, old_owner, jid_prefix, occupant.bare_jid, aff2, room.jid);
+                        i2, old_owner, owner_key, occupant.bare_jid, aff2, room.jid);
                 else
                     module:log('info', '[ROOM_OWNER_WATCH] Occupant %s now has affiliation %s, but owner already matches = %s (room: %s)', 
-                        occupant.bare_jid, aff2, jid_prefix, room.jid);
+                        occupant.bare_jid, aff2, owner_key, room.jid);
                 end
                 return;
             end

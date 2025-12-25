@@ -705,12 +705,23 @@ export function isOwnerParticipant(participant?: IParticipant) {
 //     return Boolean(value);
 // }
 
-export function isRoomOwner(participant?: IParticipant, roomOwner?: string) : boolean {
-    // console.log("Participants :", participant);
-    // return Boolean(participant) && (
-    //     (participant!.id === roomOwner && !roomExistsOwner(participant!)) || isOwnerParticipant(participant!)
-    // );
-    return Boolean(participant) && (participant!.id === roomOwner);
+/**
+ * Kiểm tra participant có phải room owner hay không.
+ * So sánh ưu tiên theo email (identity.user.email / participant.email),
+ * fallback jwtId/participant.id để giữ tương thích cũ.
+ *
+ * @param participant - Participant object.
+ * @param roomOwner - Owner id (email) từ conference.room.roomOwner.
+ * @returns {boolean}
+ */
+export function isRoomOwner(participant?: IParticipant, roomOwner?: string): boolean {
+    if (!participant || !roomOwner) {
+        return false;
+    }
+
+    const participantEmail = (participant as any)?.email;
+
+    return participantEmail === roomOwner;
 }
 /**
  * Returns the dominant speaker participant.
