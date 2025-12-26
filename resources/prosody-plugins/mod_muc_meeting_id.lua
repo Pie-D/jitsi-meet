@@ -16,18 +16,35 @@ local is_transcriber = util.is_transcriber;
 local QUEUE_MAX_SIZE = 500;
 local timer = require "util.timer";
 
+-- Bật log để xem thông tin origin/context_user khi join (cấu hình: cmeet_owner_log_context = true).
+local log_context_enabled = module:get_option_boolean('cmeet_owner_log_context', false);
+
 module:depends("jitsi_permissions");
 
--- Lấy định danh owner ổn định từ token (ưu tiên email trong context.user),
--- fallback về bare_jid/prefix nếu không có.
+-- Lấy định danh owner ổn định từ token (ưu tiên email_owner, sau đó email trong context.user),
+-- fallback về bare_jid/prefix nếu không có. Có log origin nếu bật cmeet_owner_log_context.
 local function get_owner_key(event)
     local origin = event.origin;
     local occupant = event.occupant;
     local context_user = origin and origin.jitsi_meet_context_user;
     local granted_user_email = origin and origin.granted_jitsi_meet_context_user_email;
+    local token_user_email_owner = context_user and (context_user.email_owner or context_user.owner_email);
     local token_user_email = context_user and (context_user.email or context_user.mail);
 
-    local owner_email = token_user_email or granted_user_email;
+    if log_context_enabled and origin then
+        module:log('info', '[OWNER_DEBUG][get_owner_key] email_owner=%s email=%s id=%s name=%s affiliation=%s moderator=%s granted_email=%s granted_user_id=%s granted_group=%s',
+            tostring(token_user_email_owner),
+            tostring(token_user_email),
+            tostring(context_user and context_user.id),
+            tostring(context_user and context_user.name),
+            tostring(context_user and context_user.affiliation),
+            tostring(context_user and context_user.moderator),
+            tostring(granted_user_email),
+            tostring(origin.granted_jitsi_meet_context_user_id),
+            tostring(origin.granted_jitsi_meet_context_group));
+    end
+
+    local owner_email = token_user_email_owner or token_user_email or granted_user_email;
 
     if owner_email then
         return tostring(owner_email);
