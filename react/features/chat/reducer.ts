@@ -38,7 +38,7 @@ const DEFAULT_STATE = {
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
     shownMessages: new Set<string>(),
-    focusedTab: ChatTabs.CHAT,
+    focusedTab: undefined,
     isResizing: false,
     width: {
         current: CHAT_SIZE,
@@ -47,7 +47,7 @@ const DEFAULT_STATE = {
 };
 
 export interface IChatState {
-    focusedTab: ChatTabs;
+    focusedTab?: ChatTabs;
     groupChatWithPermissions: boolean;
     isLobbyChatActive: boolean;
     isOpen: boolean;

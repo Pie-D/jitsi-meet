@@ -705,12 +705,23 @@ export function isOwnerParticipant(participant?: IParticipant) {
 //     return Boolean(value);
 // }
 
-export function isRoomOwner(participant?: IParticipant, roomOwner?: string) : boolean {
-    // console.log("Participants :", participant);
-    // return Boolean(participant) && (
-    //     (participant!.id === roomOwner && !roomExistsOwner(participant!)) || isOwnerParticipant(participant!)
-    // );
-    return Boolean(participant) && (participant!.id === roomOwner);
+/**
+ * Kiểm tra participant có phải room owner hay không.
+ * So sánh ưu tiên theo email (identity.user.email / participant.email),
+ * fallback jwtId/participant.id để giữ tương thích cũ.
+ *
+ * @param participant - Participant object.
+ * @param roomOwner - Owner id (email) từ conference.room.roomOwner.
+ * @returns {boolean}
+ */
+export function isRoomOwner(participant?: IParticipant, roomOwner?: string): boolean {
+    if (!participant || !roomOwner) {
+        return false;
+    }
+
+    const participantEmail = (participant as any)?.email;
+
+    return participantEmail === roomOwner;
 }
 /**
  * Returns the dominant speaker participant.
@@ -885,17 +896,30 @@ export const setShareDialogVisiblity = (addPeopleFeatureEnabled: boolean, dispat
 };
 
 /**
- * Checks if private chat is enabled for the given participant.
+ * Checks if private chat is enabled for the given participant or local participant.
  *
  * @param {IParticipant|IVisitorChatParticipant|undefined} participant - The participant to check.
  * @param {IReduxState} state - The Redux state.
+ * @param {boolean} [checkSelf=false] - Whether to check for local participant's ability to send messages.
  * @returns {boolean} - True if private chat is enabled, false otherwise.
  */
-export function isPrivateChatEnabled(participant: IParticipant | IVisitorChatParticipant | undefined, state: IReduxState) {
+export function isPrivateChatEnabled(
+        participant: IParticipant | IVisitorChatParticipant | undefined,
+        state: IReduxState,
+        checkSelf: boolean = false
+): boolean {
     const { remoteVideoMenu = {} } = state['features/base/config'];
     const { disablePrivateChat } = remoteVideoMenu;
 
-    if ((!isVisitorChatParticipant(participant) && participant?.local) || disablePrivateChat === 'all') {
+    // If checking self capability (if the local participant can send messages) ignore the local participant blocking rule
+    const isLocal = !isVisitorChatParticipant(participant) && participant?.local;
+
+    if (isLocal && !checkSelf) {
+        return false;
+    }
+
+    // Check if private chat is disabled globally
+    if (disablePrivateChat === 'all') {
         return false;
     }
 
@@ -914,4 +938,16 @@ export function isPrivateChatEnabled(participant: IParticipant | IVisitorChatPar
     }
 
     return !disablePrivateChat;
+}
+
+/**
+ * Checks if private chat is enabled for the local participant (can they send private messages).
+ *
+ * @param {IReduxState} state - The Redux state.
+ * @returns {boolean} - True if the local participant can send private messages, false otherwise.
+ */
+export function isPrivateChatEnabledSelf(state: IReduxState): boolean {
+    const localParticipant = getLocalParticipant(state);
+
+    return isPrivateChatEnabled(localParticipant, state, true);
 }

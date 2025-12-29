@@ -10,11 +10,51 @@ local is_healthcheck_room = main_util.is_healthcheck_room;
 local internal_room_jid_match_rewrite = main_util.internal_room_jid_match_rewrite;
 local presence_check_status = main_util.presence_check_status;
 local extract_subdomain = main_util.extract_subdomain;
+local util = module:require 'util';
+local is_transcriber = util.is_transcriber;
 
 local QUEUE_MAX_SIZE = 500;
 local timer = require "util.timer";
 
+-- Bật log để xem thông tin origin/context_user khi join (cấu hình: cmeet_owner_log_context = true).
+local log_context_enabled = module:get_option_boolean('cmeet_owner_log_context', false);
+
 module:depends("jitsi_permissions");
+
+-- Lấy định danh owner ổn định từ token (ưu tiên email_owner, sau đó email trong context.user),
+-- fallback về bare_jid/prefix nếu không có. Có log origin nếu bật cmeet_owner_log_context.
+local function get_owner_key(event)
+    local origin = event.origin;
+    local occupant = event.occupant;
+    local context_user = origin and origin.jitsi_meet_context_user;
+    local granted_user_email = origin and origin.granted_jitsi_meet_context_user_email;
+    local token_user_email_owner = context_user and (context_user.email_owner or context_user.owner_email);
+    local token_user_email = context_user and (context_user.email or context_user.mail);
+
+    if log_context_enabled and origin then
+        module:log('info', '[OWNER_DEBUG][get_owner_key] email_owner=%s email=%s id=%s name=%s affiliation=%s moderator=%s granted_email=%s granted_user_id=%s granted_group=%s',
+            tostring(token_user_email_owner),
+            tostring(token_user_email),
+            tostring(context_user and context_user.id),
+            tostring(context_user and context_user.name),
+            tostring(context_user and context_user.affiliation),
+            tostring(context_user and context_user.moderator),
+            tostring(granted_user_email),
+            tostring(origin.granted_jitsi_meet_context_user_id),
+            tostring(origin.granted_jitsi_meet_context_group));
+    end
+
+    local owner_email = token_user_email_owner or token_user_email or granted_user_email;
+
+    if owner_email then
+        return tostring(owner_email);
+    end
+
+    -- Fallback: dùng prefix của bare_jid (giữ hành vi cũ)
+    local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-");
+
+    return jid_prefix or occupant.bare_jid;
+end
 
 -- Common module for all logic that can be loaded under the conference muc component.
 --
@@ -87,10 +127,9 @@ module:hook("muc-room-created", function(event)
         end
         module:log('debug', 'tqd - %s', occupant.bare_jid);
         if not room._data.owner then
-            local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-")
-            local new_owner = jid_prefix or occupant.bare_jid;
+            local new_owner = get_owner_key(event);
             room._data.owner = new_owner;
-            module:log('info', '[ROOM_OWNER_SET] PRE-JOIN: Set initial room owner = %s (from occupant: %s, room: %s)', 
+            module:log('info', '[ROOM_OWNER_SET] PRE-JOIN: Set initial room owner = %s (from occupant: %s, room: %s)',
                 new_owner, occupant.bare_jid, room.jid);
         else
             module:log('debug', '[ROOM_OWNER_SET] PRE-JOIN: Room owner already exists = %s (occupant: %s, room: %s)', 
@@ -98,10 +137,8 @@ module:hook("muc-room-created", function(event)
         end
     end, 1); -- Priority 1 để chạy trước hook priority 8
 
--- Tuỳ chọn cho phép ghi đè (reassign) owner khi có occupant với affiliation = owner vào sau.
--- Có thể cấu hình trong prosody.cfg.lua: component "conference.example.com" ...
---   cmeet_owner_reassign = true | false (mặc định: false)
-local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', true);
+-- Tắt hoàn toàn cơ chế override/reassign owner.
+local allow_owner_reassign = false;
 
 -- Hook để đồng bộ hoá chủ phòng dựa trên affiliation thực tế (owner/admin) sau khi join.
 -- 1) Nếu occupant hiện tại có affiliation = owner/admin:
@@ -115,34 +152,21 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
             return;
         end
 
-    local jid_prefix = string.match(occupant.bare_jid, "^(.-)%-") or occupant.bare_jid;
+    local owner_key = get_owner_key(event);
 
     -- 1) Kiểm tra affiliation hiện tại của occupant
     local current_aff = room:get_affiliation(occupant.bare_jid);
 
     -- Nếu occupant đã có affiliation owner(do JWT hoặc backend cấp)
-    if current_aff == "owner"  then
+        if current_aff == "owner"  then
         module:log('info', '[ROOM_OWNER_CHECK] Occupant %s has affiliation = %s (room: %s)', 
             occupant.bare_jid, current_aff, room.jid);
         module:log('allow_owner_reassign: ', allow_owner_reassign);
         -- 1.a) Chính sách cập nhật room._data.owner để client nhận qua disco info
         if not room._data.owner then
-            room._data.owner = jid_prefix;
+            room._data.owner = owner_key;
             module:log('info', '[ROOM_OWNER_SET] JOINED (first owner): Set room owner = %s (occupant: %s, affiliation: %s, room: %s)', 
-                jid_prefix, occupant.bare_jid, current_aff, room.jid);
-        elseif allow_owner_reassign and room._data.owner ~= jid_prefix then
-            local old_owner = room._data.owner;
-            room._data.owner = jid_prefix;
-            module:log('info', '[ROOM_OWNER_REASSIGN] JOINED (immediate): Changed room owner from %s → %s (occupant: %s, affiliation: %s, room: %s)', 
-                old_owner, jid_prefix, occupant.bare_jid, current_aff, room.jid);
-        else
-            if not allow_owner_reassign then
-                module:log('debug', '[ROOM_OWNER_SKIP] JOINED: Reassign disabled, keeping owner = %s (occupant: %s has affiliation: %s, room: %s)', 
-                    room._data.owner, occupant.bare_jid, current_aff, room.jid);
-            else
-                module:log('debug', '[ROOM_OWNER_SKIP] JOINED: Owner unchanged = %s (occupant: %s already matches, affiliation: %s, room: %s)', 
-                    room._data.owner, occupant.bare_jid, current_aff, room.jid);
-            end
+                owner_key, occupant.bare_jid, current_aff, room.jid);
         end
 
         -- 1.b) Đánh dấu token_affiliation_checked để tránh race với mod_token_affiliation
@@ -156,7 +180,7 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
             local aff = room:get_affiliation(occupant.bare_jid);
             if aff ~= 'owner' then
                 module:log('info', 'Ensuring owner affiliation (retry %d) for %s', i, occupant.bare_jid);
-                room:set_affiliation(true, occupant.bare_jid, 'moderator');
+                room:set_affiliation(true, occupant.bare_jid, 'owner');
                 end
 
             if aff == 'owner' or i > 8 then
@@ -175,7 +199,7 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
     --    2.a) Nếu trùng với room._data.owner tạm thời → retry promote lên owner như cũ.
     --    2.b) Nếu KHÔNG trùng nhưng cho phép reassign → retry theo dõi affiliation;
     --         khi affiliation chuyển thành owner/admin thì cập nhật room._data.owner (reassign) và dừng retry.
-    if room._data.owner and (occupant.bare_jid == room._data.owner or jid_prefix == room._data.owner) then
+    if room._data.owner and owner_key == room._data.owner then
         if event.origin then
             event.origin.token_affiliation_checked = true;
         end
@@ -194,36 +218,6 @@ local allow_owner_reassign = module:get_option_boolean('cmeet_owner_reassign', t
             timer.add_task(0.2 * i, promote_owner);
         end
         promote_owner();
-    elseif allow_owner_reassign then
-        -- 2.b) Theo dõi occupant có affiliation owner/admin rồi sẽ gán owner
-        module:log('info', '[ROOM_OWNER_WATCH] Starting watch for occupant %s (current affiliation: %s, current owner: %s, room: %s)', 
-            occupant.bare_jid, current_aff, room._data.owner or 'none', room.jid);
-        local i2 = 0;
-        local function watch_and_reassign()
-            local aff2 = room:get_affiliation(occupant.bare_jid);
-            if aff2 == 'owner' or aff2 == 'admin' then
-                if room._data.owner ~= jid_prefix then
-                    local old_owner = room._data.owner;
-                    room._data.owner = jid_prefix;
-                    module:log('info', '[ROOM_OWNER_REASSIGN] JOINED (delayed, retry %d): Changed room owner from %s → %s (occupant: %s, affiliation: %s, room: %s)', 
-                        i2, old_owner, jid_prefix, occupant.bare_jid, aff2, room.jid);
-                else
-                    module:log('info', '[ROOM_OWNER_WATCH] Occupant %s now has affiliation %s, but owner already matches = %s (room: %s)', 
-                        occupant.bare_jid, aff2, jid_prefix, room.jid);
-                end
-                return;
-            end
-            if i2 > 8 then
-                module:log('warn', '[ROOM_OWNER_WATCH] Stopped watching after %d retries. Occupant %s still has affiliation: %s (expected owner/admin, room: %s)', 
-                    i2, occupant.bare_jid, aff2, room.jid);
-                return;
-            end
-            module:log('debug', '[ROOM_OWNER_WATCH] Retry %d: Occupant %s affiliation = %s (waiting for owner/admin, room: %s)', 
-                i2, occupant.bare_jid, aff2, room.jid);
-            i2 = i2 + 1;
-            timer.add_task(0.2 * i2, watch_and_reassign);
-        end
-        watch_and_reassign();
         end
     end, 5);
 
@@ -358,7 +352,7 @@ module:hook("muc-occupant-groupchat", function(event)
     event.stanza:remove_children('nick', 'http://jabber.org/protocol/nick');
 end, 45); -- prosody check is prio 50, we want to run after it
 
-module:hook('message/bare', function(event)
+local function filterTranscriptionResult(event)
     local stanza = event.stanza;
 
     if stanza.attr.type ~= 'groupchat' then
@@ -390,17 +384,23 @@ module:hook('message/bare', function(event)
         return;
     end
 
-    -- TODO: add optimization by moving type and certain fields like is_interim as attribute on 'json-message'
-    -- using string find is roughly 70x faster than json decode for checking the value
-    if string.find(json_message, '"is_interim":true', 1, true) then
-        return;
-    end
-
     local msg_obj, error = json.decode(json_message);
 
     if error then
         module:log('error', 'Error decoding data error:%s Sender: %s to:%s', error, stanza.attr.from, stanza.attr.to);
         return true;
+    end
+
+    if msg_obj.type == 'transcription-result' then
+        if not is_transcriber(stanza.attr.from) then
+            module:log('warn', 'Filtering transcription-result message from non-transcriber: %s', stanza.attr.from);
+            -- Do not fire the event, and do not forward the message
+            return true
+        end
+        if msg_obj.is_interim then
+            -- Do not fire the event, but forward the message
+            return
+        end
     end
 
     if msg_obj.transcript ~= nil then
@@ -440,4 +440,7 @@ module:hook('message/bare', function(event)
         room = room, occupant = occupant, message = msg_obj,
         origin = event.origin,
         stanza = stanza, raw_message = json_message });
-end);
+end
+
+module:hook('message/bare', filterTranscriptionResult);
+module:hook('jitsi-visitor-groupchat-pre-route', filterTranscriptionResult);

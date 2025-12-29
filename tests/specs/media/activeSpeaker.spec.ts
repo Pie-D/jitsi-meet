@@ -46,19 +46,19 @@ describe('Active speaker', () => {
  */
 async function testActiveSpeaker(
         activeSpeaker: Participant, otherParticipant1: Participant, otherParticipant2: Participant) {
-    activeSpeaker.log(`Start testActiveSpeaker for participant: ${activeSpeaker.name}`);
+    await activeSpeaker.log(`Start testActiveSpeaker for participant: ${activeSpeaker.name}`);
 
     const speakerEndpoint = await activeSpeaker.getEndpointId();
 
     // just a debug print to go in logs
-    activeSpeaker.log('Unmuting in testActiveSpeaker');
+    await activeSpeaker.log('Unmuting in testActiveSpeaker');
 
     // Unmute
     await activeSpeaker.getToolbar().clickAudioUnmuteButton();
 
     // just a debug print to go in logs
-    otherParticipant1.log(`Participant unmuted in testActiveSpeaker ${speakerEndpoint}`);
-    otherParticipant2.log(`Participant unmuted in testActiveSpeaker ${speakerEndpoint}`);
+    await otherParticipant1.log(`Participant unmuted in testActiveSpeaker ${speakerEndpoint}`);
+    await otherParticipant2.log(`Participant unmuted in testActiveSpeaker ${speakerEndpoint}`);
 
     await activeSpeaker.getFilmstrip().assertAudioMuteIconIsDisplayed(activeSpeaker, true);
 
@@ -66,21 +66,21 @@ async function testActiveSpeaker(
     const otherParticipant1Driver = otherParticipant1.driver;
 
     await otherParticipant1Driver.waitUntil(
-        async () => await otherParticipant1.getFilmstrip().isDominantSpeaker(speakerEndpoint),
+        async () => await otherParticipant1.getLargeVideo().getResource() === speakerEndpoint,
         {
             timeout: 30_000, // 30 seconds
-            timeoutMsg: `${activeSpeaker.name} is not selected as active speaker.`
+            timeoutMsg: 'Active speaker not displayed on large video.'
         });
 
     // just a debug print to go in logs
-    activeSpeaker.log('Muting in testActiveSpeaker');
+    await activeSpeaker.log('Muting in testActiveSpeaker');
 
     // Mute back again
     await activeSpeaker.getToolbar().clickAudioMuteButton();
 
     // just a debug print to go in logs
-    otherParticipant1.log(`Participant muted in testActiveSpeaker ${speakerEndpoint}`);
-    otherParticipant2.log(`Participant muted in testActiveSpeaker ${speakerEndpoint}`);
+    await otherParticipant1.log(`Participant muted in testActiveSpeaker ${speakerEndpoint}`);
+    await otherParticipant2.log(`Participant muted in testActiveSpeaker ${speakerEndpoint}`);
 
     await otherParticipant1.getFilmstrip().assertAudioMuteIconIsDisplayed(activeSpeaker);
 }

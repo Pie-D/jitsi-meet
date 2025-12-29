@@ -10,7 +10,12 @@ import Avatar from '../../../base/avatar/components/Avatar';
 import { isIosMobileBrowser, isMobileBrowser } from '../../../base/environment/utils';
 import { MEDIA_TYPE } from '../../../base/media/constants';
 import { PARTICIPANT_ROLE } from '../../../base/participants/constants';
-import { getLocalParticipant, hasRaisedHand, isPrivateChatEnabled } from '../../../base/participants/functions';
+import {
+    getLocalParticipant,
+    hasRaisedHand,
+    isPrivateChatEnabled,
+    isRoomOwner
+} from '../../../base/participants/functions';
 import { IParticipant } from '../../../base/participants/types';
 import { isParticipantAudioMuted } from '../../../base/tracks/functions.any';
 import ContextMenu from '../../../base/ui/components/web/ContextMenu';
@@ -156,6 +161,8 @@ const ParticipantContextMenu = ({
     const shouldDisplayVerification = useSelector((state: IReduxState) => displayVerification(state, participant?.id));
     const buttonsWithNotifyClick = useSelector(getParticipantMenuButtonsWithNotifyClick);
     const enablePrivateChat = useSelector((state: IReduxState) => isPrivateChatEnabled(participant, state));
+    const roomOwnerId = useSelector((state: IReduxState) => state['features/base/conference']?.conference?.room?.roomOwner);
+    const isTargetOwner = useMemo(() => isRoomOwner(participant, roomOwnerId), [ participant, roomOwnerId ]);
 
     const _currentRoomId = useSelector(getCurrentRoomId);
     const _rooms: IRoom[] = Object.values(useSelector(getBreakoutRooms));
@@ -217,7 +224,7 @@ const ParticipantContextMenu = ({
         };
     }, [ _getCurrentParticipantId, buttonsWithNotifyClick, notifyClick ]);
 
-    if (_isModerator) {
+    if (_isModerator && !isTargetOwner) {
         if (isModerationSupported) {
             if (_isAudioMuted && !participant.isSilent
                 && !(isClickedFromParticipantPane && quickActionButtonType === QUICK_ACTION_BUTTON.ASK_TO_UNMUTE)) {
