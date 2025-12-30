@@ -1,7 +1,10 @@
+/* global APP */
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
+
+declare const APP: any;
 
 import { IReduxState, IStore } from '../../../app/types';
 import { MEDIA_TYPE as AVM_MEDIA_TYPE } from '../../../av-moderation/constants';
@@ -13,6 +16,7 @@ import { PARTICIPANT_ROLE } from '../../../base/participants/constants';
 import {
     getLocalParticipant,
     hasRaisedHand,
+    isLocalRoomOwner,
     isPrivateChatEnabled,
     isRoomOwner
 } from '../../../base/participants/functions';
@@ -163,6 +167,7 @@ const ParticipantContextMenu = ({
     const enablePrivateChat = useSelector((state: IReduxState) => isPrivateChatEnabled(participant, state));
     const roomOwnerId = useSelector((state: IReduxState) => state['features/base/conference']?.conference?.room?.roomOwner);
     const isTargetOwner = useMemo(() => isRoomOwner(participant, roomOwnerId), [ participant, roomOwnerId ]);
+    const _isLocalOwner = useSelector(isLocalRoomOwner);
 
     const _currentRoomId = useSelector(getCurrentRoomId);
     const _rooms: IRoom[] = Object.values(useSelector(getBreakoutRooms));
@@ -268,7 +273,7 @@ const ParticipantContextMenu = ({
             buttons2.push(<LowerHandButton { ...getButtonProps(BUTTONS.LOWER_PARTICIPANT_HAND) } />);
         }
 
-        if (!disableGrantModerator && !isBreakoutRoom) {
+        if (_isLocalOwner && !disableGrantModerator && !isBreakoutRoom) {
             buttons2.push(<GrantModeratorButton { ...getButtonProps(BUTTONS.GRANT_MODERATOR) } />);
         }
 
