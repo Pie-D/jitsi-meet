@@ -49,6 +49,17 @@ function process_set_affiliation(event)
         = event.actor, event.affiliation, event.jid, event.previous_affiliation, event.room;
     local actor_session = sessions[actor];
 
+    -- event.actor can sometimes be the bare JID, while full_sessions is keyed by the full JID (with resource).
+    -- Attempt to resolve the actor session via the room occupant if the direct lookup fails so that we can
+    -- propagate the granting moderator's feature set (e.g. recording=false) to the target.
+    if not actor_session then
+        local actor_occupant = room:get_occupant_by_real_jid(actor) or room:get_occupant_by_nick(actor);
+
+        if actor_occupant then
+            actor_session = sessions[actor_occupant.jid];
+        end
+    end
+
     if is_admin(jid) or is_healthcheck_room(room.jid) or not actor or not previous_affiliation
         or not actor_session or not actor_session.jitsi_meet_context_features then
         return;
@@ -85,7 +96,7 @@ function process_set_affiliation(event)
         occupant_session.granted_jitsi_meet_context_group_id = nil;
 
         -- on revoke
-        if not occupant_session.auth_token then
+        if not session.auth_token then
             occupant_session.jitsi_meet_context_features = nil;
         end
     end
