@@ -76,6 +76,11 @@ module:hook("muc-occupant-joined", function(event)
         join_ts = os.time(),
         session_id = new_id(); -- để phân biệt lượt tham gia
     };
+    post_payload({
+        meetingId = split(room.jid, "@")[1],
+        email = email,
+        joinTime = os.time()
+    });
 end);
 
 -- Khi rời: tính duration và gửi
@@ -95,15 +100,21 @@ module:hook("muc-occupant-left", function(event)
     local leave_ts = os.time();
     local duration = leave_ts - entry.join_ts;
     post_payload({
-        room = entry.room,
+        meetingId = split(entry.room, "@")[1],
         email = entry.email,
-        joinTs = entry.join_ts,
-        leaveTs = leave_ts,
-        duration = duration,
-        sessionId = entry.session_id
+        joinTime = entry.join_ts,
+        leaveTime = leave_ts
     });
 end);
-
+-- Hàm split: tách chuỗi
+function split(str, sep)
+    local result = {}
+    sep = sep or "%s"  -- mặc định tách theo space
+    for part in string.gmatch(str, "([^" .. sep .. "]+)") do
+        table.insert(result, part)
+    end
+    return result
+end
 -- Tùy chọn: định kỳ flush những session còn treo (network drop)
 local function flush_stale()
     local now = os.time();
@@ -111,12 +122,10 @@ local function flush_stale()
     for key, entry in pairs(join_times) do
         if now - entry.join_ts > stale_after then
             post_payload({
-                room = entry.room,
+                meetingId = split(entry.room, "@")[1],
                 email = entry.email,
-                joinTs = entry.join_ts,
-                leaveTs = now,
-                duration = now - entry.join_ts,
-                sessionId = entry.session_id,
+                joinTime = entry.join_ts,
+                leaveTime = now,
                 stale = true
             });
             join_times[key] = nil;
