@@ -17,7 +17,7 @@ local QUEUE_MAX_SIZE = 500;
 local timer = require "util.timer";
 
 -- Bật log để xem thông tin origin/context_user khi join (cấu hình: cmeet_owner_log_context = true).
-local log_context_enabled = module:get_option_boolean('cmeet_owner_log_context', false);
+local log_context_enabled = module:get_option_boolean('cmeet_owner_log_context', true);
 
 module:depends("jitsi_permissions");
 
@@ -119,23 +119,36 @@ module:hook("muc-room-created", function(event)
 -- Hook set owner tạm thời cho người đầu tiên (chỉ khi chưa có logic JWT/affiliation).
 -- Lưu ý: room._data.owner sẽ có thể được cập nhật lại ở hook "muc-occupant-joined"
 -- khi chúng ta xác thực rằng occupant có affiliation = owner (được cấp từ server/JWT).
-    module:hook("muc-occupant-pre-join", function (event)
-        local room, occupant = event.room, event.occupant;
-        module:log('debug', 'tqd - pre-join');
-        if is_healthcheck_room(room.jid) or is_admin(occupant.bare_jid) then
-            return;
-        end
-        module:log('debug', 'tqd - %s', occupant.bare_jid);
-        if not room._data.owner then
-            local new_owner = get_owner_key(event);
-            room._data.owner = new_owner;
-            module:log('info', '[ROOM_OWNER_SET] PRE-JOIN: Set initial room owner = %s (from occupant: %s, room: %s)',
-                new_owner, occupant.bare_jid, room.jid);
-        else
-            module:log('debug', '[ROOM_OWNER_SET] PRE-JOIN: Room owner already exists = %s (occupant: %s, room: %s)', 
-                room._data.owner, occupant.bare_jid, room.jid);
-        end
-    end, 1); -- Priority 1 để chạy trước hook priority 8
+module:hook("muc-occupant-pre-join", function (event)
+    local room, occupant = event.room, event.occupant;
+    if is_healthcheck_room(room.jid) or is_admin(occupant.bare_jid) then
+        return;
+    end
+
+    if room._data.owner then
+        return;
+    end
+
+    local origin = event.origin;
+    local context_user = origin and origin.jitsi_meet_context_user;
+    local granted_user_email = origin and origin.granted_jitsi_meet_context_user_email;
+    local token_user_email_owner = context_user and (context_user.email_owner or context_user.owner_email);
+    local token_user_email = context_user and (context_user.email or context_user.mail);
+    local has_email_owner = token_user_email_owner or token_user_email or granted_user_email;
+
+    local new_owner = get_owner_key(event);
+
+    -- Chỉ set owner pre-join nếu có email/token; nếu không, bỏ qua để tránh guest chiếm slot owner.
+    if not has_email_owner then
+        module:log('info', '[ROOM_OWNER_SKIP] PRE-JOIN guest without email/token (occupant: %s, room: %s)', occupant.bare_jid, room.jid);
+        return;
+    end
+
+    room._data.owner = new_owner;
+    room._data.owner_is_placeholder = false;
+    module:log('info', '[ROOM_OWNER_SET] PRE-JOIN: Set initial room owner = %s (from occupant: %s, room: %s)',
+        new_owner, occupant.bare_jid, room.jid);
+end, 1); -- Priority 1 để chạy trước hook priority 8
 
 -- Tắt hoàn toàn cơ chế override/reassign owner.
 local allow_owner_reassign = false;
@@ -163,9 +176,10 @@ local allow_owner_reassign = false;
             occupant.bare_jid, current_aff, room.jid);
         module:log('allow_owner_reassign: ', allow_owner_reassign);
         -- 1.a) Chính sách cập nhật room._data.owner để client nhận qua disco info
-        if not room._data.owner then
+        if not room._data.owner or room._data.owner_is_placeholder then
             room._data.owner = owner_key;
-            module:log('info', '[ROOM_OWNER_SET] JOINED (first owner): Set room owner = %s (occupant: %s, affiliation: %s, room: %s)', 
+            room._data.owner_is_placeholder = false;
+            module:log('info', '[ROOM_OWNER_SET] JOINED (first/replace placeholder): Set room owner = %s (occupant: %s, affiliation: %s, room: %s)', 
                 owner_key, occupant.bare_jid, current_aff, room.jid);
         end
 
@@ -199,9 +213,16 @@ local allow_owner_reassign = false;
     --    2.a) Nếu trùng với room._data.owner tạm thời → retry promote lên owner như cũ.
     --    2.b) Nếu KHÔNG trùng nhưng cho phép reassign → retry theo dõi affiliation;
     --         khi affiliation chuyển thành owner/admin thì cập nhật room._data.owner (reassign) và dừng retry.
-    if room._data.owner and owner_key == room._data.owner then
-        if event.origin then
-            event.origin.token_affiliation_checked = true;
+    local origin = event.origin;
+    local context_user = origin and origin.jitsi_meet_context_user;
+    local granted_user_email = origin and origin.granted_jitsi_meet_context_user_email;
+    local user_email = (context_user and (context_user.email or context_user.mail))
+        or granted_user_email
+        or occupant.bare_jid;
+
+    if room._data.owner and owner_key == room._data.owner and room._data.owner == user_email then
+        if origin then
+            origin.token_affiliation_checked = true;
         end
 
         local i = 0;
@@ -218,7 +239,10 @@ local allow_owner_reassign = false;
             timer.add_task(0.2 * i, promote_owner);
         end
         promote_owner();
-        end
+    elseif room._data.owner and owner_key == room._data.owner then
+        module:log('info', '[ROOM_OWNER_SKIP] Occupant %s email=%s khác room owner=%s, bỏ qua promote',
+            occupant.bare_jid, tostring(user_email), tostring(room._data.owner));
+    end
     end, 5);
 
 -- Returns the meeting config Id form data.

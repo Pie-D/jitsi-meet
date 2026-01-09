@@ -5,7 +5,7 @@ import { MEET_FEATURES } from '../base/jwt/constants';
 import { isJwtFeatureEnabled } from '../base/jwt/functions';
 import { JitsiRecordingConstants } from '../base/lib-jitsi-meet';
 import { getSoundFileSrc } from '../base/media/functions';
-import { getLocalParticipant, getRemoteParticipants } from '../base/participants/functions';
+import { getLocalParticipant, getRemoteParticipants, isLocalRoomOwner } from '../base/participants/functions';
 import { registerSound, unregisterSound } from '../base/sounds/actions';
 import { isEmbedded } from '../base/util/embedUtils';
 import { isSpotTV } from '../base/util/spot';
@@ -257,12 +257,14 @@ export function getRecordButtonProps(state: IReduxState) {
         recordingService,
         localRecording
     } = state['features/base/config'];
-    const localRecordingEnabled = !localRecording?.disable && supportsLocalRecording();
+    const localRecordingEnabled = !localRecording?.disable && supportsLocalRecording() && isLocalRoomOwner(state);
 
     const dropboxEnabled = isDropboxEnabled(state);
     const recordingEnabled = recordingService?.enabled || dropboxEnabled;
 
-    if (isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)) {
+    if (localRecordingEnabled) {
+        visible = true;
+    } else if (isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)) {
         visible = recordingEnabled;
     }
 
