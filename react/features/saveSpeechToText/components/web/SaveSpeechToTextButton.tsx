@@ -75,7 +75,11 @@ class SaveSpeechToTextButton extends AbstractButton<IProps>{
             const roomId = _conference?.room?.roomjid.split('@')[0];
             if(!roomId) return null;
             stopGstStream(roomId);
-            this.stompClient.deactivate();
+            if (this.stompClient && typeof this.stompClient.deactivate === 'function') {
+                this.stompClient.deactivate().catch((e: any) => console.error('SaveSpeech deactivate failed', e));
+            } else {
+                console.warn('SaveSpeech stompClient missing deactivate()');
+            }
         }
 
         dispatch(setSaveSpeechToTextOpen(!_toggled));

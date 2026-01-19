@@ -123,7 +123,13 @@ export class WebSocketConnectionManager {
     }
 
     destroy() {
-        this.wsRocketChat?.deactivate();
-        this.wsCMeet?.deactivate();
+        if (this.wsRocketChat && typeof this.wsRocketChat.deactivate === 'function') {
+            this.wsRocketChat.deactivate().catch(e => logger.error('[Rocket.Chat] deactivate failed', e));
+        }
+        if (this.wsCMeet && typeof this.wsCMeet.deactivate === 'function') {
+            this.wsCMeet.deactivate().catch(e => logger.error('[C-Meet WS] deactivate failed', e));
+        }
+        this.wsRocketChat = undefined;
+        this.wsCMeet = undefined;
     }
 }
