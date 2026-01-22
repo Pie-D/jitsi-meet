@@ -8,7 +8,7 @@ import { translate } from '../../../base/i18n/functions';
 import { getParticipantById, getParticipantDisplayName, isPrivateChatEnabled } from '../../../base/participants/functions';
 import Popover from '../../../base/popover/components/Popover.web';
 import Message from '../../../base/react/components/web/Message';
-import { MESSAGE_TYPE_LOCAL } from '../../constants';
+import { MESSAGE_TYPE_ERROR, MESSAGE_TYPE_LOCAL } from '../../constants';
 import { getDisplayNameSuffix, getFormattedTimestamp, getMessageText, getPrivateNoticeMessage, isFileMessage } from '../../functions';
 import { IChatMessageProps } from '../../types';
 
@@ -85,9 +85,10 @@ const useStyles = makeStyles()((theme: Theme) => {
                 },
 
                 '&.error': {
-                    backgroundColor: theme.palette.actionDanger,
-                    borderRadius: 0,
-                    fontWeight: 100
+                    backgroundColor: theme.palette.ui02,
+                    borderLeft: `3px solid ${theme.palette.textError}`,
+                    borderRadius: '2px 12px 12px 12px',
+                    paddingLeft: '9px'
                 },
 
                 '&.lobbymessage': {
@@ -95,9 +96,10 @@ const useStyles = makeStyles()((theme: Theme) => {
                 }
             },
             '&.error': {
-                backgroundColor: theme.palette.actionDanger,
-                borderRadius: 0,
-                fontWeight: 100
+                backgroundColor: theme.palette.ui02,
+                borderLeft: `3px solid ${theme.palette.textError}`,
+                borderRadius: '2px 12px 12px 12px',
+                paddingLeft: '9px'
             },
             '&.lobbymessage': {
                 backgroundColor: theme.palette.support05
@@ -156,6 +158,12 @@ const useStyles = makeStyles()((theme: Theme) => {
         userMessage: {
             ...theme.typography.bodyShortRegular,
             color: theme.palette.text01,
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word'
+        },
+        errorMessage: {
+            ...theme.typography.bodyShortRegular,
+            color: theme.palette.textError,
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word'
         },
@@ -418,6 +426,7 @@ const ChatMessage = ({
                                 'chatmessage',
                                 classes.chatMessage,
                                 className,
+                                message.messageType === MESSAGE_TYPE_ERROR && 'error',
                                 message.privateMessage && 'privatemessage',
                                 message.lobbyChat && !knocking && 'lobbymessage',
                                 isFileMessage(message) && 'file'
@@ -425,7 +434,12 @@ const ChatMessage = ({
                             <div className={classes.replyWrapper}>
                                 <div className={cx('messagecontent', classes.messageContent)}>
                                     {showDisplayName && _renderDisplayName()}
-                                    <div className={cx('usermessage', classes.userMessage)}>
+                                    <div className={cx(
+                                        'usermessage',
+                                        message.messageType === MESSAGE_TYPE_ERROR
+                                            ? classes.errorMessage
+                                            : classes.userMessage
+                                    )}>
                                         {isFileMessage(message) ? (
                                             <FileMessage
                                                 message={message}
