@@ -19,7 +19,7 @@ local function on_message(event)
     -- this should already been through domain mapper and this should be the real room jid [tenant]name format
     local room = get_room_from_jid(stanza.attr.to);
     if not room then
-        module:log('warn', 'No room found found for %s', stanza.attr.to);
+        module:log('warn', 'No room found for %s', stanza.attr.to);
         return;
     end
 
@@ -27,7 +27,7 @@ local function on_message(event)
         and room.jitsiMetadata.permissions.groupChatRestricted
         and not is_feature_allowed('send-groupchat', session.jitsi_meet_context_features) then
 
-            local reply = st.error_reply(stanza, 'cancel', 'not-allowed', 'Sending group messages not allowed');
+            local reply = st.error_reply(stanza, 'cancel', 'not-allowed', 'Permission denied');
             if session.type == 's2sin' or session.type == 's2sout' then
                 reply.skipMapping = true;
             end

@@ -5,8 +5,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { IReduxState, IStore } from '../../app/types';
 import { DEFAULT_LANGUAGE } from '../../base/i18n/i18next';
 import { setRequestingSubtitles, setStageBilingualMode } from '../actions.any';
+import { openDialog } from '../../base/dialog/actions';
+import { StartRecordingDialog } from '../../recording/components/Recording/index';
+// import { setRequestingSubtitles } from '../actions.any';
 import { getAvailableSubtitlesLanguages } from '../functions.any';
-
 
 export interface IAbstractLanguageSelectorDialogProps {
     dispatch: IStore['dispatch'];
@@ -53,6 +55,7 @@ const AbstractLanguageSelectorDialog = (Component: ComponentType<IAbstractLangua
                 selected: lang === selected
             };
         });
+    const { conference } = useSelector((state: IReduxState) => state['features/base/conference']);
 
     const onLanguageSelected = useCallback((value: string) => {
         if (value === BILINGUAL_LABEL) {
@@ -70,8 +73,14 @@ const AbstractLanguageSelectorDialog = (Component: ComponentType<IAbstractLangua
         const enabled = Boolean(_selectedLanguage);
         const displaySubtitles = enabled;
 
-        dispatch(setRequestingSubtitles(enabled, displaySubtitles, _selectedLanguage));
-    }, [ dispatch, language ]);
+        if (conference?.getMetadataHandler()?.getMetadata()?.asyncTranscription) {
+            dispatch(openDialog('StartRecordingDialog', StartRecordingDialog, {
+                recordAudioAndVideo: false
+            }));
+        } else {
+            dispatch(setRequestingSubtitles(enabled, displaySubtitles, _selectedLanguage));
+        }
+    }, [ conference, language ]);
 
     return (
         <Component

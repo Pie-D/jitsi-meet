@@ -113,7 +113,7 @@
     "chat": {
         "enter": "Vào phòng",
         "disabled": "Gửi tin nhắn trò chuyện đã bị vô hiệu hóa.",
-        "error": "Lỗi: tin nhắn của bạn \"{{originalText}}\" không được gửi. Nguyên nhân: {{error}}",
+        "error": "Lỗi: tin nhắn của bạn không được gửi. Nguyên nhân: {{error}}",
         "fieldPlaceHolder": "Aa",
         "guestsChatIndicator": "(khách)",
         "lobbyChatMessageTo": "Tin nhắn trò chuyện tại sảnh tới {{recipient}}",
