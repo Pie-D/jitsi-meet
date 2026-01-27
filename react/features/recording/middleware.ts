@@ -271,9 +271,9 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
                 }
 
                 // Tự động bật speech to text khi recording to server bắt đầu
-                if (mode === JitsiRecordingConstants.mode.FILE) {
-                    _autoStartSpeechToText(state, dispatch);
-                }
+                // if (mode === JitsiRecordingConstants.mode.FILE) {
+                //     _autoStartSpeechToText(state, dispatch);
+                // }
 
                 if (typeof APP !== 'undefined') {
                     APP.API.notifyRecordingStatusChanged(
@@ -309,9 +309,9 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
             }
 
             // Tự động tắt speech to text khi recording to server dừng
-            if (mode === JitsiRecordingConstants.mode.FILE) {
-                _autoStopSpeechToText(state);
-            }
+            // if (mode === JitsiRecordingConstants.mode.FILE) {
+            //     _autoStopSpeechToText(state);
+            // }
 
             if (typeof APP !== 'undefined') {
                 APP.API.notifyRecordingStatusChanged(
@@ -387,7 +387,7 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
                     conference.stopRecording(activeFileSession.id);
                     
                     // Tự động tắt speech to text khi recording dừng
-                    _autoStopSpeechToText(state);
+                    // _autoStopSpeechToText(state);
                     
                     // Tắt transcription metadata
                     dispatch(setRequestingSubtitles(false, false, null));
