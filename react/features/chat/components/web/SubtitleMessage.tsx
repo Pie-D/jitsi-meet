@@ -1,5 +1,5 @@
 import { Theme } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
@@ -156,6 +156,13 @@ export default function SubtitleMessage({ participantId, text, timestamp, interi
         getParticipantDisplayName(state, participantId));
     const selectedLanguage = useSelector((state: IReduxState) => state['features/subtitles']._language);
     const [showTranslation, setShowTranslation] = useState(false);
+
+    // Khi đổi ngôn ngữ "Dịch sang", reset nút Translate/Hide để hiển thị đúng ngôn ngữ đã chọn.
+    // Tránh trường hợp: đang bật "Translate" (xem tiếng Anh) rồi chuyển sang "Dịch sang: English"
+    // thì phụ đề lại hiện tiếng Việt (vì alternateLang trở thành vi).
+    useEffect(() => {
+        setShowTranslation(false);
+    }, [ selectedLanguage ]);
 
     // Parse text to check if it's JSON with vi/en structure
     const parsedText = parseMessageText(text);

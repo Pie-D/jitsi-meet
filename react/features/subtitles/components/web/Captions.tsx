@@ -1,5 +1,5 @@
 import { Theme } from '@mui/material';
-import React, { ReactElement, useRef, useEffect } from 'react';
+import React, { ReactElement, useRef, useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { withStyles } from 'tss-react/mui';
 
@@ -343,10 +343,14 @@ function getDisplayText(text: string, selectedLanguage: string | null): string {
     return parsedText.vi || parsedText.en || text;
 }
 
+/** Thời gian (ms) im lặng sau đó phụ đề trên sân khấu sẽ tự ẩn */
+const STAGE_SUBTITLE_HIDE_AFTER_MS = 5000;
+
 const Captions = (props: IProps) => {
     // console.log('=== Captions component rendered ===');
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const { classes = {} } = props;  // Dùng trực tiếp prop classes từ props
+    const [now, setNow] = useState(() => Date.now());
 
     const {
         _displaySubtitles,
@@ -357,6 +361,15 @@ const Captions = (props: IProps) => {
         _language,
         _isStageBilingualMode
     } = props;
+
+    // Cập nhật thời gian mỗi giây để ẩn phụ đề sau 5 giây im lặng (chỉ showSubtitlesOnStage)
+    useEffect(() => {
+        if (!showSubtitlesOnStage) {
+            return;
+        }
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, [showSubtitlesOnStage]);
 
     // Tự động cuộn xuống dưới khi có phụ đề mới (chỉ cho ccTab)
     useEffect(() => {
@@ -392,12 +405,15 @@ const Captions = (props: IProps) => {
 
     if (showSubtitlesOnStage) {
         
-        // Chế độ showSubtitlesOnStage: chỉ hiển thị phụ đề mới nhất
+        // Chế độ showSubtitlesOnStage: chỉ hiển thị phụ đề mới nhất, tự ẩn sau 5 giây im lặng
         const latestSubtitle = dataToRender
             .filter(s => s.isTranscription)
             .sort((a, b) => b.timestamp - a.timestamp)[0];
+
+        const isSubtitleStillVisible = latestSubtitle
+            && (now - latestSubtitle.timestamp <= STAGE_SUBTITLE_HIDE_AFTER_MS);
         
-        if (latestSubtitle) {
+        if (latestSubtitle && isSubtitleStillVisible) {
             // Hàm kiểm tra xem có phải là email không
         const isEmail = (str: string): boolean => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(str);
 
