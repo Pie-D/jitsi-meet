@@ -1,5 +1,6 @@
 import { Theme } from '@mui/material';
 import React, { useCallback, useMemo, useState } from 'react';
+import { toArray } from 'react-emoji-render';
 import { connect } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
@@ -362,7 +363,7 @@ const ChatMessage = ({
                 visible = { isReactionsOpen }>
                 <div className = { classes.reactionBox }>
                     {reactionsArray.slice(0, numReactionsDisplayed).map(({ reaction }, index) =>
-                        <p key = { index }>{reaction}</p>
+                        <p key = { index }>{toArray(reaction, { className: 'smiley' })}</p>
                     )}
                     {reactionsArray.length > numReactionsDisplayed && (
                         <p className = { classes.reactionCount }>

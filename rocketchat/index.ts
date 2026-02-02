@@ -115,3 +115,9 @@ export async function sendMessageToRocketChat(message: string): Promise<void> {
         await instance.sendMessage(message);
     }
 }
+
+export async function sendReactionToRocketChat(messageId: string, reaction: string): Promise<void> {
+    if (instance) {
+        await instance.sendReaction(messageId, reaction);
+    }
+}

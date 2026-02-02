@@ -2,6 +2,7 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
 import { ROCKET_CHAT_CONFIG } from './config';
+import { RocketChatEventEmitter } from './events';
 import { Helpers } from './helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -90,21 +91,21 @@ export class WebSocketConnectionManager {
                         logger.debug('[C-Meet] Received:', message);
 
                         if (message === 'TIMESHEET_END') {
-                            document.dispatchEvent(new CustomEvent('timeSheetEnd', {
-                                detail: { isChatDisabled: true }
-                            }));
+                            RocketChatEventEmitter.emit('timeSheetEnd', {
+                                isChatDisabled: true
+                            });
                         } else {
                             const data = JSON.parse(message);
 
                             if (data.rocketChatRoomId) {
                                 logger.log('[C-Meet] RocketChat roomId updated:', data.rocketChatRoomId);
-                                document.dispatchEvent(new CustomEvent('timeSheetEnd', {
-                                    detail: { isChatDisabled: false }
-                                }));
+                                RocketChatEventEmitter.emit('timeSheetEnd', {
+                                    isChatDisabled: false
+                                });
 
-                                document.dispatchEvent(new CustomEvent('rocketChatRoomIdUpdated', {
-                                    detail: { roomId: data.rocketChatRoomId }
-                                }));
+                                RocketChatEventEmitter.emit('rocketChatRoomIdUpdated', {
+                                    roomId: data.rocketChatRoomId
+                                });
                             }
                         }
                     } catch (error) {

@@ -1,10 +1,10 @@
-/* eslint-disable require-jsdoc */
 import {
     IRocketChatMessage,
     IRocketChatParticipant,
     initRocketChat,
     isRocketChatInitialized,
     sendMessageToRocketChat,
+    sendReactionToRocketChat,
     stopRocketChat,
     syncRocketChatMessages
 } from '../../../rocketchat/index';
@@ -13,7 +13,7 @@ import { getRoomName } from '../base/conference/functions';
 import { IConferenceState } from '../base/conference/reducer';
 import { getLocalParticipant } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
-import { SEND_MESSAGE } from '../chat/actionTypes';
+import { SEND_MESSAGE, SEND_REACTION } from '../chat/actionTypes';
 import { addMessage } from '../chat/actions.any';
 
 async function waitForConnectionToken(getState: () => any, maxWaitMs = 10000, intervalMs = 100): Promise<string> {
@@ -86,6 +86,18 @@ MiddlewareRegistry.register(store => next => action => {
                     .catch(err => console.error('Failed to send message to Rocket.Chat', err));
                 return;
             }
+        }
+        break;
+    }
+
+    case SEND_REACTION: {
+        // Intercept reactions for Rocket.Chat
+        if (isRocketChatInitialized()) {
+            const { messageId, reaction } = action;
+
+            sendReactionToRocketChat(messageId, reaction)
+                .catch(err => console.error('Failed to send reaction to Rocket.Chat', err));
+            return;
         }
         break;
     }

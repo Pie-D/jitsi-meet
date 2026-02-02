@@ -35,7 +35,8 @@ export const Helpers = {
 
                 // Handle deletions
                 if (message.t === 'rm') {
-                    store.dispatch(deleteMessage({ messageId: message._id }));
+                    console.log('[RocketChat] Deleting message:', message._id);
+                    store.dispatch(deleteMessage(message._id));
                     return;
                 }
 

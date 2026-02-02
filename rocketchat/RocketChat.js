@@ -3,6 +3,7 @@
 
 import { ROCKET_CHAT_CONFIG } from './config.js';
 import { WebSocketConnectionManager } from './connection';
+import { RocketChatEventEmitter } from './events';
 import { ROCKET_CHAT_USER_TYPES } from './types.js';
 import { Utils } from './utils.js';
 
@@ -29,8 +30,10 @@ export class RocketChat {
         };
         this.cmeetToken = null;
 
-        document.addEventListener('rocketChatRoomIdUpdated', event => {
-            const newRoomId = event.detail.roomId;
+        this.cmeetToken = null;
+
+        RocketChatEventEmitter.on('rocketChatRoomIdUpdated', payload => {
+            const newRoomId = payload.roomId;
 
             this.updateRoomId(newRoomId);
         });
@@ -199,7 +202,7 @@ export class RocketChat {
 
         if (res?.messages?.length) {
             res.messages.reverse().forEach(message => {
-                if (message.msg) {
+                if (message.msg && !message.t) {
                     deliverMessage(Utils.formatMessage(message, this.userContext?.username));
                 }
             });
@@ -270,6 +273,39 @@ export class RocketChat {
             ws.send(JSON.stringify(wsMessage));
         } catch (error) {
             logger.error('Failed to send message to Rocket.Chat:', error);
+        }
+    }
+
+    async sendReaction(messageId, reaction) {
+        try {
+            if (!messageId || !reaction) {
+                return;
+            }
+
+            if (!this.rocketChatRoomId) {
+                logger.error('Cannot send reaction: Rocket.Chat room ID is not set');
+
+                return;
+            }
+
+            const ws = this.wsManager.wsRocketChat;
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                logger.error('Cannot send reaction: WebSocket is not connected');
+
+                return;
+            }
+
+            const wsMessage = {
+                msg: 'method',
+                method: 'setReaction',
+                id: '424',
+                params: [ reaction, messageId ]
+            };
+
+            ws.send(JSON.stringify(wsMessage));
+        } catch (error) {
+            logger.error('Failed to send reaction to Rocket.Chat:', error);
         }
     }
 
