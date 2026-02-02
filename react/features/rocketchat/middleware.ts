@@ -1,5 +1,13 @@
 /* eslint-disable require-jsdoc */
-import { IRocketChatMessage, IRocketChatParticipant, initRocketChat, sendMessageToRocketChat, stopRocketChat, syncRocketChatMessages } from '../../../rocketchat/index';
+import {
+    IRocketChatMessage,
+    IRocketChatParticipant,
+    initRocketChat,
+    isRocketChatInitialized,
+    sendMessageToRocketChat,
+    stopRocketChat,
+    syncRocketChatMessages
+} from '../../../rocketchat/index';
 import { CONFERENCE_FAILED, CONFERENCE_JOINED, CONFERENCE_LEFT } from '../base/conference/actionTypes';
 import { getRoomName } from '../base/conference/functions';
 import { IConferenceState } from '../base/conference/reducer';
@@ -14,7 +22,8 @@ async function waitForConnectionToken(getState: () => any, maxWaitMs = 10000, in
     // eslint-disable-next-line no-constant-condition
     while (true) {
         const conferenceState = getState()['features/base/conference'] as IConferenceState;
-        const token = conferenceState?.conference?.connection?.token || '';
+        const jwtState = getState()['features/base/jwt'];
+        const token = conferenceState?.conference?.connection?.token || jwtState?.jwt || '';
 
         if (token) {
             return token;
@@ -42,8 +51,9 @@ MiddlewareRegistry.register(store => next => action => {
 
                 if (!token) {
                     const conferenceState = store.getState()['features/base/conference'] as IConferenceState;
+                    const jwtState = store.getState()['features/base/jwt'];
 
-                    token = conferenceState?.conference?.connection?.token || '';
+                    token = conferenceState?.conference?.connection?.token || jwtState?.jwt || '';
                 }
 
                 const instance = await initRocketChat(store, token, roomName, localParticipant);
@@ -71,10 +81,10 @@ MiddlewareRegistry.register(store => next => action => {
         const { privateMessageRecipient, isLobbyChatActive } = state['features/chat'];
 
         if (!privateMessageRecipient && !isLobbyChatActive && action.message) {
-            try {
-                void sendMessageToRocketChat(action.message);
-            } catch (err) {
-                console.error('Failed to send message to Rocket.Chat', err);
+            if (isRocketChatInitialized()) {
+                sendMessageToRocketChat(action.message)
+                    .catch(err => console.error('Failed to send message to Rocket.Chat', err));
+                return;
             }
         }
         break;

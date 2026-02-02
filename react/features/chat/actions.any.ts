@@ -18,7 +18,8 @@ import {
     SET_FOCUSED_TAB,
     SET_LOBBY_CHAT_ACTIVE_STATE,
     SET_LOBBY_CHAT_RECIPIENT,
-    SET_PRIVATE_MESSAGE_RECIPIENT
+    SET_PRIVATE_MESSAGE_RECIPIENT,
+    DELETE_MESSAGE
 } from './actionTypes';
 import { ChatTabs } from './constants';
 
@@ -102,6 +103,22 @@ export function editMessage(message: Object) {
 export function clearMessages() {
     return {
         type: CLEAR_MESSAGES
+    };
+}
+
+/**
+ * Deletes a chat message.
+ *
+ * @param {string} messageId - The ID of the message to delete.
+ * @returns {{
+ *     type: DELETE_MESSAGE,
+ *     messageId: string
+ * }}
+ */
+export function deleteMessage(messageId: string) {
+    return {
+        type: DELETE_MESSAGE,
+        messageId
     };
 }
 

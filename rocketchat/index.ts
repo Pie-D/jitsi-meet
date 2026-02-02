@@ -7,6 +7,10 @@ const logger = require('./logger').getLogger('RocketChat:Index');
 
 let instance: RocketChat | null = null;
 
+export function isRocketChatInitialized(): boolean {
+    return instance !== null;
+}
+
 export interface IRocketChatMessage {
     messageId: string;
     message: string;
@@ -106,8 +110,8 @@ export async function syncRocketChatMessages(
     }
 }
 
-export async function sendMessageToRocketChat(message: string): Promise<string | undefined> {
+export async function sendMessageToRocketChat(message: string): Promise<void> {
     if (instance) {
-        return await instance.sendMessage(message);
+        await instance.sendMessage(message);
     }
 }

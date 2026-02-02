@@ -1,6 +1,5 @@
-/* eslint-disable require-jsdoc */
 /* eslint-disable no-empty-function */
-import { addMessage } from '../react/features/chat/actions.any';
+import { addMessage, deleteMessage } from '../react/features/chat/actions.any';
 
 import { Utils } from './utils';
 
@@ -34,14 +33,23 @@ export const Helpers = {
             if (msg.collection === 'stream-room-messages') {
                 const message = msg.fields.args[0];
 
-                if (!message.customFields?.fromJitsi && !message.t) {
-                    const newMessage = Utils.formatMessage(message, localParticipantName);
-
-                    store.dispatch(addMessage({
-                        ...newMessage,
-                        hadRead: false
-                    }));
+                // Handle deletions
+                if (message.t === 'rm') {
+                    store.dispatch(deleteMessage({ messageId: message._id }));
+                    return;
                 }
+
+                // ignore other system messages
+                if (message.t) {
+                    return;
+                }
+
+                // Handle incoming messages (including our own for confirmation)
+                const newMessage = Utils.formatMessage(message, localParticipantName);
+                store.dispatch(addMessage({
+                    ...newMessage,
+                    hasRead: false
+                }));
             }
 
             break;

@@ -9,6 +9,7 @@ import {
     ADD_MESSAGE_REACTION,
     CLEAR_MESSAGES,
     CLOSE_CHAT,
+    DELETE_MESSAGE,
     EDIT_MESSAGE,
     NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
     OPEN_CHAT,
@@ -161,6 +162,15 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             lastReadMessage: undefined,
             messages: []
         };
+
+    case DELETE_MESSAGE: {
+        const messages = state.messages.filter(m => m.messageId !== action.messageId);
+
+        return {
+            ...state,
+            messages
+        };
+    }
 
     case EDIT_MESSAGE: {
         let found = false;
