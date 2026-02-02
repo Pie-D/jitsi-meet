@@ -485,6 +485,10 @@ var config = {
     // DEPRECATED. Use transcription.autoTranscribeOnRecord instead.
     // autoCaptionOnRecord: false,
 
+    // Auto start/stop Speech-to-Text (GST stream) when server recording starts/stops.
+    // This is a custom feature (separate from the built-in transcription feature).
+    autoSpeechToTextOnRecord: false,
+
     // Transcription options.
     // transcription: {
     //     // Whether the feature should be enabled or not.

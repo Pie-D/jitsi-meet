@@ -198,6 +198,10 @@ export interface IConfig {
     };
     autoCaptionOnRecord?: boolean;
     autoKnockLobby?: boolean;
+    /**
+     * Custom: Auto start/stop Speech-to-Text (GST stream) when server recording starts/stops.
+     */
+    autoSpeechToTextOnRecord?: boolean;
     backgroundAlpha?: number;
     bosh?: string;
     brandingDataUrl?: string;
