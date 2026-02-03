@@ -1,5 +1,5 @@
 /* eslint-disable no-empty-function */
-import { addMessage, deleteMessage } from '../react/features/chat/actions.any';
+import { addMessage, deleteMessage, editMessage } from '../react/features/chat/actions.any';
 
 import { Utils } from './utils';
 
@@ -47,10 +47,19 @@ export const Helpers = {
 
                 // Handle incoming messages (including our own for confirmation)
                 const newMessage = Utils.formatMessage(message, localParticipantName);
-                store.dispatch(addMessage({
-                    ...newMessage,
-                    hasRead: false
-                }));
+                const existingMessage = store.getState()['features/chat'].messages.find(m => m.messageId === newMessage.messageId);
+
+                if (existingMessage) {
+                    store.dispatch(editMessage({
+                        ...newMessage,
+                        hasRead: existingMessage.hasRead
+                    }));
+                } else {
+                    store.dispatch(addMessage({
+                        ...newMessage,
+                        hasRead: false
+                    }));
+                }
             }
 
             break;
