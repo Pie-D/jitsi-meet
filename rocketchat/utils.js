@@ -43,14 +43,14 @@ export const Utils = {
         if (msg.reactions) {
             Object.entries(msg.reactions).forEach(([ k, v ]) => {
                 if (v && v.usernames) {
-                    reactions.set(k, new Set(v.usernames));
+                    reactions.set(k, new Set(v.usernames.map(u => u.name || u.username)));
                 }
             });
         }
 
         return {
             displayName,
-            participantId: sender._id || msg.customFields?.participantId || 'unknown',
+            participantId: msg.customFields?.participantId || sender._id || 'unknown',
             messageId: msg._id,
             messageType: isSystem ? 'system' : isLocal ? 'local' : 'remote',
             message: msg.msg,
