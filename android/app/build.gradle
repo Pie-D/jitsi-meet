@@ -151,34 +151,48 @@ gradle.projectsEvaluated {
     android.applicationVariants.all { variant ->
         def targetName = variant.name.capitalize()
 
-        def currentRunPackagerTask = tasks.create(
-            name: "run${targetName}ReactPackager",
-            type: Exec) {
-            group = "react"
-            description = "Run the React packager."
+        def packagerScript = file("${projectDir}/../scripts/run-packager.sh")
 
-            doFirst {
-                println "Starting the React packager..."
+        def currentRunPackagerTask = null
 
-                def androidRoot = file("${projectDir}/../")
+        def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
 
-                // Set up the call to the script
-                workingDir androidRoot
+        if (packagerScript.exists() && !isWindows) {
+            currentRunPackagerTask = tasks.create(
+                name: "run${targetName}ReactPackager",
+                type: Exec) {
+                group = "react"
+                description = "Run the React packager."
 
-                // Run the packager
-                commandLine("scripts/run-packager.sh")
+                doFirst {
+                    println "Starting the React packager..."
+
+                    def androidRoot = file("${projectDir}/../")
+
+                    // Set up the call to the script
+                    workingDir androidRoot
+
+                    // Run the packager
+                    commandLine("scripts/run-packager.sh")
+                }
+
+                // Set up dev mode
+                def devEnabled = !targetName.toLowerCase().contains("release")
+
+                // Only enable for dev builds
+                enabled devEnabled
             }
-
-            // Set up dev mode
-            def devEnabled = !targetName.toLowerCase().contains("release")
-
-            // Only enable for dev builds
-            enabled devEnabled
+        } else if (!packagerScript.exists()) {
+            println "React packager script not found at ${packagerScript}. Skipping automatic packager task. Start Metro manually with: npx react-native start --reset-cache"
+        } else {
+            println "Detected Windows OS; skipping automatic packager task. Start Metro manually with: npx react-native start --reset-cache"
         }
 
         def packageTask = variant.packageApplicationProvider.get()
 
-        packageTask.dependsOn(currentRunPackagerTask)
+        if (currentRunPackagerTask != null) {
+            packageTask.dependsOn(currentRunPackagerTask)
+        }
     }
 }
 
