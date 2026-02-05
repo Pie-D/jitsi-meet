@@ -47,6 +47,7 @@ export class RocketChat {
 
                 if (cmeetToken) {
                     this.cmeetToken = cmeetToken;
+                    console.log('[RocketChat] Logging in with cmeetToken');
                     const url = this.config.endpoints.login;
                     const data = await Utils.makeRequest('POST', url, {
                         serviceName: 'keycloak',
@@ -267,10 +268,12 @@ export class RocketChat {
                 msg: 'method',
                 method: 'sendMessage',
                 id: '423',
-                params: [ params ]
+                params: [params]
             };
 
             ws.send(JSON.stringify(wsMessage));
+
+            logger.log('[RocketChat] Message sent:', message);
         } catch (error) {
             logger.error('Failed to send message to Rocket.Chat:', error);
         }
@@ -299,13 +302,38 @@ export class RocketChat {
             const wsMessage = {
                 msg: 'method',
                 method: 'setReaction',
-                id: '424',
-                params: [ reaction, messageId ]
+                id: '22',
+                params: [reaction, messageId, true]
             };
 
             ws.send(JSON.stringify(wsMessage));
+
+            logger.log('[RocketChat] Reaction sent:', reaction);
         } catch (error) {
             logger.error('Failed to send reaction to Rocket.Chat:', error);
+        }
+    }
+
+    async deleteMessage(messageId) {
+        try {
+            const ws = this.wsManager?.wsRocketChat;
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                throw new Error('WebSocket not connected');
+            }
+
+            const wsMessage = {
+                msg: 'method',
+                method: 'deleteMessage',
+                id: `delete-${Date.now()}`,
+                params: [{ _id: messageId }]
+            };
+
+            ws.send(JSON.stringify(wsMessage));
+
+            logger.log('[RocketChat] Delete message sent:', messageId);
+        } catch (error) {
+            logger.error('Failed to delete message from Rocket.Chat:', error);
         }
     }
 

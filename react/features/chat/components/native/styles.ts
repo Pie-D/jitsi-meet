@@ -311,5 +311,50 @@ export default {
         ...BaseTheme.typography.bodyShortRegular,
         color: BaseTheme.palette.text01,
         flex: 1
+    },
+
+    contextMenuContainer: {
+        backgroundColor: BaseTheme.palette.ui02,
+        paddingVertical: BaseTheme.spacing[3]
+    },
+
+    reactionRow: {
+        flexDirection: 'row',
+        paddingHorizontal: BaseTheme.spacing[3],
+        marginBottom: BaseTheme.spacing[3]
+    },
+
+    reactionButton: {
+        backgroundColor: BaseTheme.palette.ui04,
+        borderRadius: 24,
+        width: 48,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: BaseTheme.spacing[3]
+    },
+
+    reactionOption: {
+        fontSize: 24,
+        color: BaseTheme.palette.text01
+    },
+
+    contextMenuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: BaseTheme.spacing[3],
+        paddingHorizontal: BaseTheme.spacing[4]
+    },
+
+    contextMenuItemText: {
+        ...BaseTheme.typography.bodyShortRegular,
+        color: BaseTheme.palette.text01,
+        marginLeft: BaseTheme.spacing[3]
+    },
+
+    divider: {
+        height: 1,
+        backgroundColor: BaseTheme.palette.ui07,
+        marginVertical: BaseTheme.spacing[2]
     }
 };

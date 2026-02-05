@@ -11,7 +11,7 @@ import Popover from '../../../base/popover/components/Popover.web';
 import Button from '../../../base/ui/components/web/Button';
 import { BUTTON_TYPES } from '../../../base/ui/constants.any';
 import { copyText } from '../../../base/util/copyText.web';
-import { handleLobbyChatInitialized, openChat } from '../../actions.web';
+import { deleteMessage, handleLobbyChatInitialized, openChat } from '../../actions.web';
 import logger from '../../logger';
 
 export interface IProps {
@@ -22,6 +22,8 @@ export interface IProps {
     isFromVisitor?: boolean;
     isLobbyMessage: boolean;
     message: string;
+    messageId: string;
+    messageType: string;
     participantId: string;
 }
 
@@ -62,14 +64,16 @@ const useStyles = makeStyles()(theme => {
     };
 });
 
-const MessageMenu = ({ message, participantId, isFromVisitor, isLobbyMessage, enablePrivateChat, displayName, isFileMessage }: IProps) => {
+const MessageMenu = ({ message, messageId, messageType, participantId, isFromVisitor, isLobbyMessage, enablePrivateChat, displayName, isFileMessage }: IProps) => {
     const dispatch = useDispatch();
     const { classes, cx } = useStyles();
     const { t } = useTranslation();
-    const [ isPopoverOpen, setIsPopoverOpen ] = useState(false);
-    const [ showCopiedMessage, setShowCopiedMessage ] = useState(false);
-    const [ popupPosition, setPopupPosition ] = useState({ top: 0,
-        left: 0 });
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+    const [showCopiedMessage, setShowCopiedMessage] = useState(false);
+    const [popupPosition, setPopupPosition] = useState({
+        top: 0,
+        left: 0
+    });
     const buttonRef = useRef<HTMLDivElement>(null);
 
     const participant = useSelector((state: IReduxState) => getParticipantById(state, participantId));
@@ -107,7 +111,14 @@ const MessageMenu = ({ message, participantId, isFromVisitor, isLobbyMessage, en
             }
         }
         handleClose();
-    }, [ dispatch, isLobbyMessage, participant, participantId, displayName ]);
+    }, [dispatch, isLobbyMessage, participant, participantId, displayName]);
+
+    const isLocalMessage = messageType === 'local';
+
+    const handleDeleteClick = useCallback(() => {
+        dispatch(deleteMessage(messageId));
+        handleClose();
+    }, [dispatch, messageId]);
 
     const handleCopyClick = useCallback(() => {
         copyText(message)
@@ -133,22 +144,29 @@ const MessageMenu = ({ message, participantId, isFromVisitor, isLobbyMessage, en
                 logger.error('Error copying text', error);
             });
         handleClose();
-    }, [ message ]);
+    }, [message]);
 
     const popoverContent = (
-        <div className = { classes.menuPanel }>
+        <div className={classes.menuPanel}>
             {enablePrivateChat && (
                 <div
-                    className = { classes.menuItem }
-                    onClick = { handlePrivateClick }>
+                    className={classes.menuItem}
+                    onClick={handlePrivateClick}>
                     {t('Private Message')}
                 </div>
             )}
             {!isFileMessage && (
                 <div
-                    className = { classes.menuItem }
-                    onClick = { handleCopyClick }>
+                    className={classes.menuItem}
+                    onClick={handleCopyClick}>
                     {t('Copy')}
+                </div>
+            )}
+            {isLocalMessage && (
+                <div
+                    className={classes.menuItem}
+                    onClick={handleDeleteClick}>
+                    {t('Delete')}
                 </div>
             )}
         </div>
@@ -156,27 +174,29 @@ const MessageMenu = ({ message, participantId, isFromVisitor, isLobbyMessage, en
 
     return (
         <div>
-            <div ref = { buttonRef }>
+            <div ref={buttonRef}>
                 <Popover
-                    content = { popoverContent }
-                    onPopoverClose = { handleClose }
-                    position = 'top'
-                    trigger = 'click'
-                    visible = { isPopoverOpen }>
+                    content={popoverContent}
+                    onPopoverClose={handleClose}
+                    position='top'
+                    trigger='click'
+                    visible={isPopoverOpen}>
                     <Button
-                        accessibilityLabel = { t('toolbar.accessibilityLabel.moreOptions') }
-                        className = { classes.messageMenuButton }
-                        icon = { IconDotsHorizontal }
-                        onClick = { handleMenuClick }
-                        type = { BUTTON_TYPES.TERTIARY } />
+                        accessibilityLabel={t('toolbar.accessibilityLabel.moreOptions')}
+                        className={classes.messageMenuButton}
+                        icon={IconDotsHorizontal}
+                        onClick={handleMenuClick}
+                        type={BUTTON_TYPES.TERTIARY} />
                 </Popover>
             </div>
 
             {showCopiedMessage && ReactDOM.createPortal(
                 <div
-                    className = { cx(classes.copiedMessage, { [classes.showCopiedMessage]: showCopiedMessage }) }
-                    style = {{ top: `${popupPosition.top}px`,
-                        left: `${popupPosition.left}px` }}>
+                    className={cx(classes.copiedMessage, { [classes.showCopiedMessage]: showCopiedMessage })}
+                    style={{
+                        top: `${popupPosition.top}px`,
+                        left: `${popupPosition.left}px`
+                    }}>
                     {t('Message Copied')}
                 </div>,
                 document.body

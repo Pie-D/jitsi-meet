@@ -1,6 +1,7 @@
 import {
     IRocketChatMessage,
     IRocketChatParticipant,
+    deleteMessageFromRocketChat,
     initRocketChat,
     isRocketChatInitialized,
     sendMessageToRocketChat,
@@ -13,8 +14,9 @@ import { getRoomName } from '../base/conference/functions';
 import { IConferenceState } from '../base/conference/reducer';
 import { getLocalParticipant } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
-import { SEND_MESSAGE, SEND_REACTION } from '../chat/actionTypes';
+import { DELETE_MESSAGE, SEND_MESSAGE, SEND_REACTION } from '../chat/actionTypes';
 import { addMessage } from '../chat/actions.any';
+import { JITSI_TO_ROCKET_CHAT_REACTIONS } from '../../../rocketchat/const';
 
 async function waitForConnectionToken(getState: () => any, maxWaitMs = 10000, intervalMs = 100): Promise<string> {
     const start = Date.now();
@@ -43,64 +45,92 @@ MiddlewareRegistry.register(store => next => action => {
     const localParticipant = getLocalParticipant(state) as IRocketChatParticipant;
 
     switch (action.type) {
-    case CONFERENCE_JOINED: {
-        (async () => {
-            try {
-                const roomName = getRoomName(store.getState()) || '';
-                let token = await waitForConnectionToken(store.getState);
+        case CONFERENCE_JOINED: {
+            (async () => {
+                try {
+                    const roomName = getRoomName(store.getState()) || '';
+                    let token = await waitForConnectionToken(store.getState);
 
-                if (!token) {
-                    const conferenceState = store.getState()['features/base/conference'] as IConferenceState;
-                    const jwtState = store.getState()['features/base/jwt'];
+                    if (!token) {
+                        const conferenceState = store.getState()['features/base/conference'] as IConferenceState;
+                        const jwtState = store.getState()['features/base/jwt'];
 
-                    token = conferenceState?.conference?.connection?.token || jwtState?.jwt || '';
+                        token = conferenceState?.conference?.connection?.token || jwtState?.jwt || '';
+                    }
+
+                    console.log('[RocketChat Middleware] Token for Init:', token ? 'Found' : 'Missing', roomName);
+
+                    const instance = await initRocketChat(store, token, roomName, localParticipant);
+
+                    if (instance) {
+                        await syncRocketChatMessages(0, 30, (msg: IRocketChatMessage) => {
+                            dispatch(addMessage({ ...msg, hasRead: false }));
+                        });
+                        console.log('RocketChat Middleware: Synced messages from RocketChat successfully');
+
+                        // Notify external listeners (Flutter) that Rocket.Chat is connected
+                        dispatch(addMessage({
+                            displayName: 'System',
+                            hasRead: true,
+                            id: 'system-rocketchat-connected',
+                            message: 'Rocket.Chat Connected',
+                            messageType: 'error', // Use 'error' or 'local' to ensure it avoids some UI/bubble logic if needed, or 'system' if supported
+                            timestamp: Date.now()
+                        }));
+                    }
+                } catch (err) {
+                    console.error('RocketChat Middleware error in CONFERENCE_JOINED:', err);
                 }
+            })().catch(err => console.error('Unhandled error in RocketChat init:', err));
+            break;
+        }
 
-                const instance = await initRocketChat(store, token, roomName, localParticipant);
+        case CONFERENCE_LEFT:
+        case CONFERENCE_FAILED:
+            stopRocketChat();
+            break;
 
-                if (instance) {
-                    await syncRocketChatMessages(0, 30, (msg: IRocketChatMessage) => {
-                        dispatch(addMessage({ ...msg, hasRead: false }));
-                    });
-                    console.log('RocketChat Middleware: Synced messages from RocketChat successfully');
+        case SEND_MESSAGE: {
+            // Chỉ gửi tin nhắn group chat tới Rocket.Chat (không gửi private messages)
+            const { privateMessageRecipient, isLobbyChatActive } = state['features/chat'];
+
+            if (!privateMessageRecipient && !isLobbyChatActive && action.message) {
+                if (isRocketChatInitialized()) {
+                    console.log('[RocketChat Middleware] Sending message to Rocket.Chat:', action.message.substring(0, 50));
+                    sendMessageToRocketChat(action.message)
+                        .catch(err => console.error('Failed to send message to Rocket.Chat', err));
+
+                    return;
                 }
-            } catch (err) {
-                console.error('RocketChat Middleware error in CONFERENCE_JOINED:', err);
             }
-        })().catch(err => console.error('Unhandled error in RocketChat init:', err));
-        break;
-    }
+            break;
+        }
 
-    case CONFERENCE_LEFT:
-    case CONFERENCE_FAILED:
-        stopRocketChat();
-        break;
-
-    case SEND_MESSAGE: {
-        // Chỉ gửi tin nhắn group chat tới Rocket.Chat (không gửi private messages)
-        const { privateMessageRecipient, isLobbyChatActive } = state['features/chat'];
-
-        if (!privateMessageRecipient && !isLobbyChatActive && action.message) {
+        case SEND_REACTION: {
+            // Intercept reactions for Rocket.Chat
             if (isRocketChatInitialized()) {
-                sendMessageToRocketChat(action.message)
-                    .catch(err => console.error('Failed to send message to Rocket.Chat', err));
+                const { messageId, reaction } = action;
+                const mappedReaction = JITSI_TO_ROCKET_CHAT_REACTIONS[reaction as string] || reaction;
+
+                console.log('[RocketChat Middleware] Sending reaction to Rocket.Chat:', mappedReaction);
+
+                sendReactionToRocketChat(messageId, mappedReaction)
+                    .catch(err => console.error('Failed to send reaction to Rocket.Chat', err));
                 return;
             }
+            break;
         }
-        break;
-    }
 
-    case SEND_REACTION: {
-        // Intercept reactions for Rocket.Chat
-        if (isRocketChatInitialized()) {
-            const { messageId, reaction } = action;
+        case DELETE_MESSAGE: {
+            if (isRocketChatInitialized()) {
+                const { messageId } = action;
 
-            sendReactionToRocketChat(messageId, reaction)
-                .catch(err => console.error('Failed to send reaction to Rocket.Chat', err));
-            return;
+                console.log('[RocketChat Middleware] Deleting message from Rocket.Chat:', messageId);
+                deleteMessageFromRocketChat(messageId)
+                    .catch(err => console.error('Failed to delete message from Rocket.Chat', err));
+            }
+            break;
         }
-        break;
-    }
     }
 
     return next(action);

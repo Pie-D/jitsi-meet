@@ -1,5 +1,8 @@
 /* eslint-disable require-jsdoc */
 
+import { ROCKET_CHAT_TO_JITSI_REACTIONS } from './const';
+import jwtDecode from 'jwt-decode';
+
 export const Utils = {
     async makeRequest(method, url, body = null, headers = {}) {
         const options = {
@@ -41,9 +44,14 @@ export const Utils = {
         const reactions = new Map();
 
         if (msg.reactions) {
-            Object.entries(msg.reactions).forEach(([ k, v ]) => {
+
+            Object.entries(msg.reactions).forEach(([rcCode, v]) => {
                 if (v && v.usernames) {
-                    reactions.set(k, new Set(v.usernames.map(u => u.name || u.username)));
+                    const emoji = ROCKET_CHAT_TO_JITSI_REACTIONS[rcCode] || rcCode;
+                    const usernames = v.usernames.map(u => u.name || u.username);
+
+                    console.log('[Utils] Mapping reaction:', rcCode, '→', emoji);
+                    reactions.set(emoji, new Set(usernames));
                 }
             });
         }
@@ -69,14 +77,11 @@ export const Utils = {
             throw new Error('Invalid JWT token format');
         }
 
-        const parts = token.split('.');
-
-        if (parts.length !== 3) {
-            throw new Error('Invalid JWT token format');
+        try {
+            return jwtDecode(token);
+        } catch (e) {
+            console.error('[Utils] Failed to decode token:', e);
+            return null;
         }
-
-        const decodedToken = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-
-        return decodedToken || null;
     }
 };

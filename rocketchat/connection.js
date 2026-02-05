@@ -31,21 +31,29 @@ export class WebSocketConnectionManager {
             ws.send(JSON.stringify({
                 msg: 'connect',
                 version: '1',
-                support: [ '1' ]
+                support: ['1']
             }));
 
             ws.send(JSON.stringify({
                 msg: 'method',
                 method: 'login',
                 id: 'login-1',
-                params: [ { resume: authToken } ]
+                params: [{ resume: authToken }]
             }));
 
             ws.send(JSON.stringify({
                 msg: 'sub',
                 id: 'sub-1',
                 name: 'stream-room-messages',
-                params: [ roomId, false ]
+                params: [roomId, false]
+            }));
+
+            // Subscribe to deleteMessage notifications
+            ws.send(JSON.stringify({
+                msg: 'sub',
+                id: 'sub-2',
+                name: 'stream-notify-room',
+                params: [`${roomId}/deleteMessage`, false]
             }));
         };
         ws.onmessage = event => {

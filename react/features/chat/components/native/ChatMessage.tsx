@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import { Text, View, ViewStyle } from 'react-native';
+import { Text, TouchableWithoutFeedback, View, ViewStyle } from 'react-native';
 import { connect } from 'react-redux';
+
+import { openSheet } from '../../../base/dialog/actions';
 
 import { IReduxState } from '../../../app/types';
 import Avatar from '../../../base/avatar/components/Avatar';
@@ -18,15 +20,49 @@ import {
 } from '../../functions';
 import { IChatMessageProps } from '../../types';
 
+import ChatContextMenu from './ChatContextMenu';
 import GifMessage from './GifMessage';
 import PrivateMessageButton from './PrivateMessageButton';
 import styles from './styles';
 
 
 /**
+ * The type of the React {@code Component} props of {@link ChatMessage}.
+ */
+interface IProps extends IChatMessageProps {
+
+    /**
+     * Redux dispatch function.
+     */
+    dispatch: Function;
+}
+
+/**
  * Renders a single chat message.
  */
-class ChatMessage extends Component<IChatMessageProps> {
+class ChatMessage extends Component<IProps> {
+    /**
+     * Implements {@code Component#render}.
+     *
+     * @inheritdoc
+     */
+    constructor(props: IProps) {
+        super(props);
+
+        this._onLongPress = this._onLongPress.bind(this);
+    }
+
+    /**
+     * Handles the long press event.
+     *
+     * @returns {void}
+     */
+    _onLongPress() {
+        const { dispatch, message } = this.props;
+
+        dispatch(openSheet(ChatContextMenu, { message }));
+    }
+
     /**
      * Implements {@code Component#render}.
      *
@@ -43,18 +79,18 @@ class ChatMessage extends Component<IChatMessageProps> {
 
             return (
                 <View
-                    id = { message.messageId }
-                    style = { styles.messageWrapper as ViewStyle }>
-                    <View style = { [ styles.detailsWrapper as ViewStyle ] }>
-                        <View style = { [ styles.messageBubble as ViewStyle, styles.systemMessageBubble as ViewStyle ] }>
-                            <View style = { [ styles.textWrapper as ViewStyle, styles.systemTextRow as ViewStyle ] }>
-                                <View style = { styles.systemMessageSign as ViewStyle } />
-                                <View style = { styles.systemContentColumn as ViewStyle }>
-                                    <Text style = { styles.systemMessageTitle }>
-                                        { 'Tin nhắn hệ thống' }
+                    id={message.messageId}
+                    style={styles.messageWrapper as ViewStyle}>
+                    <View style={[styles.detailsWrapper as ViewStyle]}>
+                        <View style={[styles.messageBubble as ViewStyle, styles.systemMessageBubble as ViewStyle]}>
+                            <View style={[styles.textWrapper as ViewStyle, styles.systemTextRow as ViewStyle]}>
+                                <View style={styles.systemMessageSign as ViewStyle} />
+                                <View style={styles.systemContentColumn as ViewStyle}>
+                                    <Text style={styles.systemMessageTitle}>
+                                        {'Tin nhắn hệ thống'}
                                     </Text>
-                                    <Text style = { styles.systemChatMessage }>
-                                        { messageText }
+                                    <Text style={styles.systemChatMessage}>
+                                        {messageText}
                                     </Text>
                                 </View>
                             </View>
@@ -105,21 +141,23 @@ class ChatMessage extends Component<IChatMessageProps> {
 
         return (
             <View
-                id = { message.messageId }
-                style = { styles.messageWrapper as ViewStyle } >
-                { this._renderAvatar() }
-                <View style = { detailsWrapperStyle }>
-                    <View style = { messageBubbleStyle }>
-                        <View style = { styles.textWrapper as ViewStyle } >
-                            { this._renderDisplayName() }
-                            { gifEnabled && isGifMessage(messageText)
-                                ? <GifMessage message = { messageText } />
-                                : this._renderMessageTextComponent(messageText) }
-                            { this._renderPrivateNotice() }
+                id={message.messageId}
+                style={styles.messageWrapper as ViewStyle} >
+                {this._renderAvatar()}
+                <View style={detailsWrapperStyle}>
+                    <TouchableWithoutFeedback onLongPress={this._onLongPress}>
+                        <View style={messageBubbleStyle}>
+                            <View style={styles.textWrapper as ViewStyle} >
+                                {this._renderDisplayName()}
+                                {gifEnabled && isGifMessage(messageText)
+                                    ? <GifMessage message={messageText} />
+                                    : this._renderMessageTextComponent(messageText)}
+                                {this._renderPrivateNotice()}
+                            </View>
+                            {this._renderPrivateReplyButton()}
                         </View>
-                        { this._renderPrivateReplyButton() }
-                    </View>
-                    { this._renderTimestamp() }
+                    </TouchableWithoutFeedback>
+                    {this._renderTimestamp()}
                 </View>
             </View>
         );
@@ -134,11 +172,11 @@ class ChatMessage extends Component<IChatMessageProps> {
         const { message } = this.props;
 
         return (
-            <View style = { styles.avatarWrapper }>
-                { this.props.showAvatar && <Avatar
-                    displayName = { message.displayName }
-                    participantId = { message.participantId }
-                    size = { styles.avatarWrapper.width } />
+            <View style={styles.avatarWrapper}>
+                {this.props.showAvatar && <Avatar
+                    displayName={message.displayName}
+                    participantId={message.participantId}
+                    size={styles.avatarWrapper.width} />
                 }
             </View>
         );
@@ -159,8 +197,8 @@ class ChatMessage extends Component<IChatMessageProps> {
         const { displayName } = message;
 
         return (
-            <Text style = { styles.senderDisplayName }>
-                { `${displayName}${getDisplayNameSuffix(message)}` }
+            <Text style={styles.senderDisplayName}>
+                {`${displayName}${getDisplayNameSuffix(message)}`}
             </Text>
         );
     }
@@ -176,18 +214,18 @@ class ChatMessage extends Component<IChatMessageProps> {
         if (messageText.length >= CHAR_LIMIT) {
             return (
                 <Text
-                    selectable = { true }
-                    style = { styles.chatMessage }>
-                    { messageText }
+                    selectable={true}
+                    style={styles.chatMessage}>
+                    {messageText}
                 </Text>
             );
         }
 
         return (
             <Linkify
-                linkStyle = { styles.chatLink }
-                style = { styles.chatMessage }>
-                { replaceNonUnicodeEmojis(messageText) }
+                linkStyle={styles.chatLink}
+                style={styles.chatMessage}>
+                {replaceNonUnicodeEmojis(messageText)}
             </Linkify>
         );
     }
@@ -205,8 +243,8 @@ class ChatMessage extends Component<IChatMessageProps> {
         }
 
         return (
-            <Text style = { message.lobbyChat ? styles.lobbyMsgNotice : styles.privateNotice }>
-                { getPrivateNoticeMessage(this.props.message) }
+            <Text style={message.lobbyChat ? styles.lobbyMsgNotice : styles.privateNotice}>
+                {getPrivateNoticeMessage(this.props.message)}
             </Text>
         );
     }
@@ -225,13 +263,13 @@ class ChatMessage extends Component<IChatMessageProps> {
         }
 
         return (
-            <View style = { styles.replyContainer as ViewStyle }>
+            <View style={styles.replyContainer as ViewStyle}>
                 <PrivateMessageButton
-                    isLobbyMessage = { lobbyChat }
-                    participantID = { message.participantId }
-                    reply = { true }
-                    showLabel = { false }
-                    toggledStyles = { styles.replyStyles } />
+                    isLobbyMessage={lobbyChat}
+                    participantID={message.participantId}
+                    reply={true}
+                    showLabel={false}
+                    toggledStyles={styles.replyStyles} />
             </View>
         );
     }
@@ -247,8 +285,8 @@ class ChatMessage extends Component<IChatMessageProps> {
         }
 
         return (
-            <Text style = { styles.timeText }>
-                { getFormattedTimestamp(this.props.message) }
+            <Text style={styles.timeText}>
+                {getFormattedTimestamp(this.props.message)}
             </Text>
         );
     }

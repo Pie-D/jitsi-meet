@@ -121,3 +121,10 @@ export async function sendReactionToRocketChat(messageId: string, reaction: stri
         await instance.sendReaction(messageId, reaction);
     }
 }
+
+export async function deleteMessageFromRocketChat(messageId: string): Promise<void> {
+    if (instance) {
+        await instance.deleteMessage(messageId);
+    }
+}
+
