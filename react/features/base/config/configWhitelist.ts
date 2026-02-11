@@ -22,7 +22,6 @@ export default [
     'audioLevelsInterval',
     'audioQuality',
     'autoKnockLobby',
-    'autoSpeechToTextOnRecord',
     'apiLogLevels',
     'avgRtpStatsN',
     'backgroundAlpha',
