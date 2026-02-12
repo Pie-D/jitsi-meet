@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc */
 
-import { ROCKET_CHAT_TO_JITSI_REACTIONS } from './const';
+import { ROCKET_CHAT_TO_JITSI_REACTIONS } from './constants';
 import jwtDecode from 'jwt-decode';
 
 export const Utils = {
@@ -44,14 +44,16 @@ export const Utils = {
         const reactions = new Map();
 
         if (msg.reactions) {
-
             Object.entries(msg.reactions).forEach(([rcCode, v]) => {
-                if (v && v.usernames) {
-                    const emoji = ROCKET_CHAT_TO_JITSI_REACTIONS[rcCode] || rcCode;
-                    const usernames = v.usernames.map(u => u.name || u.username);
+                if (v && Array.isArray(v.usernames)) {
+                    const userObjectsSet = new Set(
+                        v.usernames.map(u => ({
+                            name: u.name || '',
+                            username: u.username || ''
+                        }))
+                    );
 
-                    console.log('[Utils] Mapping reaction:', rcCode, '→', emoji);
-                    reactions.set(emoji, new Set(usernames));
+                    reactions.set(rcCode, userObjectsSet);
                 }
             });
         }

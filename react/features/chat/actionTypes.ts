@@ -186,4 +186,14 @@ export const SET_CHAT_IS_RESIZING = 'SET_CHAT_IS_RESIZING';
   *     type: NOTIFY_PRIVATE_RECIPIENTS_CHANGED
   * }
   */
- export const NOTIFY_PRIVATE_RECIPIENTS_CHANGED = 'NOTIFY_PRIVATE_RECIPIENTS_CHANGED';
+export const NOTIFY_PRIVATE_RECIPIENTS_CHANGED = 'NOTIFY_PRIVATE_RECIPIENTS_CHANGED';
+
+/**
+ * The type of action which signals to set the Rocket.Chat messages loaded state.
+ *
+ * {
+ *     type: SET_ROCKET_CHAT_MESSAGES_LOADED,
+ *     loaded: boolean
+ * }
+ */
+export const SET_ROCKET_CHAT_MESSAGES_LOADED = 'SET_ROCKET_CHAT_MESSAGES_LOADED';

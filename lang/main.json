@@ -159,7 +159,9 @@
         "titleWithFeatures": "Chat and",
         "titleWithFileSharing": "Files",
         "titleWithPolls": "Polls",
-        "you": "you"
+        "you": "you",
+        "unauthenticated": "You need to log in to send messages.",
+        "anonymous": "Guest"
     },
     "chromeExtensionBanner": {
         "buttonText": "Install Chrome Extension",
@@ -925,8 +927,8 @@
         "speechContinued": "The STT stream has not ended. Please try again later.",
         "speechFailed": "STT service is currently unavailable. Please try again later.",
         "tokenExpired": "Token has expired. Please log in again.",
-        "sttEnabled" : "STT is enabled.",
-        "sttDisabled" : "STT is disabled.",
+        "sttEnabled": "STT is enabled.",
+        "sttDisabled": "STT is disabled.",
         "sttErrored": "STT encountered an error.",
         "sttExists": "An STT session is already active. Please stop the current session before starting a new one.",
         "cannotdemoteOwner": "You cannot move the meeting host to viewer."
@@ -1724,15 +1726,14 @@
             "heading": "Whiteboard"
         },
         "screenTitle": "Whiteboard"
+    },
+    "immersive": {
+        "selectTitle": "Choose immersive layout",
+        "secondTitle": "Sample Library",
+        "start": "Start",
+        "slots": "slots",
+        "description": "This layout will be the same for everyone. Participants can be arranged freely within this view.",
+        "accessDenied": "Access denied",
+        "ownerOnly": "Only the host can configure immersive view"
     }
-  ,
-  "immersive": {
-    "selectTitle": "Choose immersive layout",
-   "secondTitle": "Sample Library",
-    "start": "Start",
-    "slots": "slots",
-    "description": "This layout will be the same for everyone. Participants can be arranged freely within this view.",
-    "accessDenied": "Access denied",
-    "ownerOnly": "Only the host can configure immersive view"
-  }
 }

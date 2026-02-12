@@ -21,6 +21,7 @@ import {
 import { IChatMessageProps } from '../../types';
 
 import ChatContextMenu from './ChatContextMenu';
+import DeleteMessageButton from './DeleteMessageButton';
 import GifMessage from './GifMessage';
 import PrivateMessageButton from './PrivateMessageButton';
 import styles from './styles';
@@ -155,6 +156,7 @@ class ChatMessage extends Component<IProps> {
                                 {this._renderPrivateNotice()}
                             </View>
                             {this._renderPrivateReplyButton()}
+                            {this._renderDeleteButton()}
                         </View>
                     </TouchableWithoutFeedback>
                     {this._renderTimestamp()}
@@ -268,6 +270,29 @@ class ChatMessage extends Component<IProps> {
                     isLobbyMessage={lobbyChat}
                     participantID={message.participantId}
                     reply={true}
+                    showLabel={false}
+                    toggledStyles={styles.replyStyles} />
+            </View>
+        );
+    }
+
+    /**
+     * Renders the delete button, if necessary.
+     *
+     * @returns {React.ReactElement<*> | null}
+     */
+    _renderDeleteButton() {
+        const { message } = this.props;
+        const isLocalMessage = message.messageType === MESSAGE_TYPE_LOCAL;
+
+        if (!isLocalMessage) {
+            return null;
+        }
+
+        return (
+            <View style={styles.replyContainer as ViewStyle}>
+                <DeleteMessageButton
+                    messageID={message.messageId}
                     showLabel={false}
                     toggledStyles={styles.replyStyles} />
             </View>

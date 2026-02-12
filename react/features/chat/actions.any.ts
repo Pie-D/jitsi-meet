@@ -19,7 +19,8 @@ import {
     SET_LOBBY_CHAT_ACTIVE_STATE,
     SET_LOBBY_CHAT_RECIPIENT,
     SET_PRIVATE_MESSAGE_RECIPIENT,
-    DELETE_MESSAGE
+    DELETE_MESSAGE,
+    SET_ROCKET_CHAT_MESSAGES_LOADED
 } from './actionTypes';
 import { ChatTabs } from './constants';
 
@@ -387,18 +388,36 @@ export function handleLobbyChatInitialized(participantId: string) {
             return;
         }
 
-        const payload = { type: LOBBY_CHAT_INITIALIZED,
+        const payload = {
+            type: LOBBY_CHAT_INITIALIZED,
             moderator: {
                 ...me,
                 name: 'Moderator',
                 id: lobbyLocalId
             },
-            attendee };
+            attendee
+        };
 
         // notify attendee privately.
         conference?.sendLobbyMessage(payload, attendee.id);
 
         // notify other moderators.
         return conference?.sendLobbyMessage(payload);
+    };
+}
+
+/**
+ * Action to set the state of Rocket.Chat messages loaded.
+ *
+ * @param {boolean} loaded - The loaded state.
+ * @returns {{
+ *     type: SET_ROCKET_CHAT_MESSAGES_LOADED,
+ *     loaded: boolean
+ * }}
+ */
+export function setRocketChatMessagesLoaded(loaded: boolean) {
+    return {
+        type: SET_ROCKET_CHAT_MESSAGES_LOADED,
+        loaded
     };
 }

@@ -1,3 +1,14 @@
+export const ROCKET_CHAT_USER_TYPES = {
+    USER: 'u',
+    BOT: 'b'
+};
+
+export const MESSAGE_TYPES = {
+    SYSTEM: 'system',
+    LOCAL: 'local',
+    REMOTE: 'remote'
+};
+
 export const ROCKET_CHAT_REACTIONS = {
     LIKE: {
         message: ':thumbsup:',
@@ -31,7 +42,7 @@ export const ROCKET_CHAT_REACTIONS = {
     }
 };
 
-// Mapping từ Jitsi reaction codes sang Rocket.Chat codes
+// Mapping from Jitsi reaction codes to Rocket.Chat codes
 export const JITSI_TO_ROCKET_CHAT_REACTIONS = {
     [ROCKET_CHAT_REACTIONS.LIKE.emoji]: ROCKET_CHAT_REACTIONS.LIKE.message,
     [ROCKET_CHAT_REACTIONS.LOVE.emoji]: ROCKET_CHAT_REACTIONS.LOVE.message,

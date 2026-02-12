@@ -22,6 +22,7 @@ import {
     SET_LOBBY_CHAT_RECIPIENT,
     SET_PRIVATE_MESSAGE_RECIPIENT,
     SET_USER_CHAT_WIDTH,
+    SET_ROCKET_CHAT_MESSAGES_LOADED
 } from './actionTypes';
 import { CHAT_SIZE, ChatTabs, MESSAGE_TYPE_LOCAL } from './constants';
 import { createMessageId } from './functions';
@@ -45,13 +46,17 @@ const DEFAULT_STATE = {
     width: {
         current: CHAT_SIZE,
         userSet: null
-    }
+    },
+    isRocketChatMessagesLoaded: true,
+    bufferedMessages: []
 };
 
 export interface IChatState {
+    bufferedMessages?: any[];
     focusedTab?: ChatTabs;
     groupChatWithPermissions: boolean;
     isLobbyChatActive: boolean;
+    isRocketChatMessagesLoaded?: boolean;
     isOpen: boolean;
     isResizing: boolean;
     lastReadMessage?: IMessage;
@@ -78,6 +83,20 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         case ADD_MESSAGE: {
             const messageId = action.messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
+            // Check if we need to buffer
+            const isRocketChatMessage = action.isRocketChatHistory;
+
+            if (state.isRocketChatMessagesLoaded === false && !isRocketChatMessage) {
+                const bufferedMessages = state.bufferedMessages || [];
+                return {
+                    ...state,
+                    bufferedMessages: [...bufferedMessages, {
+                        ...action,
+                        messageId
+                    }]
+                };
+            }
+
             const specificMessageId = createMessageId(action.participantId, action.timestamp, action.message);
             if (state.shownMessages.has(specificMessageId)) {
                 return state;
@@ -102,7 +121,9 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
 
             // Check if this message was recently sent (within 5 seconds)
             const recentSendTime = newRecentlySentMessages.get(contentHash);
-            if (recentSendTime && (now - recentSendTime) < DUPLICATE_WINDOW_MS) {
+
+            // Chỉ check duplicate nếu message không phải là history từ RC (vì RC history là source of truth)
+            if (!isRocketChatMessage && recentSendTime && (now - recentSendTime) < DUPLICATE_WINDOW_MS) {
                 console.log('[Chat Reducer] Duplicate detected by content hash, skipping');
                 // Remove from tracking since we found the echo
                 newRecentlySentMessages.delete(contentHash);
@@ -153,7 +174,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
                 ...state,
                 lastReadMessage:
                     action.hasRead ? newMessage : state.lastReadMessage,
-                unreadMessagesCount: state.focusedTab !== ChatTabs.CHAT ? state.unreadMessagesCount + 1 : state.unreadMessagesCount,
+                unreadMessagesCount: state.focusedTab !== ChatTabs.CHAT && !action.isReaction ? state.unreadMessagesCount + 1 : state.unreadMessagesCount,
                 recentlySentMessages: newRecentlySentMessages,
                 messages
             };
@@ -180,7 +201,8 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
 
                     return {
                         ...message,
-                        reactions: newReactions
+                        reactions: newReactions,
+                        hasRead: true
                     };
                 }
 
@@ -353,6 +375,91 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             return {
                 ...state,
                 unreadFilesCount: remoteFilesCount
+            };
+        }
+
+        case SET_ROCKET_CHAT_MESSAGES_LOADED: {
+            const { loaded } = action;
+            const newMessages = [...state.messages];
+            const newRecentlySentMessages = new Map(state.recentlySentMessages);
+
+            if (loaded && state.bufferedMessages?.length) {
+                // Flush buffer
+                state.bufferedMessages.forEach(msgAction => {
+                    const messageId = msgAction.messageId;
+                    const specificMessageId = createMessageId(msgAction.participantId, msgAction.timestamp, msgAction.message);
+
+                    if (state.shownMessages.has(specificMessageId)) {
+                        return;
+                    }
+
+                    if (messageId && newMessages.some(m => m.messageId === messageId)) {
+                        return;
+                    }
+
+                    const contentHash = `${msgAction.participantId}-${msgAction.message}`;
+                    const DUPLICATE_WINDOW_MS = 5000;
+                    // const now = Date.now();
+
+                    // Check duplicate against recentlySentMessages (local echo or fast replay)
+                    const recentSendTime = newRecentlySentMessages.get(contentHash);
+                    // Allow slight drift. Message timestamp is `msgAction.timestamp`
+                    if (recentSendTime && (msgAction.timestamp - recentSendTime) < DUPLICATE_WINDOW_MS) {
+                        // Duplicate
+                        return;
+                    }
+
+                    // Also check if any message in newMessages looks like this one (deduplicate against RC history by content)
+                    const isDuplicateContent = newMessages.some(m =>
+                        m.participantId === msgAction.participantId
+                        && m.message === msgAction.message
+                        && Math.abs(m.timestamp - msgAction.timestamp) < 5000
+                    );
+
+                    if (isDuplicateContent) {
+                        return;
+                    }
+
+                    const newMessage: IMessage = {
+                        displayName: msgAction.displayName,
+                        error: msgAction.error,
+                        fileMetadata: msgAction.fileMetadata,
+                        isFromGuest: Boolean(msgAction.isFromGuest),
+                        isFromVisitor: Boolean(msgAction.isFromVisitor),
+                        participantId: msgAction.participantId,
+                        isReaction: msgAction.isReaction,
+                        messageId,
+                        messageType: msgAction.messageType,
+                        message: msgAction.message,
+                        reactions: msgAction.reactions,
+                        privateMessage: msgAction.privateMessage,
+                        lobbyChat: msgAction.lobbyChat,
+                        recipient: msgAction.recipient,
+                        sentToVisitor: Boolean(msgAction.sentToVisitor),
+                        timestamp: msgAction.timestamp
+                    };
+
+                    state.shownMessages.add(specificMessageId);
+                    if (msgAction.messageType === MESSAGE_TYPE_LOCAL) {
+                        newRecentlySentMessages.set(contentHash, msgAction.timestamp);
+                    }
+
+                    newMessages.push(newMessage);
+                });
+
+                // Sort by timestamp
+                newMessages.sort((a, b) => a.timestamp - b.timestamp);
+                if (navigator.product === 'ReactNative') {
+                    newMessages.reverse();
+                }
+            }
+
+            return {
+                ...state,
+                isRocketChatMessagesLoaded: loaded,
+                bufferedMessages: [], // Clear buffer
+                messages: newMessages,
+                recentlySentMessages: newRecentlySentMessages
             };
         }
     }

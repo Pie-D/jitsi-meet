@@ -15,10 +15,10 @@ import { IConferenceState } from '../base/conference/reducer';
 import { getLocalParticipant } from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { DELETE_MESSAGE, SEND_MESSAGE, SEND_REACTION } from '../chat/actionTypes';
-import { addMessage } from '../chat/actions.any';
-import { JITSI_TO_ROCKET_CHAT_REACTIONS } from '../../../rocketchat/const';
+import { addMessage, setRocketChatMessagesLoaded } from '../chat/actions.any';
+import { JITSI_TO_ROCKET_CHAT_REACTIONS } from '../../../rocketchat/constants';
 
-async function waitForConnectionToken(getState: () => any, maxWaitMs = 10000, intervalMs = 100): Promise<string> {
+async function waitForConnectionToken(getState: () => any, maxWaitMs = 2000, intervalMs = 100): Promise<string> {
     const start = Date.now();
 
     // eslint-disable-next-line no-constant-condition
@@ -48,6 +48,7 @@ MiddlewareRegistry.register(store => next => action => {
         case CONFERENCE_JOINED: {
             (async () => {
                 try {
+                    dispatch(setRocketChatMessagesLoaded(false));
                     const roomName = getRoomName(store.getState()) || '';
                     let token = await waitForConnectionToken(store.getState);
 
@@ -64,24 +65,19 @@ MiddlewareRegistry.register(store => next => action => {
 
                     if (instance) {
                         await syncRocketChatMessages(0, 30, (msg: IRocketChatMessage) => {
-                            dispatch(addMessage({ ...msg, hasRead: false }));
+                            dispatch(addMessage({ ...msg, hasRead: false, isRocketChatHistory: true }));
                         });
                         console.log('RocketChat Middleware: Synced messages from RocketChat successfully');
-
-                        // Notify external listeners (Flutter) that Rocket.Chat is connected
-                        dispatch(addMessage({
-                            displayName: 'System',
-                            hasRead: true,
-                            id: 'system-rocketchat-connected',
-                            message: 'Rocket.Chat Connected',
-                            messageType: 'error', // Use 'error' or 'local' to ensure it avoids some UI/bubble logic if needed, or 'system' if supported
-                            timestamp: Date.now()
-                        }));
                     }
                 } catch (err) {
                     console.error('RocketChat Middleware error in CONFERENCE_JOINED:', err);
+                } finally {
+                    dispatch(setRocketChatMessagesLoaded(true));
                 }
-            })().catch(err => console.error('Unhandled error in RocketChat init:', err));
+            })().catch(err => {
+                console.error('Unhandled error in RocketChat init:', err);
+                dispatch(setRocketChatMessagesLoaded(true));
+            });
             break;
         }
 

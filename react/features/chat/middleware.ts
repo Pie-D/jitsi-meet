@@ -695,8 +695,9 @@ function _handleReceivedMessage({ dispatch, getState }: IStore,
         }, NOTIFICATION_TIMEOUT_TYPE.MEDIUM));
     }
 
-    if (typeof APP !== 'undefined') {
+    if (typeof APP !== 'undefined' && !isReaction) {
         // Logic for web only:
+        console.log('[Phuc] notifyReceivedChatMessage: ', notificationDisplayName)
 
         APP.API.notifyReceivedChatMessage({
             body: message,

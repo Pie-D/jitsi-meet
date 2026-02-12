@@ -28,7 +28,7 @@
         "shareLink": "Chia sẻ đường dẫn để mời người khác tham dự cuộc họp",
         "shareStream": "Chia sẻ liên kết phát trực tiếp",
         "sipAddresses": "sip addresses",
-        "shareCiscoInvite" : "Chia sẻ để tham dự từ Cisco",
+        "shareCiscoInvite": "Chia sẻ để tham dự từ Cisco",
         "telephone": "Số: {{number}}",
         "title": "Mời người tham dự cuộc họp này",
         "yahooEmail": "Email Yahoo"
@@ -148,7 +148,9 @@
         "titleWithFeatures": "Trò chuyện và",
         "titleWithFileSharing": "Tệp",
         "titleWithPolls": "Cuộc hội thoại",
-        "you": "bạn"
+        "you": "bạn",
+        "unauthenticated": "Bạn cần phải đăng nhập để sử dụng tính năng trò chuyện",
+        "anonymous": "Khách"
     },
     "chromeExtensionBanner": {
         "buttonText": "Cài đặt tiện ích mở rộng của Chrome",
@@ -157,7 +159,7 @@
         "dontShowAgain": "Đừng cho tôi xem lại cái này",
         "installExtensionText": "Cài đặt tiện ích mở rộng để tích hợp Lịch Google và Office 365"
     },
-        "closedCaptionsTab": {
+    "closedCaptionsTab": {
         "emptyState": "Phụ đề sẽ khả dụng sau khi người điều hành bắt đầu",
         "startClosedCaptionsButton": "Bắt đầu phụ đề"
     },
@@ -566,21 +568,21 @@
         "veryGood": "Rất Tốt"
     },
     "fileSharing": {
-    "downloadFailedDescription": "Vui lòng thử lại.",
-    "downloadFailedTitle": "Tải xuống không thành công",
-    "downloadFile": "Tải xuống",
-    "downloadStarted": "Đã bắt đầu tải xuống tệp",
-    "dragAndDrop": "Kéo và thả tệp vào đây hoặc bất kỳ đâu trên màn hình",
-    "fileAlreadyUploaded": "Tệp đã được tải lên cuộc họp này.",
-    "fileTooLargeDescription": "Vui lòng đảm bảo tệp không vượt quá {{ maxFileSize }}.",
-    "fileTooLargeTitle": "Tệp đã chọn quá lớn",
-    "fileUploadProgress": "Tiến trình tải tệp lên",
-    "fileUploadedSuccessfully": "Tải tệp lên thành công",
-    "removeFile": "Xóa",
-    "removeFileSuccess": "Đã xóa tệp thành công",
-    "uploadFailedDescription": "Vui lòng thử lại.",
-    "uploadFailedTitle": "Tải lên không thành công",
-    "uploadFile": "Chia sẻ tệp"
+        "downloadFailedDescription": "Vui lòng thử lại.",
+        "downloadFailedTitle": "Tải xuống không thành công",
+        "downloadFile": "Tải xuống",
+        "downloadStarted": "Đã bắt đầu tải xuống tệp",
+        "dragAndDrop": "Kéo và thả tệp vào đây hoặc bất kỳ đâu trên màn hình",
+        "fileAlreadyUploaded": "Tệp đã được tải lên cuộc họp này.",
+        "fileTooLargeDescription": "Vui lòng đảm bảo tệp không vượt quá {{ maxFileSize }}.",
+        "fileTooLargeTitle": "Tệp đã chọn quá lớn",
+        "fileUploadProgress": "Tiến trình tải tệp lên",
+        "fileUploadedSuccessfully": "Tải tệp lên thành công",
+        "removeFile": "Xóa",
+        "removeFileSuccess": "Đã xóa tệp thành công",
+        "uploadFailedDescription": "Vui lòng thử lại.",
+        "uploadFailedTitle": "Tải lên không thành công",
+        "uploadFile": "Chia sẻ tệp"
     },
     "filmstrip": {
         "accessibilityLabel": {
@@ -639,7 +641,7 @@
         "tooltip": "Chia sẻ liên kết và thông tin quay số của cuộc họp này",
         "upgradeOptions": "Vui lòng kiểm tra các tùy chọn nâng cấp trên",
         "whiteboardError": "Lỗi tải bảng trắng. Vui lòng thử lại sau.",
-        "subject" : "Cuộc họp"
+        "subject": "Cuộc họp"
     },
     "inlineDialogFailure": {
         "msg": "Chúng tôi đã gặp một chút vấn đề.",
@@ -1708,15 +1710,14 @@
             "heading": "Bảng trắng"
         },
         "screenTitle": "Bảng trắng"
+    },
+    "immersive": {
+        "selectTitle": "Chọn chế độ hiển thị nhập vai",
+        "secondTitle": "Thư viện mẫu ",
+        "start": "Bắt đầu",
+        "slots": "ô",
+        "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này",
+        "accessDenied": "Không có quyền truy cập",
+        "ownerOnly": "Chỉ Chủ phòng mới có thể cấu hình chế độ nhập vai"
     }
-  ,
-  "immersive": {
-    "selectTitle": "Chọn chế độ hiển thị nhập vai",
-    "secondTitle": "Thư viện mẫu ",
-    "start": "Bắt đầu",
-    "slots": "ô",
-    "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này",
-    "accessDenied": "Không có quyền truy cập",
-    "ownerOnly": "Chỉ Chủ phòng mới có thể cấu hình chế độ nhập vai"
-  }
 }

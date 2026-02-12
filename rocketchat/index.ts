@@ -1,11 +1,11 @@
 /* eslint-disable require-jsdoc */
 // @ts-ignore
-import { RocketChat } from './RocketChat';
+import { RocketChatService } from './service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const logger = require('./logger').getLogger('RocketChat:Index');
 
-let instance: RocketChat | null = null;
+let instance: RocketChatService | null = null;
 
 export function isRocketChatInitialized(): boolean {
     return instance !== null;
@@ -40,13 +40,13 @@ export async function initRocketChat(
     token: string,
     meetingId: string,
     localParticipant: any
-): Promise<RocketChat | false> {
+): Promise<RocketChatService | false> {
     if (!meetingId) {
         logger.warn('Meeting ID is required');
         return false;
     }
 
-    const rocketChat = new RocketChat(store, meetingId, localParticipant);
+    const rocketChat = new RocketChatService(store, meetingId, localParticipant);
     instance = rocketChat;
 
     let rocketChatRoomId: string | null = null;

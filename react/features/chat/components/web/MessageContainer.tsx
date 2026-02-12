@@ -103,29 +103,29 @@ export default class MessageContainer extends Component<IProps, IState> {
 
             return (
                 <ChatMessageGroup
-                    className = { messageType || MESSAGE_TYPE_REMOTE }
-                    key = { index }
-                    messages = { messages } />
+                    className={messageType || MESSAGE_TYPE_REMOTE}
+                    key={index}
+                    messages={messages} />
             );
         });
 
         return (
-            <div id = 'chat-conversation-container'>
+            <div id='chat-conversation-container'>
                 <div
-                    aria-labelledby = 'chat-header'
-                    id = 'chatconversation'
-                    onScroll = { this._onChatScroll }
-                    ref = { this._messageListRef }
-                    role = 'log'
-                    tabIndex = { 0 }>
-                    { content }
+                    aria-labelledby='chat-header'
+                    id='chatconversation'
+                    onScroll={this._onChatScroll}
+                    ref={this._messageListRef}
+                    role='log'
+                    tabIndex={0}>
+                    {content}
 
-                    { !this.state.isScrolledToBottom && this.state.hasNewMessages
+                    {!this.state.isScrolledToBottom && this.state.hasNewMessages
                         && <NewMessagesButton
-                            onGoToFirstUnreadMessage = { this._onGoToFirstUnreadMessage } /> }
+                            onGoToFirstUnreadMessage={this._onGoToFirstUnreadMessage} />}
                     <div
-                        id = 'messagesListEnd'
-                        ref = { this._messagesListEndRef } />
+                        id='messagesListEnd'
+                        ref={this._messagesListEndRef} />
                 </div>
             </div>
         );
@@ -154,7 +154,24 @@ export default class MessageContainer extends Component<IProps, IState> {
      * @returns {void}
      */
     override componentDidUpdate(prevProps: IProps) {
-        const newMessages = this.props.messages.filter(message => !prevProps.messages.includes(message));
+        const newMessages = this.props.messages.filter(message => {
+            // Check if this exact message object was in previous props
+            if (prevProps.messages.includes(message)) {
+                return false;
+            }
+
+            // If not, check if a message with the same ID was in previous props
+            const prevMessage = prevProps.messages.find(m => m.messageId === message.messageId);
+
+            if (prevMessage) {
+                // It's an update (e.g. reaction), not a new message
+                return false;
+            }
+
+            // It's genuinely a new message
+            return true;
+        });
+
         const hasLocalMessage = newMessages.map(message => message.messageType).includes(MESSAGE_TYPE_LOCAL);
 
         if (newMessages.length > 0) {
@@ -310,7 +327,7 @@ export default class MessageContainer extends Component<IProps, IState> {
         const messagesNodeList = document.querySelectorAll('.chatmessage-wrapper');
 
         // @ts-ignore
-        const messagesToArray = [ ...messagesNodeList ];
+        const messagesToArray = [...messagesNodeList];
 
         const previousIndex = messagesToArray.findIndex((message: Element) =>
             message.id === this.state.lastReadMessageId);

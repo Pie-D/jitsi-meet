@@ -269,6 +269,15 @@ const ChatMessage = ({
     const [isReactionsOpen, setIsReactionsOpen] = useState(false);
     const systemMessageTitle = 'Tin nhắn hệ thống';
 
+    const emojiList = [
+        { key: ':thumbsup:', emoji: '👍' },      // Like
+        { key: ':hearts:', emoji: '💖' },        // Love
+        { key: ':laughing:', emoji: '😆' },     // Laugh
+        { key: ':disappointed_relieved:', emoji: '😢' }, // Sad
+        { key: ':angry:', emoji: '😠' },         // Angry
+        { key: ':fire:', emoji: '🔥' }          // Fire
+    ];
+
     const handleMouseEnter = useCallback(() => {
         setIsHovered(true);
     }, []);
@@ -359,15 +368,15 @@ const ChatMessage = ({
                         className={classes.reactionItem}
                         key={reaction}>
                         <div className={classes.reactionHeader}>
-                            <span className={classes.reactionEmoji}>{reaction}</span>
+                            <span className={classes.reactionEmoji}>{emojiList.find(e => e.key === reaction)?.emoji || reaction}</span>
                             <span className={classes.reactionCount}>{participants.size}</span>
                         </div>
                         <div className={classes.participantList}>
-                            {Array.from(participants).map((username, idx) => (
+                            {Array.from(participants as Set<string>).map((participantName: string, idx) => (
                                 <span
                                     className={classes.participant}
-                                    key={`${username}-${idx}`}>
-                                    {username}
+                                    key={`${participantName}-${idx}`}>
+                                    {participantName === 'anonymous' ? t('chat.anonymous') : participantName}
                                 </span>
                             ))}
                         </div>
@@ -381,7 +390,7 @@ const ChatMessage = ({
                 content={reactionsContent}
                 onPopoverClose={handleReactionsClose}
                 onPopoverOpen={handleReactionsOpen}
-                position='top'
+                position='auto'
                 trigger='hover'
                 visible={isReactionsOpen}>
                 <div className={classes.reactionBox}>

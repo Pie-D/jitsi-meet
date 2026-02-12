@@ -6,7 +6,18 @@ import { AnyAction } from 'redux';
 
 // @ts-ignore
 import { ENDPOINT_TEXT_MESSAGE_NAME } from '../../../../modules/API/constants';
-import { syncRocketChatMessages } from '../../../../rocketchat';
+import {
+    IRocketChatMessage,
+    IRocketChatParticipant,
+    deleteMessageFromRocketChat,
+    initRocketChat,
+    isRocketChatInitialized,
+    sendMessageToRocketChat,
+    sendReactionToRocketChat,
+    stopRocketChat,
+    syncRocketChatMessages
+} from '../../../../rocketchat';
+import { getRoomName } from '../../base/conference/functions';
 import { appNavigate } from '../../app/actions.native';
 import { IStore } from '../../app/types';
 import { APP_WILL_MOUNT, APP_WILL_UNMOUNT } from '../../base/app/actionTypes';
@@ -27,7 +38,7 @@ import {
     getCurrentConference,
     isRoomValid
 } from '../../base/conference/functions';
-import { IJitsiConference } from '../../base/conference/reducer';
+import { IConferenceState, IJitsiConference } from '../../base/conference/reducer';
 import { overwriteConfig } from '../../base/config/actions';
 import { getWhitelistedJSON } from '../../base/config/functions.native';
 import { CONNECTION_DISCONNECTED } from '../../base/connection/actionTypes';
@@ -54,7 +65,7 @@ import { CAMERA_FACING_MODE_MESSAGE } from '../../base/tracks/constants';
 import { getLocalTracks, isLocalTrackMuted } from '../../base/tracks/functions.native';
 import { ITrack } from '../../base/tracks/types';
 import { ADD_MESSAGE, CLOSE_CHAT, OPEN_CHAT } from '../../chat/actionTypes';
-import { addMessage, closeChat, openChat, sendMessage, setPrivateMessageRecipient } from '../../chat/actions.native';
+import { addMessage, closeChat, deleteMessage, openChat, sendMessage, setPrivateMessageRecipient } from '../../chat/actions.native';
 import { isEnabled as isDropboxEnabled } from '../../dropbox/functions.native';
 import { hideNotification, showNotification } from '../../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE, NOTIFICATION_TYPE } from '../../notifications/constants';
@@ -72,6 +83,7 @@ import { READY_TO_CLOSE } from './actionTypes';
 import { setParticipantsWithScreenShare } from './actions';
 import { participantToParticipantInfo, sendEvent } from './functions';
 import logger from './logger';
+import { JITSI_TO_ROCKET_CHAT_REACTIONS } from '../../../../rocketchat/constants';
 
 /**
  * Event which will be emitted on the native side when a chat message is received
@@ -111,6 +123,28 @@ const PARTICIPANTS_INFO_RETRIEVED = 'PARTICIPANTS_INFO_RETRIEVED';
  * Event which will be emitted on the native side to indicate the recording status has changed.
  */
 const RECORDING_STATUS_CHANGED = 'RECORDING_STATUS_CHANGED';
+
+// eslint-disable-next-line max-params
+async function waitForConnectionToken(getState: () => any, maxWaitMs = 2000, intervalMs = 100): Promise<string> {
+    const start = Date.now();
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const conferenceState = getState()['features/base/conference'] as IConferenceState;
+        const jwtState = getState()['features/base/jwt'];
+        const token = conferenceState?.conference?.connection?.token || jwtState?.jwt || '';
+
+        if (token) {
+            return token;
+        }
+
+        if (Date.now() - start >= maxWaitMs) {
+            return '';
+        }
+
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+    }
+}
 
 const externalAPIEnabled = isExternalAPIAvailable();
 
@@ -159,17 +193,43 @@ externalAPIEnabled && MiddlewareRegistry.register(store => next => action => {
                     ...data
                 });
             }
+            stopRocketChat();
             break;
         }
 
         case CONFERENCE_LEFT:
             _sendConferenceEvent(store, action);
+            stopRocketChat();
             break;
 
         case CONFERENCE_JOINED:
             _sendConferenceEvent(store, action);
             _registerForEndpointTextMessages(store);
-            syncRocketChatMessages(0).catch(e => logger.warn('RocketChat sync failed', e));
+
+            (async () => {
+                try {
+                    const roomName = getRoomName(store.getState()) || '';
+                    let token = await waitForConnectionToken(store.getState);
+
+                    if (!token) {
+                        const conferenceState = store.getState()['features/base/conference'] as IConferenceState;
+                        const jwtState = store.getState()['features/base/jwt'];
+
+                        token = conferenceState?.conference?.connection?.token || jwtState?.jwt || '';
+                    }
+
+                    const localParticipant = getLocalParticipant(store.getState()) as IRocketChatParticipant;
+                    const instance = await initRocketChat(store, token, roomName, localParticipant);
+
+                    if (instance) {
+                        await syncRocketChatMessages(0, 30, (msg: IRocketChatMessage) => {
+                            store.dispatch(addMessage({ ...msg, hasRead: false }));
+                        });
+                    }
+                } catch (err) {
+                    logger.warn('RocketChat Middleware Mobile error in CONFERENCE_JOINED:', err);
+                }
+            })().catch(err => logger.warn('Unhandled error in RocketChat Mobile init:', err));
             break;
 
         case CONFERENCE_BLURRED:
@@ -210,6 +270,8 @@ externalAPIEnabled && MiddlewareRegistry.register(store => next => action => {
                         url: _normalizeUrl(locationURL)
                     });
             }
+
+            stopRocketChat();
 
             break;
         }
@@ -480,7 +542,20 @@ function _registerForNativeEvents(store: IStore) {
             dispatch(setPrivateMessageRecipient(participant));
         }
 
+        if (isRocketChatInitialized()) {
+            sendMessageToRocketChat(message)
+                .catch(err => console.error('Failed to send message to Rocket.Chat', err));
+        }
+
         dispatch(sendMessage(message));
+    });
+
+    eventEmitter.addListener(ExternalAPI.SEND_REACTION, ({ messageId, reaction }: any) => {
+        if (isRocketChatInitialized()) {
+            const mappedReaction = JITSI_TO_ROCKET_CHAT_REACTIONS[reaction as string] || reaction;
+            sendReactionToRocketChat(messageId, mappedReaction)
+                .catch(err => console.error('Failed to send reaction to Rocket.Chat', err));
+        }
     });
 
     eventEmitter.addListener(ExternalAPI.SET_CLOSED_CAPTIONS_ENABLED,
@@ -661,16 +736,17 @@ function _registerForNativeEvents(store: IStore) {
         });
     });
 
-    eventEmitter.addListener(ExternalAPI.SYNC_ROCKETCHAT_MESSAGES, async ({ offset }: any) => {
-        try {
-            await syncRocketChatMessages(Number(offset) || 0);
-        } catch (e) {
-            logger.warn('RocketChat sync failed', e);
-        }
-    });
-
     eventEmitter.addListener(ExternalAPI.ADD_CHAT_MESSAGE, (payload: any) => {
         store.dispatch(addMessage(payload));
+    });
+
+    eventEmitter.addListener(ExternalAPI.DELETE_MESSAGE, (payload: any) => {
+        if (isRocketChatInitialized()) {
+            deleteMessageFromRocketChat(payload.messageId)
+                .catch(err => console.error('Failed to delete message from Rocket.Chat', err));
+        }
+
+        store.dispatch(deleteMessage(payload));
     });
 }
 
@@ -690,6 +766,7 @@ function _unregisterForNativeEvents() {
     eventEmitter.removeAllListeners(ExternalAPI.OPEN_CHAT);
     eventEmitter.removeAllListeners(ExternalAPI.CLOSE_CHAT);
     eventEmitter.removeAllListeners(ExternalAPI.SEND_CHAT_MESSAGE);
+    eventEmitter.removeAllListeners(ExternalAPI.SEND_REACTION);
     eventEmitter.removeAllListeners(ExternalAPI.SET_CLOSED_CAPTIONS_ENABLED);
     eventEmitter.removeAllListeners(ExternalAPI.TOGGLE_CAMERA);
     eventEmitter.removeAllListeners(ExternalAPI.SHOW_NOTIFICATION);
@@ -698,8 +775,8 @@ function _unregisterForNativeEvents() {
     eventEmitter.removeAllListeners(ExternalAPI.STOP_RECORDING);
     eventEmitter.removeAllListeners(ExternalAPI.OVERWRITE_CONFIG);
     eventEmitter.removeAllListeners(ExternalAPI.SEND_CAMERA_FACING_MODE_MESSAGE);
-    eventEmitter.removeAllListeners(ExternalAPI.SYNC_ROCKETCHAT_MESSAGES);
     eventEmitter.removeAllListeners(ExternalAPI.ADD_CHAT_MESSAGE);
+    eventEmitter.removeAllListeners(ExternalAPI.DELETE_MESSAGE);
 }
 
 /**
