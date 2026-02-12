@@ -47,7 +47,7 @@ export const getWhipLink = async (token: string, meetingId: string): Promise<str
         } else toast.error(i18n.t('notify.speechFailed'));
         return undefined;
     }
-    console.log('Whip link:', data);
+
     return data.data;
 }
 

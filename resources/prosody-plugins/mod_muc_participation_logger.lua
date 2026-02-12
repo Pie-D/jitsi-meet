@@ -67,8 +67,20 @@ module:hook("muc-occupant-joined", function(event)
     local email, ctx = get_email(event);
     -- module:log("info", "CTX room=%s nick=%s ctx=%s", room.jid, tostring(occupant and occupant.nick), ctx and json.encode(ctx) or "nil");
     -- module:log("info", "JOIN room=%s nick=%s email=%s", room.jid, tostring(occupant.nick), tostring(email));
-
+    if name == "CMEET Assistant" then
+        module:log("info","participant is Bot Assistant, skipping");
+        return;
+    end
+    if name == "CMEET-BOT-RECORDING" then
+        module:log("info","participant is Bot STT Recording, skipping");
+        return;
+    end
+    if name == nil then
+        module:log("info","participant is Bot Recording, skipping");
+        return;
+    end
     local key = room.jid .. "/" .. occupant.nick;
+    module:log("info","nick == %s", key)
     if split(occupant.nick, "/")[2] == "focus" then
         module:log("info","participant is focus, skipping");
         return;
@@ -102,7 +114,7 @@ module:hook("muc-occupant-left", function(event)
         module:log("info", "LEAVE room=%s nick=%s entry_not_found", room.jid, tostring(occupant and occupant.nick));
         return;
     end
-    module:log("info", "LEAVE room=%s nick=%s email=%s", room.jid, tostring(occupant.nick), tostring(entry.email));
+    -- module:log("info", "LEAVE room=%s nick=%s email=%s", room.jid, tostring(occupant.nick), tostring(entry.email));
     join_times[key] = nil;
     if not flush_on_leave then return; end
 

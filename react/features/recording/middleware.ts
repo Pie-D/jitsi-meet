@@ -270,11 +270,10 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
                     dispatch(playSound(soundID));
                 }
 
-                // Tự động bật speech to text khi recording to server bắt đầu (theo config).
-                if (mode === JitsiRecordingConstants.mode.FILE
-                        && Boolean(state['features/base/config']?.autoSpeechToTextOnRecord)) {
-                    void _autoStartSpeechToText(state, dispatch);
-                }
+                // Tự động bật speech to text khi recording to server bắt đầu
+                // if (mode === JitsiRecordingConstants.mode.FILE) {
+                //     _autoStartSpeechToText(state, dispatch);
+                // }
 
                 if (typeof APP !== 'undefined') {
                     APP.API.notifyRecordingStatusChanged(
@@ -309,11 +308,10 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
                 dispatch(playSound(soundOff));
             }
 
-            // Tự động tắt speech to text khi recording to server dừng (theo config).
-            if (mode === JitsiRecordingConstants.mode.FILE
-                    && Boolean(state['features/base/config']?.autoSpeechToTextOnRecord)) {
-                void _autoStopSpeechToText(state);
-            }
+            // Tự động tắt speech to text khi recording to server dừng
+            // if (mode === JitsiRecordingConstants.mode.FILE) {
+            //     _autoStopSpeechToText(state);
+            // }
 
             if (typeof APP !== 'undefined') {
                 APP.API.notifyRecordingStatusChanged(
@@ -389,9 +387,7 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
                     conference.stopRecording(activeFileSession.id);
                     
                     // Tự động tắt speech to text khi recording dừng
-                    if (Boolean(state['features/base/config']?.autoSpeechToTextOnRecord)) {
-                        void _autoStopSpeechToText(state);
-                    }
+                    // _autoStopSpeechToText(state);
                     
                     // Tắt transcription metadata
                     dispatch(setRequestingSubtitles(false, false, null));
