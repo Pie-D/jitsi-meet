@@ -14,7 +14,7 @@ const AudioLevels = {
     updateLargeVideoAudioLevel(elementId, audioLevel) {
         const element = document.getElementById(elementId);
 
-        if (!UIUtil.isVisible(element)) {
+        if (!element || !UIUtil.isVisible(element)) {
             return;
         }
 

@@ -39,7 +39,11 @@ const useStyles = makeStyles()((theme: Theme) => {
             overflow: 'hidden'
         },
         chatMessageWrapper: {
-            maxWidth: '100%'
+            maxWidth: '100%',
+            '&:hover .action-buttons': {
+                opacity: 1,
+                visibility: 'visible'
+            }
         },
         chatMessage: {
             display: 'inline-flex',
@@ -117,6 +121,8 @@ const useStyles = makeStyles()((theme: Theme) => {
             display: 'flex',
             alignItems: 'center',
             gap: theme.spacing(1),
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
             backgroundColor: theme.palette.grey[800],
             borderRadius: theme.shape.borderRadius,
             padding: theme.spacing(0, 1),
@@ -145,7 +151,10 @@ const useStyles = makeStyles()((theme: Theme) => {
             alignItems: 'center',
             gap: theme.spacing(1),
             minWidth: '32px',
-            minHeight: '32px'
+            minHeight: '32px',
+            opacity: 0,
+            transition: 'opacity 0.2s',
+            visibility: 'hidden'
         },
         displayName: {
             ...theme.typography.labelBold,
@@ -265,7 +274,6 @@ const ChatMessage = ({
     t
 }: IProps) => {
     const { classes, cx } = useStyles();
-    const [isHovered, setIsHovered] = useState(false);
     const [isReactionsOpen, setIsReactionsOpen] = useState(false);
     const systemMessageTitle = 'Tin nhắn hệ thống';
 
@@ -278,13 +286,7 @@ const ChatMessage = ({
         { key: ':fire:', emoji: '🔥' }          // Fire
     ];
 
-    const handleMouseEnter = useCallback(() => {
-        setIsHovered(true);
-    }, []);
 
-    const handleMouseLeave = useCallback(() => {
-        setIsHovered(false);
-    }, []);
 
     const handleReactionsOpen = useCallback(() => {
         setIsReactionsOpen(true);
@@ -372,13 +374,21 @@ const ChatMessage = ({
                             <span className={classes.reactionCount}>{participants.size}</span>
                         </div>
                         <div className={classes.participantList}>
-                            {Array.from(participants as Set<string>).map((participantName: string, idx) => (
-                                <span
-                                    className={classes.participant}
-                                    key={`${participantName}-${idx}`}>
-                                    {participantName === 'anonymous' ? t('chat.anonymous') : participantName}
-                                </span>
-                            ))}
+                            {Array.from(participants).map((participant: any, idx) => {
+                                let displayName = participant;
+
+                                if (typeof participant === 'object' && participant !== null) {
+                                    displayName = participant.name || participant.username;
+                                }
+
+                                return (
+                                    <span
+                                        className={classes.participant}
+                                        key={`${displayName}-${idx}`}>
+                                        {displayName === 'anonymous' ? t('chat.anonymous') : displayName}
+                                    </span>
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
@@ -405,14 +415,12 @@ const ChatMessage = ({
                 </div>
             </Popover>
         );
-    }, [message?.reactions, isHovered, isReactionsOpen]);
+    }, [message?.reactions, isReactionsOpen]);
 
     return (
         <div
             className={cx(classes.chatMessageWrapper, className)}
             id={message.messageId}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
             tabIndex={-1}>
             <div className={classes.sideBySideContainer}>
                 {message.messageType === 'system' ? (
@@ -442,8 +450,8 @@ const ChatMessage = ({
                 ) : (
                     <>
                         {!shouldDisplayMenuOnRight && (
-                            <div className={classes.optionsButtonContainer}>
-                                {isHovered && <MessageMenu
+                            <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
+                                <MessageMenu
                                     displayName={message.displayName}
                                     enablePrivateChat={Boolean(enablePrivateChat)}
                                     isFileMessage={isFileMessage(message)}
@@ -453,7 +461,6 @@ const ChatMessage = ({
                                     messageId={message.messageId}
                                     messageType={message.messageType}
                                     participantId={message.participantId} />
-                                }
                             </div>
                         )}
                         <div
@@ -513,15 +520,15 @@ const ChatMessage = ({
                             <div className={classes.sideBySideContainer}>
                                 {!message.privateMessage && !message.lobbyChat
                                     && !message.isReaction && <div>
-                                        <div className={classes.optionsButtonContainer}>
-                                            {isHovered && <ReactButton
+                                        <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
+                                            <ReactButton
                                                 messageId={message.messageId}
-                                                receiverId={''} />}
+                                                receiverId={''} />
                                         </div>
                                     </div>}
                                 <div>
-                                    <div className={classes.optionsButtonContainer}>
-                                        {isHovered && <MessageMenu
+                                    <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
+                                        <MessageMenu
                                             displayName={message.displayName}
                                             enablePrivateChat={Boolean(enablePrivateChat)}
                                             isFileMessage={isFileMessage(message)}
@@ -530,7 +537,7 @@ const ChatMessage = ({
                                             message={message.message}
                                             messageId={message.messageId}
                                             messageType={message.messageType}
-                                            participantId={message.participantId} />}
+                                            participantId={message.participantId} />
                                     </div>
                                 </div>
                             </div>
