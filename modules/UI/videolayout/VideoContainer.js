@@ -13,6 +13,8 @@ import { LargeVideoBackground, ORIENTATION } from '../../../react/features/large
 import { LAYOUTS } from '../../../react/features/video-layout/constants';
 import { getCurrentLayout } from '../../../react/features/video-layout/functions.any';
 /* eslint-enable no-unused-vars */
+import { isMobileBrowser } from '../../../react/features/base/environment/utils';
+import { getParticipantsPaneOpen } from '../../../react/features/participants-pane/functions';
 import UIUtil from '../util/UIUtil';
 
 import Filmstrip from './Filmstrip';
@@ -272,6 +274,9 @@ export class VideoContainer extends LargeContainer {
 
         this.video.onresize = this._onResize.bind(this);
         this._play = this._play.bind(this);
+
+        this._onStateChange = this._onStateChange.bind(this);
+        APP.store.subscribe(this._onStateChange);
     }
 
     /**
@@ -642,6 +647,24 @@ export class VideoContainer extends LargeContainer {
     }
 
     /**
+     * State change listener.
+     *
+     * @private
+     * @returns {void}
+     */
+    _onStateChange() {
+        const state = APP.store.getState();
+        const isChatOpen = state['features/chat'].isOpen;
+        const isParticipantsPaneOpen = getParticipantsPaneOpen(state);
+
+        if (this._isChatOpen !== isChatOpen || this._isParticipantsPaneOpen !== isParticipantsPaneOpen) {
+            this._isChatOpen = isChatOpen;
+            this._isParticipantsPaneOpen = isParticipantsPaneOpen;
+            this._updateBackground();
+        }
+    }
+
+    /**
      * Attaches and/or updates a React Component to be used as a background for
      * the large video, to display blurred video and fill up empty space not
      * taken up by the large video.
@@ -666,7 +689,7 @@ export class VideoContainer extends LargeContainer {
 
         ReactDOM.render(
             <LargeVideoBackground
-                hidden={this._hideBackground || this._isHidden}
+                hidden={this._hideBackground || this._isHidden || (isMobileBrowser() && (this._isChatOpen || this._isParticipantsPaneOpen))}
                 mirror={
                     this.stream
                     && this.stream.isLocal()
