@@ -43,13 +43,10 @@ interface IProps {
     onRaiseMenu: Function;
 
     /**
-     * The raise context for the participant menu.
+     * The context key of the participant for which the context menu is raised.
+     * This key encodes both room and participant identifiers.
      */
-    participantContextEntity?: {
-        jid: string;
-        participantName: string;
-        room: IRoom;
-    };
+    participantContextKey?: string;
 
     /**
      * Callback to raise participant context menu.
@@ -59,16 +56,7 @@ interface IProps {
     /**
      * Room reference.
      */
-    room: {
-        id: string;
-        name: string;
-        participants: {
-            [jid: string]: {
-                displayName: string;
-                jid: string;
-            };
-        };
-    };
+    room: IRoom;
 
     /**
      * Participants search string.
@@ -114,7 +102,7 @@ export const CollapsibleRoom = ({
     isHighlighted,
     onRaiseMenu,
     onLeave,
-    participantContextEntity,
+    participantContextKey,
     raiseParticipantContextMenu,
     room,
     searchString,
@@ -148,12 +136,13 @@ export const CollapsibleRoom = ({
             || {}).length})`}
     </span>);
 
-    const raiseParticipantMenu = useCallback(({ participantID, displayName }) => moderator
-    && raiseParticipantContextMenu({
-        room,
-        jid: participantID,
-        participantName: displayName
-    }), [ room, moderator ]);
+    const raiseParticipantMenu = useCallback(({ participantID }) => {
+        if (moderator) {
+            const contextKey = `${room.jid}|${participantID}`;
+
+            raiseParticipantContextMenu(contextKey);
+        }
+    }, [ moderator, raiseParticipantContextMenu, room.jid ]);
 
     return (<>
         <ListItem
@@ -170,12 +159,18 @@ export const CollapsibleRoom = ({
             textChildren = { roomName }
             trigger = { actionsTrigger } />
         {!collapsed && room?.participants
-            && Object.values(room?.participants || {}).map(p =>
-                participantMatchesSearch(p, searchString) && (
+            && Object.values(room?.participants || {}).map(p => {
+                if (!participantMatchesSearch(p, searchString)) {
+                    return null;
+                }
+
+                const contextKey = `${room.jid}|${p.jid}`;
+
+                return (
                     <ParticipantItem
                         actionsTrigger = { ACTION_TRIGGER.HOVER }
                         displayName = { p.displayName || defaultRemoteDisplayName }
-                        isHighlighted = { participantContextEntity?.jid === p.jid }
+                        isHighlighted = { participantContextKey === contextKey }
                         key = { p.jid }
                         local = { false }
                         openDrawerForParticipant = { raiseParticipantMenu }
@@ -184,12 +179,11 @@ export const CollapsibleRoom = ({
                         {!overflowDrawer && moderator && (
                             <ParticipantActionEllipsis
                                 accessibilityLabel = { t('breakoutRoom.more') }
-                                onClick = { toggleParticipantMenu({ room,
-                                    jid: p.jid,
-                                    participantName: p.displayName }) } />
+                                onClick = { toggleParticipantMenu(contextKey) } />
                         )}
                     </ParticipantItem>
-                ))
+                );
+            })
         }
     </>);
 };

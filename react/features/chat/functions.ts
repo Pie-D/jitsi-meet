@@ -222,9 +222,7 @@ export function getFormattedTimestamp(message: IMessage) {
  */
 export function getMessageText(message: IMessage) {
     return message.messageType === MESSAGE_TYPE_ERROR
-        ? i18next.t('chat.error', {
-            error: message.message
-        })
+        ? i18next.t('chat.error')
         : message.message;
 }
 

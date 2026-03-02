@@ -53,11 +53,7 @@ export const RoomList = ({ searchString }: IProps) => {
     const { hideJoinRoomButton } = useSelector(getBreakoutRoomsConfig);
     const [ lowerMenu, raiseMenu, toggleMenu, menuEnter, menuLeave, raiseContext ] = useContextMenu<IRoom>();
     const [ lowerParticipantMenu, raiseParticipantMenu, toggleParticipantMenu,
-        participantMenuEnter, participantMenuLeave, raiseParticipantContext ] = useContextMenu<{
-        jid: string;
-        participantName: string;
-        room: IRoom;
-    }>();
+        participantMenuEnter, participantMenuLeave, raiseParticipantContext ] = useContextMenu<string>();
     const onRaiseMenu = useCallback(room => (target: HTMLElement) => raiseMenu(room, target), [ raiseMenu ]);
 
     // close the menu when the room vanishes
@@ -81,7 +77,7 @@ export const RoomList = ({ searchString }: IProps) => {
                         <CollapsibleRoom
                             isHighlighted = { true }
                             onRaiseMenu = { onRaiseMenu(room) }
-                            participantContextEntity = { raiseParticipantContext.entity }
+                            participantContextKey = { raiseParticipantContext.entity }
                             raiseParticipantContextMenu = { raiseParticipantMenu }
                             room = { room }
                             searchString = { searchString }
@@ -101,10 +97,11 @@ export const RoomList = ({ searchString }: IProps) => {
                 onSelect = { lowerMenu }
                 { ...raiseContext } />
             <RoomParticipantContextMenu
+                offsetTarget = { raiseParticipantContext.offsetTarget }
                 onEnter = { participantMenuEnter }
                 onLeave = { participantMenuLeave }
                 onSelect = { lowerParticipantMenu }
-                { ...raiseParticipantContext } />
+                participantKey = { raiseParticipantContext.entity } />
         </>
     );
 };
