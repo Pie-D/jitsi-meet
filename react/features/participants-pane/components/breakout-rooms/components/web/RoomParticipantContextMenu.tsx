@@ -1,3 +1,6 @@
+/* global APP */
+declare const APP: any;
+
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -17,13 +20,9 @@ import { AVATAR_SIZE } from '../../../../constants';
 interface IProps {
 
     /**
-     * Room and participant jid reference.
+     * Participant context key reference (encodes room & participant).
      */
-    entity?: {
-        jid: string;
-        participantName: string;
-        room: any;
-    };
+    participantKey?: string;
 
     /**
      * Target elements against which positioning calculations are made.
@@ -61,7 +60,7 @@ const useStyles = makeStyles()(theme => {
 });
 
 export const RoomParticipantContextMenu = ({
-    entity,
+    participantKey,
     offsetTarget,
     onEnter,
     onLeave,
@@ -71,7 +70,7 @@ export const RoomParticipantContextMenu = ({
     const { t } = useTranslation();
     const isLocalModerator = useSelector(isLocalParticipantModerator);
     const lowerMenu = useCallback(() => onSelect(true), [ onSelect ]);
-    const rooms: Object = useSelector(getBreakoutRooms);
+    const rooms: any = useSelector(getBreakoutRooms);
     const overflowDrawer = useSelector(showOverflowDrawer);
     const buttonsWithNotifyClick = useSelector(getParticipantMenuButtonsWithNotifyClick);
 
@@ -79,7 +78,7 @@ export const RoomParticipantContextMenu = ({
         (buttonKey: string, participantId?: string) => {
             const notifyMode = buttonsWithNotifyClick?.get(buttonKey);
 
-            if (!notifyMode) {
+            if (!notifyMode || typeof APP === 'undefined') {
                 return;
             }
 
@@ -90,38 +89,65 @@ export const RoomParticipantContextMenu = ({
             );
         }, [ buttonsWithNotifyClick ]);
 
-    const breakoutRoomsButtons = useMemo(() => Object.values(rooms || {}).map((room: any) => {
-        if (room.id !== entity?.room?.id) {
+    const {
+        roomJid,
+        participantJid,
+        participantName
+    } = useMemo(() => {
+        if (!participantKey) {
+            return {
+                roomJid: undefined,
+                participantJid: undefined,
+                participantName: undefined
+            };
+        }
+
+        const [ parsedRoomJid, parsedParticipantJid ] = participantKey.split('|');
+        const room = rooms?.[parsedRoomJid];
+        const participant = room?.participants?.[parsedParticipantJid];
+
+        return {
+            roomJid: parsedRoomJid,
+            participantJid: parsedParticipantJid,
+            participantName: participant?.displayName
+        };
+    }, [ participantKey, rooms ]);
+
+    const breakoutRoomsButtons = useMemo(
+        () => Object.values(rooms || {}).map((room: any) => {
+            if (!participantJid || room.jid === roomJid) {
+                return null;
+            }
+
             return (<SendToRoomButton
                 key = { room.id }
                 // eslint-disable-next-line react/jsx-no-bind
-                notifyClick = { () => notifyClick(BUTTONS.SEND_PARTICIPANT_TO_ROOM, entity?.jid) }
+                notifyClick = { () => notifyClick(BUTTONS.SEND_PARTICIPANT_TO_ROOM, participantJid) }
                 notifyMode = { buttonsWithNotifyClick?.get(BUTTONS.SEND_PARTICIPANT_TO_ROOM) }
                 onClick = { lowerMenu }
-                participantID = { entity?.jid ?? '' }
+                participantID = { participantJid }
                 room = { room } />);
-        }
-
-        return null;
-    })
-    .filter(Boolean), [ entity, rooms, buttonsWithNotifyClick ]);
+        })
+        .filter(Boolean),
+        [ participantJid, roomJid, rooms, buttonsWithNotifyClick, lowerMenu, notifyClick ]
+    );
 
     return isLocalModerator ? (
         <ContextMenu
-            entity = { entity }
-            isDrawerOpen = { Boolean(entity) }
+            entity = { participantKey }
+            isDrawerOpen = { Boolean(participantKey) }
             offsetTarget = { offsetTarget }
             onClick = { lowerMenu }
             onDrawerClose = { onSelect }
             onMouseEnter = { onEnter }
             onMouseLeave = { onLeave }>
-            {overflowDrawer && entity?.jid && <ContextMenuItemGroup
+            {overflowDrawer && participantJid && <ContextMenuItemGroup
                 actions = { [ {
-                    accessibilityLabel: entity?.participantName,
+                    accessibilityLabel: participantName,
                     customIcon: <Avatar
-                        displayName = { entity?.participantName }
+                        displayName = { participantName }
                         size = { AVATAR_SIZE } />,
-                    text: entity?.participantName
+                    text: participantName
                 } ] } />}
 
             <ContextMenuItemGroup>
