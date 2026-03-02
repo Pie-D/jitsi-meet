@@ -113,7 +113,7 @@
     "chat": {
         "disabled": "Sending chat messages is disabled.",
         "enter": "Enter room",
-        "error": "Error: your message was not sent. Reason: {{error}}",
+        "error": "You do not have permission to send messages.",
         "everyone": "Everyone",
         "fieldPlaceHolder": "Aa",
         "fileAccessibleTitle": "{{user}} uploaded a file",
