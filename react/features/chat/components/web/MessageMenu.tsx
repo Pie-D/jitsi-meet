@@ -148,7 +148,7 @@ const MessageMenu = ({ message, messageId, messageType, participantId, isFromVis
 
     const popoverContent = (
         <div className={classes.menuPanel}>
-            {enablePrivateChat && (
+            {enablePrivateChat && !isLocalMessage && (
                 <div
                     className={classes.menuItem}
                     onClick={handlePrivateClick}>

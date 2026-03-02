@@ -206,7 +206,6 @@ export class RocketChatService {
         if (res?.messages?.length) {
             res.messages.reverse().forEach(message => {
                 if (message.msg && !message.t) {
-                    console.log('[Phuc] load chat: ', message._id, message.msg, message.u.username)
                     deliverMessage(Utils.formatMessage(message, this.userContext?.username));
                 }
             });
@@ -302,11 +301,16 @@ export class RocketChatService {
                 return;
             }
 
+            let alias = "";
+            if (this.rocketChatType === ROCKET_CHAT_USER_TYPES.BOT) {
+                alias = this.localParticipant.name;
+            }
+
             const wsMessage = {
                 msg: 'method',
                 method: 'setReaction',
                 id: '22',
-                params: [reaction, messageId, true]
+                params: [reaction, messageId, true, alias]
             };
 
             ws.send(JSON.stringify(wsMessage));

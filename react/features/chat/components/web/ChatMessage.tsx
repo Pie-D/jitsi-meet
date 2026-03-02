@@ -375,17 +375,19 @@ const ChatMessage = ({
                         </div>
                         <div className={classes.participantList}>
                             {Array.from(participants).map((participant: any, idx) => {
-                                let displayName = participant;
+                                let displayName: string;
 
                                 if (typeof participant === 'object' && participant !== null) {
-                                    displayName = participant.name || participant.username;
+                                    displayName = participant.alias || participant.name || participant.username || 'Unknown';
+                                } else {
+                                    displayName = String(participant);
                                 }
 
                                 return (
                                     <span
                                         className={classes.participant}
                                         key={`${displayName}-${idx}`}>
-                                        {displayName === 'anonymous' ? t('chat.anonymous') : displayName}
+                                        {displayName}
                                     </span>
                                 );
                             })}

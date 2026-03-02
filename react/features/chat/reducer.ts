@@ -142,6 +142,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
                 participantId: action.participantId,
                 isReaction: action.isReaction,
                 messageId: messageId,
+                rcMessageId: action.rcMessageId,
                 messageType: action.messageType,
                 message: action.message,
                 reactions: action.reactions,
@@ -234,8 +235,9 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         case EDIT_MESSAGE: {
             let found = false;
             const newMessage = action.message;
+            const matchId = action.originalMessageId || newMessage.messageId;
             const messages = state.messages.map(m => {
-                if (m.messageId === newMessage.messageId) {
+                if (m.messageId === matchId) {
                     found = true;
 
                     return newMessage;

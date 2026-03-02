@@ -48,8 +48,9 @@ export const Utils = {
                 if (v && Array.isArray(v.usernames)) {
                     const userObjectsSet = new Set(
                         v.usernames.map(u => ({
+                            username: u.username || '',
                             name: u.name || '',
-                            username: u.username || ''
+                            alias: u.alias || ''
                         }))
                     );
 

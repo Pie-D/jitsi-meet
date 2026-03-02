@@ -191,7 +191,7 @@ export class SocketManager {
                     // Xử lý tin nhắn bị xóa
                     if (message.t === 'rm') {
                         logger.log('[RocketChat] Deleting message:', message._id);
-                        store.dispatch(deleteMessage(message._id));
+                        store.dispatch({ ...deleteMessage(message._id), fromRocketChat: true });
 
                         return;
                     }
@@ -221,17 +221,29 @@ export class SocketManager {
 
                     if (existingMessage) {
                         const areReactionsEqual = (map1, map2) => {
-                            if (map1.size !== map2.size) {
+                            const m1 = map1 instanceof Map ? map1 : new Map();
+                            const m2 = map2 instanceof Map ? map2 : new Map();
+
+                            if (m1.size !== m2.size) {
                                 return false;
                             }
-                            for (const [key, set1] of map1) {
-                                const set2 = map2.get(key);
+                            for (const [key, set1] of m1) {
+                                const set2 = m2.get(key);
 
                                 if (!set2 || set1.size !== set2.size) {
                                     return false;
                                 }
-                                for (const val of set1) {
-                                    if (!set2.has(val)) {
+
+                                // Compare by username since participants are objects
+                                const usernames1 = new Set(Array.from(set1).map(p =>
+                                    typeof p === 'object' && p !== null ? p.username : p
+                                ));
+                                const usernames2 = new Set(Array.from(set2).map(p =>
+                                    typeof p === 'object' && p !== null ? p.username : p
+                                ));
+
+                                for (const u of usernames1) {
+                                    if (!usernames2.has(u)) {
                                         return false;
                                     }
                                 }
@@ -240,17 +252,31 @@ export class SocketManager {
                             return true;
                         };
 
-                        if (!areReactionsEqual(newMessage.reactions, existingMessage.reactions)) {
-                            logger.log('[RocketChat] Updating reactions for message:', newMessage.messageId);
-                            store.dispatch(editMessage({
-                                ...existingMessage,
-                                reactions: newMessage.reactions,
-                                isReaction: true,
-                                hasRead: true
-                            }));
-                            console.log('[Phuc]: From RocketChat', existingMessage);
-                        } else {
-                            logger.debug('[RocketChat] Message exists with same reactions, skipping');
+                        try {
+                            const rcId = newMessage.messageId;
+                            const needsRcIdSync = existingMessage.rcMessageId !== rcId;
+                            const reactionsChanged = !areReactionsEqual(newMessage.reactions, existingMessage.reactions);
+                            if (reactionsChanged || needsRcIdSync) {
+                                logger.log('[RocketChat] Syncing message messageId/rcMessageId/reactions:', rcId);
+                                const dispatchPayload = {
+                                    ...editMessage({
+                                        ...existingMessage,
+                                        messageId: rcId,
+                                        rcMessageId: rcId,
+                                        ...(reactionsChanged ? {
+                                            reactions: newMessage.reactions,
+                                            isReaction: true,
+                                            hasRead: true
+                                        } : {})
+                                    }),
+                                    originalMessageId: existingMessage.messageId
+                                };
+                                store.dispatch(dispatchPayload);
+                            } else {
+                                logger.debug('[RocketChat] Message exists, no changes, skipping');
+                            }
+                        } catch (err) {
+                            logger.error('[RocketChat] Error syncing message:', err);
                         }
 
                         return;
@@ -259,6 +285,7 @@ export class SocketManager {
                     // Dispatch new message
                     store.dispatch(addMessage({
                         ...newMessage,
+                        rcMessageId: newMessage.messageId,
                         hasRead: false
                     }));
                 }
@@ -274,7 +301,7 @@ export class SocketManager {
                             const deletedMessageId = args[0]._id;
 
                             logger.log('[RocketChat] Received deleteMessage notification:', deletedMessageId);
-                            store.dispatch(deleteMessage(deletedMessageId));
+                            store.dispatch({ ...deleteMessage(deletedMessageId), fromRocketChat: true });
                         }
                     }
                 }

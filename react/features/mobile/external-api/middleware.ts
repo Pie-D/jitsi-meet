@@ -134,6 +134,8 @@ async function waitForConnectionToken(getState: () => any, maxWaitMs = 2000, int
         const jwtState = getState()['features/base/jwt'];
         const token = conferenceState?.conference?.connection?.token || jwtState?.jwt || '';
 
+        console.log('[Jitsi Mobile] token: ', token);
+
         if (token) {
             return token;
         }

@@ -697,8 +697,6 @@ function _handleReceivedMessage({ dispatch, getState }: IStore,
 
     if (typeof APP !== 'undefined' && !isReaction) {
         // Logic for web only:
-        console.log('[Phuc] notifyReceivedChatMessage: ', notificationDisplayName)
-
         APP.API.notifyReceivedChatMessage({
             body: message,
             from: participantId,

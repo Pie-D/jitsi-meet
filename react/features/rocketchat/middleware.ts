@@ -89,11 +89,12 @@ MiddlewareRegistry.register(store => next => action => {
         case SEND_MESSAGE: {
             // Chỉ gửi tin nhắn group chat tới Rocket.Chat (không gửi private messages)
             const { privateMessageRecipient, isLobbyChatActive } = state['features/chat'];
+            const { message, messageId } = action;
 
-            if (!privateMessageRecipient && !isLobbyChatActive && action.message) {
+            if (!privateMessageRecipient && !isLobbyChatActive && message) {
                 if (isRocketChatInitialized()) {
-                    console.log('[RocketChat Middleware] Sending message to Rocket.Chat:', action.message.substring(0, 50));
-                    sendMessageToRocketChat(action.message)
+                    console.log('[RocketChat Middleware] Sending message to Rocket.Chat:', message.substring(0, 50));
+                    sendMessageToRocketChat(message)
                         .catch(err => console.error('Failed to send message to Rocket.Chat', err));
 
                     return;
@@ -118,11 +119,15 @@ MiddlewareRegistry.register(store => next => action => {
         }
 
         case DELETE_MESSAGE: {
-            if (isRocketChatInitialized()) {
+            if (isRocketChatInitialized() && !action.fromRocketChat) {
                 const { messageId } = action;
 
-                console.log('[RocketChat Middleware] Deleting message from Rocket.Chat:', messageId);
-                deleteMessageFromRocketChat(messageId)
+                const messages = store.getState()['features/chat'].messages;
+                const message = messages.find((m: any) => m.messageId === messageId);
+                const rcMessageId = message?.rcMessageId || messageId;
+
+                console.log('[RocketChat Middleware] Deleting message from Rocket.Chat:', rcMessageId);
+                deleteMessageFromRocketChat(rcMessageId)
                     .catch(err => console.error('Failed to delete message from Rocket.Chat', err));
             }
             break;
