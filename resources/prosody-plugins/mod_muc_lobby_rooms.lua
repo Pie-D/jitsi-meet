@@ -53,7 +53,23 @@ local get_room_from_jid = util.get_room_from_jid;
 local is_healthcheck_room = util.is_healthcheck_room;
 local presence_check_status = util.presence_check_status;
 local process_host_module = util.process_host_module;
+local function get_email(event)
+    local occupant = event and event.occupant;
+    local origin = event and event.origin or (occupant and occupant.session);
 
+    -- token_verification thường đặt context tại session (origin)
+    local ctx = origin and origin.jitsi_meet_context_user;
+    if ctx and ctx.email then
+        return ctx.email, ctx;
+    end
+
+    return nil, ctx;
+end
+local function getMeetingRoomOwner(room)
+    local room_owner = room._data.owner or "Unknown";
+    module:log("debug", "tqd room owner: %s", room_owner);
+    return room_owner;
+end
 local main_muc_component_config = module:get_option_string('main_muc');
 if main_muc_component_config == nil then
     module:log('error', 'lobby not enabled missing main_muc config');
@@ -559,6 +575,14 @@ process_host_module(main_muc_component_config, function(host_module, host)
         end
 
         local password = join:get_child_text('password', MUC_NS);
+        local email, ctx = get_email(event);
+        local room_owner = getMeetingRoomOwner(event.room);
+        if email and room_owner and email == room_owner then
+            occupant.role = 'moderator';
+            room:set_affiliation(true, invitee_bare_jid, 'owner');
+            room:save_occupant(occupant);
+            return;
+        end
         if password and room:get_password() and password == room:get_password() then
             whitelistJoin = true;
         end
