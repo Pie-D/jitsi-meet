@@ -293,6 +293,7 @@
         "Submit": "Submit",
         "Understand": "I understand, keep me muted for now",
         "UnderstandAndUnmute": "I understand, please unmute me",
+        "WaitForHostMsg": "The conference has not yet started because no moderators have yet arrived. If you are the host, please authenticate. If not, please wait for the host.",
         "WaitForHostNoAuthMsg": "The conference has not yet started because no moderators have yet arrived. Please wait.",
         "WaitingForHostButton": "Wait for moderator",
         "WaitingForHostTitle": "Waiting for a moderator…",
@@ -1002,7 +1003,8 @@
             "pollQuestion": "Poll Question",
             "questionPlaceholder": "Ask a question",
             "removeOption": "Remove option",
-            "save": "Save"
+            "save": "Save",
+            "send": "Send"
         },
         "errors": {
             "notUniqueOption": "Options must be unique"
@@ -1536,7 +1538,7 @@
     "transcribing": {
         "ccButtonTooltip": "Start / Stop subtitles",
         "expandedLabel": "Transcribing is currently on",
-        "failed": "Transcribing failed",
+        "failedToStart": "Khởi chạy phiên âm thất bại",
         "labelTooltip": "This meeting is being transcribed.",
         "labelTooltipExtra": "In addition, a transcript will be available later.",
         "openClosedCaptions": "Open closed captions",
@@ -1547,6 +1549,7 @@
         "stop": "Stop showing subtitles",
         "subtitles": "Subtitles",
         "subtitlesOff": "Off",
+        "failed": "Transcribing failed",
         "tr": "TR",
         "translateTo": "Translate to",
         "bilingual": "VI/EN",
