@@ -20,7 +20,6 @@ import '../base/tracks/middleware';
 import '../base/user-interaction/middleware';
 import '../breakout-rooms/middleware';
 import '../calendar-sync/middleware';
-import '../rocketchat/middleware';
 import '../chat/middleware';
 import '../conference/middleware';
 import '../connection-indicator/middleware';
@@ -43,6 +42,7 @@ import '../reactions/middleware';
 import '../recent-list/middleware';
 import '../recording/middleware';
 import '../rejoin/middleware';
+import '../rocketchat/middleware';
 
 import '../room-lock/middleware';
 import '../rtcstats/middleware';

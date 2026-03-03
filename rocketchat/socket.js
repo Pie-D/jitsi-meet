@@ -18,6 +18,7 @@ export class SocketManager {
 
         this.wsRocketChat = null;
         this.wsCMeet = null;
+        this._intentionallyClosed = false;
 
         SocketManager.instance = this;
     }
@@ -31,8 +32,10 @@ export class SocketManager {
      */
     connectRocketChat(store, authToken, roomId, localParticipantName) {
         if (this.wsRocketChat) {
+            this._intentionallyClosed = true;
             this.wsRocketChat.close();
         }
+        this._intentionallyClosed = false;
 
         const ws = new WebSocket(ROCKET_CHAT_CONFIG.wsUrl);
 
@@ -77,6 +80,10 @@ export class SocketManager {
         };
 
         ws.onclose = () => {
+            if (this._intentionallyClosed) {
+                logger.log('[Rocket.Chat] Connection closed intentionally, skipping reconnect.');
+                return;
+            }
             logger.warn('[Rocket.Chat] Disconnected, retrying...');
             setTimeout(() => {
                 this.connectRocketChat(store, authToken, roomId, localParticipantName);
@@ -318,6 +325,7 @@ export class SocketManager {
      * Destroys the connections.
      */
     destroy() {
+        this._intentionallyClosed = true;
         if (this.wsRocketChat && typeof this.wsRocketChat.close === 'function') {
             this.wsRocketChat.close();
         }

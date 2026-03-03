@@ -363,6 +363,7 @@ externalAPIEnabled && MiddlewareRegistry.register(store => next => action => {
 
         case READY_TO_CLOSE:
             sendEvent(store, type, /* data */ {});
+            stopRocketChat();
             break;
 
         case RECORDING_SESSION_UPDATED: {

@@ -89,15 +89,13 @@ MiddlewareRegistry.register(store => next => action => {
         case SEND_MESSAGE: {
             // Chỉ gửi tin nhắn group chat tới Rocket.Chat (không gửi private messages)
             const { privateMessageRecipient, isLobbyChatActive } = state['features/chat'];
-            const { message, messageId } = action;
+            const { message } = action;
 
             if (!privateMessageRecipient && !isLobbyChatActive && message) {
                 if (isRocketChatInitialized()) {
                     console.log('[RocketChat Middleware] Sending message to Rocket.Chat:', message.substring(0, 50));
                     sendMessageToRocketChat(message)
                         .catch(err => console.error('Failed to send message to Rocket.Chat', err));
-
-                    return;
                 }
             }
             break;
@@ -113,7 +111,6 @@ MiddlewareRegistry.register(store => next => action => {
 
                 sendReactionToRocketChat(messageId, mappedReaction)
                     .catch(err => console.error('Failed to send reaction to Rocket.Chat', err));
-                return;
             }
             break;
         }

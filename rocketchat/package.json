@@ -2,7 +2,7 @@
   "name": "@jitsi/rocketchat",
   "version": "1.0.0",
   "description": "Unified Rocket.Chat integration for Jitsi Meet",
-  "main": "RocketChat.js",
+  "main": "index.ts",
   "types": "index.d.ts",
   "scripts": {
     "build": "tsc",
