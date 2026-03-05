@@ -83,38 +83,38 @@ module:hook("muc-room-created", function(event)
 
     room._data.meetingId = uuid_gen();
 
-    module:log("debug", "Created meetingId:%s for %s",
-        room._data.meetingId, room.jid);
-        for key,value in pairs(room) do
-            if type(value) == "table" then
-                module:log("info", "Key: %s -> Table (nested)", key)
-                for k, v in pairs(value) do
-                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-                end
-            else
-                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-            end
-        end
-        for key,value in pairs(stanza) do
-            if type(value) == "table" then
-                module:log("info", "Key: %s -> Table (nested)", key)
-                for k, v in pairs(value) do
-                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-                end
-            else
-                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-            end
-        end
-        for key, value in pairs(event) do
-            if type(value) == "table" then
-                module:log("info", "Key: %s -> Table (nested)", key)
-                for k, v in pairs(value) do
-                    module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
-                end
-            else
-                module:log("info", "Key: %s -> Value: %s", key, tostring(value))
-            end
-        end
+    -- module:log("debug", "Created meetingId:%s for %s",
+    --     room._data.meetingId, room.jid);
+        -- for key,value in pairs(room) do
+        --     if type(value) == "table" then
+        --         module:log("info", "Key: %s -> Table (nested)", key)
+        --         for k, v in pairs(value) do
+        --             module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+        --         end
+        --     else
+        --         module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+        --     end
+        -- end
+        -- for key,value in pairs(stanza) do
+        --     if type(value) == "table" then
+        --         module:log("info", "Key: %s -> Table (nested)", key)
+        --         for k, v in pairs(value) do
+        --             module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+        --         end
+        --     else
+        --         module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+        --     end
+        -- end
+        -- for key, value in pairs(event) do
+        --     if type(value) == "table" then
+        --         module:log("info", "Key: %s -> Table (nested)", key)
+        --         for k, v in pairs(value) do
+        --             module:log("info", "  Sub-key: %s -> Value: %s", k, tostring(v))
+        --         end
+        --     else
+        --         module:log("info", "Key: %s -> Value: %s", key, tostring(value))
+        --     end
+        -- end
     end);
 -- Hook set owner tạm thời cho người đầu tiên (chỉ khi chưa có logic JWT/affiliation).
 -- Lưu ý: room._data.owner sẽ có thể được cập nhật lại ở hook "muc-occupant-joined"
