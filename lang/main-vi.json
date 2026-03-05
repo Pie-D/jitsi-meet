@@ -127,7 +127,7 @@
         "nickname": {
             "popover": "Chọn biệt danh",
             "title": "Nhập biệt danh để sử dụng tính năng trò chuyện",
-             "titleWith1Features": "Nhập biệt danh để sử dụng {{feature1}}",
+            "titleWith1Features": "Nhập biệt danh để sử dụng {{feature1}}",
             "titleWith2Features": "Nhập biệt danh để sử dụng {{feature1}} và {{feature2}}",
             "titleWith3Features": "Nhập biệt danh để sử dụng {{feature1}}, {{feature2}} và {{feature3}}",
             "titleWith4Features": "Nhập biệt danh để sử dụng {{feature1}}, {{feature2}}, {{feature3}} và {{feature4}}",
@@ -339,6 +339,7 @@
         "contactSupport": "Liên hệ hỗ trợ kỹ thuật",
         "copied": "Đã sao chép",
         "copy": "Sao chép",
+        "delete": "Xóa",
         "demoteParticipantDialog": "Bạn có chắc chắn muốn chuyển người tham gia này thành khách truy cập không?",
         "demoteParticipantTitle": "Di chuyển đến khách truy cập",
         "dismiss": "Hủy",

@@ -11,6 +11,7 @@ import ChatMessageGroup from './ChatMessageGroup';
 import NewMessagesButton from './NewMessagesButton';
 
 interface IProps {
+    isLoadingMore?: boolean;
     loadMoreMessages: () => Promise<void>;
     messages: IMessage[];
 }
@@ -175,6 +176,11 @@ export default class MessageContainer extends Component<IProps, IState> {
         const hasLocalMessage = newMessages.map(message => message.messageType).includes(MESSAGE_TYPE_LOCAL);
 
         if (newMessages.length > 0) {
+            // When loading older history (load-more), don't trigger new-message notification
+            if (this.props.isLoadingMore) {
+                return;
+            }
+
             if (this.state.isScrolledToBottom || hasLocalMessage) {
                 this.scrollToElement(false, null);
             } else {

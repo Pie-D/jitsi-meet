@@ -12,6 +12,7 @@ import {
     EDIT_MESSAGE,
     NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
     OPEN_CHAT,
+    PREPEND_MESSAGES,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
     SEND_MESSAGE,
     SEND_REACTION,
@@ -419,5 +420,19 @@ export function setRocketChatMessagesLoaded(loaded: boolean) {
     return {
         type: SET_ROCKET_CHAT_MESSAGES_LOADED,
         loaded
+    };
+}
+
+/**
+ * Prepends a batch of older messages at the beginning of the messages array.
+ * Used when loading chat history (load-more).
+ *
+ * @param {IMessage[]} messages - The older messages to prepend.
+ * @returns {{ type: PREPEND_MESSAGES, messages: IMessage[] }}
+ */
+export function prependMessages(messages: any[]) {
+    return {
+        type: PREPEND_MESSAGES,
+        messages
     };
 }

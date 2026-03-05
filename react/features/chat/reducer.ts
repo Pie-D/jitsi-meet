@@ -13,6 +13,7 @@ import {
     EDIT_MESSAGE,
     NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
     OPEN_CHAT,
+    PREPEND_MESSAGES,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
     SET_CHAT_IS_RESIZING,
     SET_CHAT_WIDTH,
@@ -220,11 +221,38 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             return {
                 ...state,
                 lastReadMessage: undefined,
-                messages: []
+                messages: [],
+                shownMessages: new Set<string>(),
+                recentlySentMessages: new Map<string, number>()
             };
 
         case DELETE_MESSAGE: {
             const messages = state.messages.filter(m => m.messageId !== action.messageId);
+
+            return {
+                ...state,
+                messages
+            };
+        }
+
+        case PREPEND_MESSAGES: {
+            // Filter out any messages already in state (dedup by messageId)
+            const existingIds = new Set(state.messages.map(m => m.messageId));
+            const newOldMessages = (action.messages as any[])
+                .filter(m => !existingIds.has(m.messageId));
+
+            if (!newOldMessages.length) {
+                return state;
+            }
+
+            // Merge and sort ascending by timestamp so older messages sit above newer ones
+            const merged = [...newOldMessages, ...state.messages]
+                .sort((a, b) => a.timestamp - b.timestamp);
+
+            // React Native wants reverse order
+            const messages = navigator.product === 'ReactNative'
+                ? [...merged].reverse()
+                : merged;
 
             return {
                 ...state,

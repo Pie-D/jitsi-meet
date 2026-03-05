@@ -197,3 +197,14 @@ export const NOTIFY_PRIVATE_RECIPIENTS_CHANGED = 'NOTIFY_PRIVATE_RECIPIENTS_CHAN
  * }
  */
 export const SET_ROCKET_CHAT_MESSAGES_LOADED = 'SET_ROCKET_CHAT_MESSAGES_LOADED';
+
+/**
+ * The type of the action which signals to prepend (older) messages at the beginning
+ * of the messages array (used when loading chat history / load-more).
+ *
+ * {
+ *     type: PREPEND_MESSAGES,
+ *     messages: IMessage[]
+ * }
+ */
+export const PREPEND_MESSAGES = 'PREPEND_MESSAGES';

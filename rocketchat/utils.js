@@ -46,6 +46,9 @@ export const Utils = {
         if (msg.reactions) {
             Object.entries(msg.reactions).forEach(([rcCode, v]) => {
                 if (v && Array.isArray(v.usernames)) {
+                    // Map Rocket.Chat reaction code to Jitsi emoji
+                    const emoji = ROCKET_CHAT_TO_JITSI_REACTIONS[rcCode] || rcCode;
+
                     const userObjectsSet = new Set(
                         v.usernames.map(u => ({
                             username: u.username || '',
@@ -54,7 +57,7 @@ export const Utils = {
                         }))
                     );
 
-                    reactions.set(rcCode, userObjectsSet);
+                    reactions.set(emoji, userObjectsSet);
                 }
             });
         }

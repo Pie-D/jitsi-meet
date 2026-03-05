@@ -345,6 +345,7 @@
         "contactSupport": "Contact support",
         "copied": "Copied",
         "copy": "Copy",
+        "delete": "Delete",
         "demoteParticipantDialog": "Are you sure you want to move this participant to viewer?",
         "demoteParticipantTitle": "Move to viewer",
         "dismiss": "Dismiss",

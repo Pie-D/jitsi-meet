@@ -205,7 +205,7 @@ export class RocketChatService {
 
         if (res?.messages?.length) {
             res.messages.reverse().forEach(message => {
-                if (message.msg && !message.t) {
+                if (message.msg && !message.t && typeof deliverMessage === 'function') {
                     deliverMessage(Utils.formatMessage(message, this.userContext?.username));
                 }
             });

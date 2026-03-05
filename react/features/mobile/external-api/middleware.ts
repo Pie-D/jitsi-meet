@@ -65,7 +65,7 @@ import { CAMERA_FACING_MODE_MESSAGE } from '../../base/tracks/constants';
 import { getLocalTracks, isLocalTrackMuted } from '../../base/tracks/functions.native';
 import { ITrack } from '../../base/tracks/types';
 import { ADD_MESSAGE, CLOSE_CHAT, OPEN_CHAT } from '../../chat/actionTypes';
-import { addMessage, closeChat, deleteMessage, openChat, sendMessage, setPrivateMessageRecipient } from '../../chat/actions.native';
+import { addMessage, clearMessages, closeChat, deleteMessage, openChat, sendMessage, setPrivateMessageRecipient } from '../../chat/actions.native';
 import { isEnabled as isDropboxEnabled } from '../../dropbox/functions.native';
 import { hideNotification, showNotification } from '../../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE, NOTIFICATION_TYPE } from '../../notifications/constants';
@@ -364,6 +364,7 @@ externalAPIEnabled && MiddlewareRegistry.register(store => next => action => {
         case READY_TO_CLOSE:
             sendEvent(store, type, /* data */ {});
             stopRocketChat();
+            store.dispatch(clearMessages());
             break;
 
         case RECORDING_SESSION_UPDATED: {
