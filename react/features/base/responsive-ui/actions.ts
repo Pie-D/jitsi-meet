@@ -2,6 +2,7 @@ import { batch } from 'react-redux';
 
 import { IStore } from '../../app/types';
 import { CHAT_SIZE } from '../../chat/constants';
+import { isMobileBrowser } from '../../base/environment/utils';
 import { getParticipantsPaneWidth } from '../../participants-pane/functions';
 
 import {
@@ -46,11 +47,15 @@ export function clientResized(clientWidth: number, clientHeight: number) {
             const { reducedUIEnabled = true } = state['features/base/config'];
             const { isOpen: isChatOpen, width } = state['features/chat'];
 
-            if (isChatOpen) {
-                availableWidth -= width?.current ?? CHAT_SIZE;
-            }
+            // On mobile, chat opens full-screen and doesn't take space from the toolbar.
+            // Skip width subtraction to prevent reducedUI mode hiding toolbar buttons.
+            if (!isMobileBrowser()) {
+                if (isChatOpen) {
+                    availableWidth -= width?.current ?? CHAT_SIZE;
+                }
 
-            availableWidth -= getParticipantsPaneWidth(state);
+                availableWidth -= getParticipantsPaneWidth(state);
+            }
 
             reducedUIEnabled && dispatch(setReducedUI(availableWidth, clientHeight));
         }
@@ -87,7 +92,7 @@ export function setAspectRatio(width: number, height: number) {
                 = width < height ? ASPECT_RATIO_NARROW : ASPECT_RATIO_WIDE;
 
             if (aspectRatio
-                    !== getState()['features/base/responsive-ui'].aspectRatio) {
+                !== getState()['features/base/responsive-ui'].aspectRatio) {
                 return dispatch({
                     type: SET_ASPECT_RATIO,
                     aspectRatio

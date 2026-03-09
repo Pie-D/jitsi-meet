@@ -28,7 +28,7 @@
         "shareLink": "Chia sẻ đường dẫn để mời người khác tham dự cuộc họp",
         "shareStream": "Chia sẻ liên kết phát trực tiếp",
         "sipAddresses": "sip addresses",
-        "shareCiscoInvite" : "Chia sẻ để tham dự từ Cisco",
+        "shareCiscoInvite": "Chia sẻ để tham dự từ Cisco",
         "telephone": "Số: {{number}}",
         "title": "Mời người tham dự cuộc họp này",
         "yahooEmail": "Email Yahoo"
@@ -134,7 +134,7 @@
             "featurePolls": "Thăm dò ý kiến",
             "popover": "Chọn biệt danh",
             "title": "Nhập biệt danh để sử dụng tính năng trò chuyện",
-             "titleWith1Features": "Nhập biệt danh để sử dụng {{feature1}}",
+            "titleWith1Features": "Nhập biệt danh để sử dụng {{feature1}}",
             "titleWith2Features": "Nhập biệt danh để sử dụng {{feature1}} và {{feature2}}",
             "titleWith3Features": "Nhập biệt danh để sử dụng {{feature1}}, {{feature2}} và {{feature3}}",
             "titleWith4Features": "Nhập biệt danh để sử dụng {{feature1}}, {{feature2}}, {{feature3}} và {{feature4}}",
@@ -159,7 +159,9 @@
         "titleWithFeatures": "Trò chuyện và",
         "titleWithFileSharing": "Tệp",
         "titleWithPolls": "Cuộc hội thoại",
-        "you": "bạn"
+        "you": "bạn",
+        "unauthenticated": "Bạn cần phải đăng nhập để sử dụng tính năng trò chuyện",
+        "anonymous": "Khách"
     },
     "chromeExtensionBanner": {
         "buttonText": "Cài đặt tiện ích mở rộng của Chrome",
@@ -168,7 +170,7 @@
         "dontShowAgain": "Đừng cho tôi xem lại cái này",
         "installExtensionText": "Cài đặt tiện ích mở rộng để tích hợp Lịch Google và Office 365"
     },
-        "closedCaptionsTab": {
+    "closedCaptionsTab": {
         "emptyState": "Phụ đề sẽ khả dụng sau khi người điều hành bắt đầu",
         "startClosedCaptionsButton": "Bắt đầu phụ đề"
     },
@@ -344,6 +346,7 @@
         "contactSupport": "Liên hệ hỗ trợ kỹ thuật",
         "copied": "Đã sao chép",
         "copy": "Sao chép",
+        "delete": "Xóa",
         "demoteParticipantDialog": "Bạn có chắc chắn muốn chuyển người tham gia này thành khách truy cập không?",
         "demoteParticipantTitle": "Di chuyển đến khách truy cập",
         "dismiss": "Hủy",
@@ -653,7 +656,7 @@
         "tooltip": "Chia sẻ liên kết và thông tin quay số của cuộc họp này",
         "upgradeOptions": "Vui lòng kiểm tra các tùy chọn nâng cấp trên",
         "whiteboardError": "Lỗi tải bảng trắng. Vui lòng thử lại sau.",
-        "subject" : "Cuộc họp"
+        "subject": "Cuộc họp"
     },
     "inlineDialogFailure": {
         "msg": "Chúng tôi đã gặp một chút vấn đề.",
@@ -1727,15 +1730,14 @@
             "heading": "Bảng trắng"
         },
         "screenTitle": "Bảng trắng"
+    },
+    "immersive": {
+        "selectTitle": "Chọn chế độ hiển thị nhập vai",
+        "secondTitle": "Thư viện mẫu ",
+        "start": "Bắt đầu",
+        "slots": "ô",
+        "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này",
+        "accessDenied": "Không có quyền truy cập",
+        "ownerOnly": "Chỉ Chủ phòng mới có thể cấu hình chế độ nhập vai"
     }
-  ,
-  "immersive": {
-    "selectTitle": "Chọn chế độ hiển thị nhập vai",
-    "secondTitle": "Thư viện mẫu ",
-    "start": "Bắt đầu",
-    "slots": "ô",
-    "description": "Chế độ hiển thị này sẽ giống đối với tất cả mọi người. Có thể sắp xếp vị trí người tham gia tự do trong chế độ này",
-    "accessDenied": "Không có quyền truy cập",
-    "ownerOnly": "Chỉ Chủ phòng mới có thể cấu hình chế độ nhập vai"
-  }
 }

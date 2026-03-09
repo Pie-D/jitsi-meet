@@ -1,11 +1,15 @@
 /* eslint-disable require-jsdoc */
 // @ts-ignore
-import { RocketChat } from './RocketChat';
+import { RocketChatService } from './service';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const logger = require('./logger').getLogger('RocketChat:Index');
 
-let instance: RocketChat | null = null;
+let instance: RocketChatService | null = null;
+
+export function isRocketChatInitialized(): boolean {
+    return instance !== null;
+}
 
 export interface IRocketChatMessage {
     messageId: string;
@@ -36,13 +40,13 @@ export async function initRocketChat(
     token: string,
     meetingId: string,
     localParticipant: any
-): Promise<RocketChat | false> {
+): Promise<RocketChatService | false> {
     if (!meetingId) {
         logger.warn('Meeting ID is required');
         return false;
     }
 
-    const rocketChat = new RocketChat(store, meetingId, localParticipant);
+    const rocketChat = new RocketChatService(store, meetingId, localParticipant);
     instance = rocketChat;
 
     let rocketChatRoomId: string | null = null;
@@ -106,8 +110,21 @@ export async function syncRocketChatMessages(
     }
 }
 
-export async function sendMessageToRocketChat(message: string): Promise<string | undefined> {
+export async function sendMessageToRocketChat(message: string): Promise<void> {
     if (instance) {
-        return await instance.sendMessage(message);
+        await instance.sendMessage(message);
     }
 }
+
+export async function sendReactionToRocketChat(messageId: string, reaction: string): Promise<void> {
+    if (instance) {
+        await instance.sendReaction(messageId, reaction);
+    }
+}
+
+export async function deleteMessageFromRocketChat(messageId: string): Promise<void> {
+    if (instance) {
+        await instance.deleteMessage(messageId);
+    }
+}
+

@@ -13,6 +13,7 @@ export interface IMessage {
     lobbyChat: boolean;
     message: string;
     messageId: string;
+    rcMessageId?: string;
     messageType: string;
     participantId: string;
     privateMessage: boolean;

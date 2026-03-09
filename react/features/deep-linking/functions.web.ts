@@ -38,11 +38,12 @@ export function generateDeepLinkingURL(state: IReduxState) {
         // https://meet.jit.si/foo -> meet.jit.si/foo
         const url = href.replace(regex, '').substr(2);
 
-        return `intent://${url}#Intent;scheme=${appScheme};package=${appPackage};end`;
+        // return `intent://${url}#Intent;scheme=${appScheme};package=${appPackage};end`;
+        return `cmeet://com.cmcati.cmeetglobal/meetingOnline?roomID=${state['features/base/conference'].room}`;
     }
 
     // iOS: Replace the protocol part with the app scheme.
-    return href.replace(regex, `${appScheme}:`);
+    return `cmeet://com.cmcati.cmeetglobal/meetingOnline?roomID=${state['features/base/conference'].room}`;
 }
 
 /**
@@ -62,17 +63,17 @@ export function getDeepLinkingPage(state: IReduxState) {
 
     // Show only if we are about to join a conference.
     if (launchInWeb
-            || !room
-            || state['features/base/config'].deeplinking?.disabled
-            || browser.isElectron()
-            || (isVpaasMeeting(state) && (!appScheme || appScheme === 'com.8x8.meet'))) {
+        || !room
+        || state['features/base/config'].deeplinking?.disabled
+        || browser.isElectron()
+        || (isVpaasMeeting(state) && (!appScheme || appScheme === 'com.8x8.meet'))) {
         return Promise.resolve();
     }
 
     if (isMobileBrowser()) { // mobile
         const mobileAppPromo
             = typeof interfaceConfig === 'object'
-                && interfaceConfig.MOBILE_APP_PROMO;
+            && interfaceConfig.MOBILE_APP_PROMO;
 
         return Promise.resolve(
             typeof mobileAppPromo === 'undefined' || Boolean(mobileAppPromo)

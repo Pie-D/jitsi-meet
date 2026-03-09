@@ -44,6 +44,16 @@ export const CLEAR_MESSAGES = 'CLEAR_MESSAGES';
 export const CLOSE_CHAT = 'CLOSE_CHAT';
 
 /**
+ * The type of the action which signals to delete a chat message.
+ *
+ * {
+ *     type: DELETE_MESSAGE,
+ *     messageId: string
+ * }
+ */
+export const DELETE_MESSAGE = 'DELETE_MESSAGE';
+
+/**
  * The type of the action which signals to edit chat message.
  *
  * {
@@ -176,4 +186,25 @@ export const SET_CHAT_IS_RESIZING = 'SET_CHAT_IS_RESIZING';
   *     type: NOTIFY_PRIVATE_RECIPIENTS_CHANGED
   * }
   */
- export const NOTIFY_PRIVATE_RECIPIENTS_CHANGED = 'NOTIFY_PRIVATE_RECIPIENTS_CHANGED';
+export const NOTIFY_PRIVATE_RECIPIENTS_CHANGED = 'NOTIFY_PRIVATE_RECIPIENTS_CHANGED';
+
+/**
+ * The type of action which signals to set the Rocket.Chat messages loaded state.
+ *
+ * {
+ *     type: SET_ROCKET_CHAT_MESSAGES_LOADED,
+ *     loaded: boolean
+ * }
+ */
+export const SET_ROCKET_CHAT_MESSAGES_LOADED = 'SET_ROCKET_CHAT_MESSAGES_LOADED';
+
+/**
+ * The type of the action which signals to prepend (older) messages at the beginning
+ * of the messages array (used when loading chat history / load-more).
+ *
+ * {
+ *     type: PREPEND_MESSAGES,
+ *     messages: IMessage[]
+ * }
+ */
+export const PREPEND_MESSAGES = 'PREPEND_MESSAGES';

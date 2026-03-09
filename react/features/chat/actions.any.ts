@@ -12,13 +12,16 @@ import {
     EDIT_MESSAGE,
     NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
     OPEN_CHAT,
+    PREPEND_MESSAGES,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
     SEND_MESSAGE,
     SEND_REACTION,
     SET_FOCUSED_TAB,
     SET_LOBBY_CHAT_ACTIVE_STATE,
     SET_LOBBY_CHAT_RECIPIENT,
-    SET_PRIVATE_MESSAGE_RECIPIENT
+    SET_PRIVATE_MESSAGE_RECIPIENT,
+    DELETE_MESSAGE,
+    SET_ROCKET_CHAT_MESSAGES_LOADED
 } from './actionTypes';
 import { ChatTabs } from './constants';
 
@@ -102,6 +105,22 @@ export function editMessage(message: Object) {
 export function clearMessages() {
     return {
         type: CLEAR_MESSAGES
+    };
+}
+
+/**
+ * Deletes a chat message.
+ *
+ * @param {string} messageId - The ID of the message to delete.
+ * @returns {{
+ *     type: DELETE_MESSAGE,
+ *     messageId: string
+ * }}
+ */
+export function deleteMessage(messageId: string) {
+    return {
+        type: DELETE_MESSAGE,
+        messageId
     };
 }
 
@@ -370,18 +389,50 @@ export function handleLobbyChatInitialized(participantId: string) {
             return;
         }
 
-        const payload = { type: LOBBY_CHAT_INITIALIZED,
+        const payload = {
+            type: LOBBY_CHAT_INITIALIZED,
             moderator: {
                 ...me,
                 name: 'Moderator',
                 id: lobbyLocalId
             },
-            attendee };
+            attendee
+        };
 
         // notify attendee privately.
         conference?.sendLobbyMessage(payload, attendee.id);
 
         // notify other moderators.
         return conference?.sendLobbyMessage(payload);
+    };
+}
+
+/**
+ * Action to set the state of Rocket.Chat messages loaded.
+ *
+ * @param {boolean} loaded - The loaded state.
+ * @returns {{
+ *     type: SET_ROCKET_CHAT_MESSAGES_LOADED,
+ *     loaded: boolean
+ * }}
+ */
+export function setRocketChatMessagesLoaded(loaded: boolean) {
+    return {
+        type: SET_ROCKET_CHAT_MESSAGES_LOADED,
+        loaded
+    };
+}
+
+/**
+ * Prepends a batch of older messages at the beginning of the messages array.
+ * Used when loading chat history (load-more).
+ *
+ * @param {IMessage[]} messages - The older messages to prepend.
+ * @returns {{ type: PREPEND_MESSAGES, messages: IMessage[] }}
+ */
+export function prependMessages(messages: any[]) {
+    return {
+        type: PREPEND_MESSAGES,
+        messages
     };
 }

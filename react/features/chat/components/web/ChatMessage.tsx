@@ -1,5 +1,6 @@
 import { Theme } from '@mui/material';
 import React, { useCallback, useMemo, useState } from 'react';
+import { toArray } from 'react-emoji-render';
 import { connect } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
@@ -38,7 +39,11 @@ const useStyles = makeStyles()((theme: Theme) => {
             overflow: 'hidden'
         },
         chatMessageWrapper: {
-            maxWidth: '100%'
+            maxWidth: '100%',
+            '&:hover .action-buttons': {
+                opacity: 1,
+                visibility: 'visible'
+            }
         },
         chatMessage: {
             display: 'inline-flex',
@@ -116,12 +121,14 @@ const useStyles = makeStyles()((theme: Theme) => {
             display: 'flex',
             alignItems: 'center',
             gap: theme.spacing(1),
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
             backgroundColor: theme.palette.grey[800],
             borderRadius: theme.shape.borderRadius,
             padding: theme.spacing(0, 1),
             cursor: 'pointer'
         },
-        reactionCount: {
+        reactionCountBadge: {
             fontSize: '0.8rem',
             color: theme.palette.grey[400]
         },
@@ -144,7 +151,10 @@ const useStyles = makeStyles()((theme: Theme) => {
             alignItems: 'center',
             gap: theme.spacing(1),
             minWidth: '32px',
-            minHeight: '32px'
+            minHeight: '32px',
+            opacity: 0,
+            transition: 'opacity 0.2s',
+            visibility: 'hidden'
         },
         displayName: {
             ...theme.typography.labelBold,
@@ -184,31 +194,52 @@ const useStyles = makeStyles()((theme: Theme) => {
             padding: theme.spacing(2),
             backgroundColor: theme.palette.ui03,
             borderRadius: theme.shape.borderRadius,
-            maxWidth: '150px',
+            minWidth: '200px',
+            maxWidth: '300px',
             maxHeight: '400px',
             overflowY: 'auto',
-            color: theme.palette.text01
+            color: theme.palette.text01,
+            boxShadow: theme.shadows[5]
         },
         reactionItem: {
             display: 'flex',
-            alignItems: 'center',
-            marginBottom: theme.spacing(1),
-            gap: theme.spacing(1),
-            borderBottom: `1px solid ${theme.palette.common.white}`,
-            paddingBottom: theme.spacing(1),
+            flexDirection: 'column',
+            marginBottom: theme.spacing(2),
+            paddingBottom: theme.spacing(2),
+            borderBottom: `1px solid ${theme.palette.ui04}`,
             '&:last-child': {
                 borderBottom: 'none',
-                paddingBottom: 0
+                paddingBottom: 0,
+                marginBottom: 0
             }
         },
+        reactionHeader: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: theme.spacing(1),
+            marginBottom: theme.spacing(1),
+            fontSize: '1.2rem'
+        },
+        reactionEmoji: {
+            fontSize: '1.5rem'
+        },
+        reactionCount: {
+            fontSize: '0.9rem',
+            color: theme.palette.text02,
+            fontWeight: 'bold'
+        },
         participantList: {
-            marginLeft: theme.spacing(1),
-            fontSize: '0.8rem',
-            maxWidth: '120px'
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: theme.spacing(0.5),
+            marginTop: theme.spacing(1)
         },
         participant: {
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            padding: theme.spacing(0.5, 1),
+            backgroundColor: theme.palette.ui04,
+            borderRadius: '12px',
+            fontSize: '0.75rem',
+            color: theme.palette.text01,
             whiteSpace: 'nowrap'
         },
         chatMessageFooterSystem: {
@@ -243,17 +274,19 @@ const ChatMessage = ({
     t
 }: IProps) => {
     const { classes, cx } = useStyles();
-    const [ isHovered, setIsHovered ] = useState(false);
-    const [ isReactionsOpen, setIsReactionsOpen ] = useState(false);
+    const [isReactionsOpen, setIsReactionsOpen] = useState(false);
     const systemMessageTitle = 'Tin nhắn hệ thống';
 
-    const handleMouseEnter = useCallback(() => {
-        setIsHovered(true);
-    }, []);
+    const emojiList = [
+        { key: ':thumbsup:', emoji: '👍' },      // Like
+        { key: ':hearts:', emoji: '💖' },        // Love
+        { key: ':laughing:', emoji: '😆' },     // Laugh
+        { key: ':disappointed_relieved:', emoji: '😢' }, // Sad
+        { key: ':angry:', emoji: '😠' },         // Angry
+        { key: ':fire:', emoji: '🔥' }          // Fire
+    ];
 
-    const handleMouseLeave = useCallback(() => {
-        setIsHovered(false);
-    }, []);
+
 
     const handleReactionsOpen = useCallback(() => {
         setIsReactionsOpen(true);
@@ -273,8 +306,8 @@ const ChatMessage = ({
 
         return (
             <div
-                aria-hidden = { true }
-                className = { cx('display-name', classes.displayName) }>
+                aria-hidden={true}
+                className={cx('display-name', classes.displayName)}>
                 {`${displayName}${getDisplayNameSuffix(message)}`}
             </div>
         );
@@ -287,7 +320,7 @@ const ChatMessage = ({
      */
     function _renderPrivateNotice() {
         return (
-            <div className = { classes.privateMessageNotice }>
+            <div className={classes.privateMessageNotice}>
                 {getPrivateNoticeMessage(message)}
             </div>
         );
@@ -300,7 +333,7 @@ const ChatMessage = ({
      */
     function _renderTimestamp() {
         return (
-            <div className = { cx('timestamp', classes.timestamp) }>
+            <div className={cx('timestamp', classes.timestamp)}>
                 <p>
                     {getFormattedTimestamp(message)}
                 </p>
@@ -319,9 +352,11 @@ const ChatMessage = ({
         }
 
         const reactionsArray = Array.from(message.reactions.entries())
-            .map(([ reaction, participants ]) => {
-                return { reaction,
-                    participants };
+            .map(([reaction, participants]) => {
+                return {
+                    reaction,
+                    participants
+                };
             })
             .sort((a, b) => b.participants.size - a.participants.size);
 
@@ -329,23 +364,33 @@ const ChatMessage = ({
         const numReactionsDisplayed = 3;
 
         const reactionsContent = (
-            <div className = { classes.reactionsPopover }>
+            <div className={classes.reactionsPopover}>
                 {reactionsArray.map(({ reaction, participants }) => (
                     <div
-                        className = { classes.reactionItem }
-                        key = { reaction }>
-                        <p>
-                            <span>{reaction}</span>
-                            <span>{participants.size}</span>
-                        </p>
-                        <div className = { classes.participantList }>
-                            {Array.from(participants).map(participantId => (
-                                <p
-                                    className = { classes.participant }
-                                    key = { participantId }>
-                                    {state && getParticipantDisplayName(state, participantId)}
-                                </p>
-                            ))}
+                        className={classes.reactionItem}
+                        key={reaction}>
+                        <div className={classes.reactionHeader}>
+                            <span className={classes.reactionEmoji}>{emojiList.find(e => e.key === reaction)?.emoji || reaction}</span>
+                            <span className={classes.reactionCount}>{participants.size}</span>
+                        </div>
+                        <div className={classes.participantList}>
+                            {Array.from(participants).map((participant: any, idx) => {
+                                let displayName: string;
+
+                                if (typeof participant === 'object' && participant !== null) {
+                                    displayName = participant.alias || participant.name || participant.username || 'Unknown';
+                                } else {
+                                    displayName = String(participant);
+                                }
+
+                                return (
+                                    <span
+                                        className={classes.participant}
+                                        key={`${displayName}-${idx}`}>
+                                        {displayName}
+                                    </span>
+                                );
+                            })}
                         </div>
                     </div>
                 ))}
@@ -354,54 +399,52 @@ const ChatMessage = ({
 
         return (
             <Popover
-                content = { reactionsContent }
-                onPopoverClose = { handleReactionsClose }
-                onPopoverOpen = { handleReactionsOpen }
-                position = 'top'
-                trigger = 'hover'
-                visible = { isReactionsOpen }>
-                <div className = { classes.reactionBox }>
+                content={reactionsContent}
+                onPopoverClose={handleReactionsClose}
+                onPopoverOpen={handleReactionsOpen}
+                position='auto'
+                trigger='hover'
+                visible={isReactionsOpen}>
+                <div className={classes.reactionBox}>
                     {reactionsArray.slice(0, numReactionsDisplayed).map(({ reaction }, index) =>
-                        <p key = { index }>{reaction}</p>
+                        <p key={index}>{toArray(reaction, { className: 'smiley' })}</p>
                     )}
                     {reactionsArray.length > numReactionsDisplayed && (
-                        <p className = { classes.reactionCount }>
+                        <p className={classes.reactionCountBadge}>
                             +{totalReactions - numReactionsDisplayed}
                         </p>
                     )}
                 </div>
             </Popover>
         );
-    }, [ message?.reactions, isHovered, isReactionsOpen ]);
+    }, [message?.reactions, isReactionsOpen]);
 
     return (
         <div
             className={cx(classes.chatMessageWrapper, className)}
             id={message.messageId}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
             tabIndex={-1}>
             <div className={classes.sideBySideContainer}>
                 {message.messageType === 'system' ? (
                     <div
-                        className={ cx(
+                        className={cx(
                             'chatmessage',
                             classes.chatMessage,
                             'systemmessage'
-                        ) }>
-                        <div className={ classes.messageContent }>
+                        )}>
+                        <div className={classes.messageContent}>
                             <div
-                                className={ cx(
+                                className={cx(
                                     'usermessage',
                                     classes.userMessage,
                                     'systemmessage'
-                                ) }>
-                                <div className={ classes.systemMessageSign }/>
+                                )}>
+                                <div className={classes.systemMessageSign} />
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span className={ classes.messageSystemTitle }>
-                                            { systemMessageTitle }
-                                        </span>
-                                    <Message text={ getMessageText(message) }/>
+                                    <span className={classes.messageSystemTitle}>
+                                        {systemMessageTitle}
+                                    </span>
+                                    <Message text={getMessageText(message)} />
                                 </div>
                             </div>
                         </div>
@@ -409,28 +452,29 @@ const ChatMessage = ({
                 ) : (
                     <>
                         {!shouldDisplayMenuOnRight && (
-                            <div className = {classes.optionsButtonContainer}>
-                                {isHovered && <MessageMenu
+                            <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
+                                <MessageMenu
                                     displayName={message.displayName}
                                     enablePrivateChat={Boolean(enablePrivateChat)}
                                     isFileMessage={isFileMessage(message)}
                                     isFromVisitor={message.isFromVisitor}
                                     isLobbyMessage={message.lobbyChat}
                                     message={message.message}
-                                    participantId={message.participantId}/>
-                                }
+                                    messageId={message.messageId}
+                                    messageType={message.messageType}
+                                    participantId={message.participantId} />
                             </div>
                         )}
                         <div
-                            className={ cx(
+                            className={cx(
                                 'chatmessage',
                                 classes.chatMessage,
                                 className,
                                 message.messageType === MESSAGE_TYPE_ERROR && 'error',
-                                message.privateMessage && 'privatemessage',
+                                (message.privateMessage && message.messageType !== MESSAGE_TYPE_LOCAL) && 'privatemessage',
                                 message.lobbyChat && !knocking && 'lobbymessage',
                                 isFileMessage(message) && 'file'
-                            ) }>
+                            )}>
                             <div className={classes.replyWrapper}>
                                 <div className={cx('messagecontent', classes.messageContent)}>
                                     {showDisplayName && _renderDisplayName()}
@@ -448,7 +492,7 @@ const ChatMessage = ({
                                                     : t<string>('chat.fileAccessibleTitle', {
                                                         user: message.displayName
                                                     })
-                                                }/>
+                                                } />
                                         ) : (
                                             <Message
                                                 screenReaderHelpText={message.messageType === MESSAGE_TYPE_LOCAL
@@ -456,9 +500,9 @@ const ChatMessage = ({
                                                     : t<string>('chat.messageAccessibleTitle', {
                                                         user: message.displayName
                                                     })}
-                                                text={getMessageText(message)}/>
+                                                text={getMessageText(message)} />
                                         )}
-                                        {(message.privateMessage || (message.lobbyChat && !knocking))
+                                        {((message.privateMessage && message.messageType !== MESSAGE_TYPE_LOCAL) || (message.lobbyChat && !knocking))
                                             && _renderPrivateNotice()}
                                         <div className={classes.chatMessageFooter}>
                                             <div className={classes.chatMessageFooterLeft}>
@@ -478,22 +522,24 @@ const ChatMessage = ({
                             <div className={classes.sideBySideContainer}>
                                 {!message.privateMessage && !message.lobbyChat
                                     && !message.isReaction && <div>
-                                        <div className={classes.optionsButtonContainer}>
-                                            {isHovered && <ReactButton
+                                        <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
+                                            <ReactButton
                                                 messageId={message.messageId}
-                                                receiverId={''}/>}
+                                                receiverId={''} />
                                         </div>
                                     </div>}
                                 <div>
-                                    <div className={classes.optionsButtonContainer}>
-                                        {isHovered && <MessageMenu
+                                    <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
+                                        <MessageMenu
                                             displayName={message.displayName}
                                             enablePrivateChat={Boolean(enablePrivateChat)}
                                             isFileMessage={isFileMessage(message)}
                                             isFromVisitor={message.isFromVisitor}
                                             isLobbyMessage={message.lobbyChat}
                                             message={message.message}
-                                            participantId={message.participantId}/>}
+                                            messageId={message.messageId}
+                                            messageType={message.messageType}
+                                            participantId={message.participantId} />
                                     </div>
                                 </div>
                             </div>

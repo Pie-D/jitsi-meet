@@ -2,18 +2,19 @@
 /* eslint-disable require-jsdoc */
 
 import { ROCKET_CHAT_CONFIG } from './config.js';
-import { WebSocketConnectionManager } from './connection';
-import { ROCKET_CHAT_USER_TYPES } from './types.js';
+import { ROCKET_CHAT_USER_TYPES } from './constants';
+import { RocketChatEventEmitter } from './events';
+import { SocketManager } from './socket';
 import { Utils } from './utils.js';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const logger = require('./logger').getLogger('RocketChat');
+const logger = require('./logger').getLogger('RocketChat:Service');
 
-export class RocketChat {
+export class RocketChatService {
     constructor(store, meetingId, localParticipant) {
         this.store = store;
         this.config = ROCKET_CHAT_CONFIG;
-        this.wsManager = new WebSocketConnectionManager();
+        this.socketManager = new SocketManager();
         this.rocketChatUserId = null;
         this.rocketChatAuthToken = null;
         this.rocketChatType = null;
@@ -29,8 +30,8 @@ export class RocketChat {
         };
         this.cmeetToken = null;
 
-        document.addEventListener('rocketChatRoomIdUpdated', event => {
-            const newRoomId = event.detail.roomId;
+        RocketChatEventEmitter.on('rocketChatRoomIdUpdated', payload => {
+            const newRoomId = payload.roomId;
 
             this.updateRoomId(newRoomId);
         });
@@ -44,6 +45,7 @@ export class RocketChat {
 
                 if (cmeetToken) {
                     this.cmeetToken = cmeetToken;
+                    logger.log('[RocketChat] Logging in with cmeetToken');
                     const url = this.config.endpoints.login;
                     const data = await Utils.makeRequest('POST', url, {
                         serviceName: 'keycloak',
@@ -160,12 +162,17 @@ export class RocketChat {
     }
 
     connectWebSocket() {
-        this.wsManager.connectRocketChat(this.store, this.rocketChatAuthToken, this.rocketChatRoomId, this.userContext?.username);
-        this.wsManager.connectCMeet(this.cmeetMeetingId);
+        this.socketManager.connectRocketChat(
+            this.store,
+            this.rocketChatAuthToken,
+            this.rocketChatRoomId,
+            this.userContext?.username
+        );
+        this.socketManager.connectCMeet(this.cmeetMeetingId);
     }
 
     connectCMeetRoomWatcher() {
-        this.wsManager.connectCMeet(this.cmeetMeetingId);
+        this.socketManager.connectCMeet(this.cmeetMeetingId);
     }
 
     setRocketChatRoomId(roomId) {
@@ -181,8 +188,7 @@ export class RocketChat {
 
         this.rocketChatRoomId = newRoomId;
 
-        // Reconnect WS RocketChat với roomId mới
-        this.wsManager.reconnectRocketChatWithNewRoom(
+        this.socketManager.reconnectRocketChatWithNewRoom(
             this.store,
             this.rocketChatAuthToken,
             newRoomId,
@@ -199,7 +205,7 @@ export class RocketChat {
 
         if (res?.messages?.length) {
             res.messages.reverse().forEach(message => {
-                if (message.msg) {
+                if (message.msg && !message.t && typeof deliverMessage === 'function') {
                     deliverMessage(Utils.formatMessage(message, this.userContext?.username));
                 }
             });
@@ -232,7 +238,7 @@ export class RocketChat {
             const position = this.userContext?.position || 'Không có chức danh';
 
             // Kiểm tra WebSocket đã kết nối chưa
-            const ws = this.wsManager.wsRocketChat;
+            const ws = this.socketManager.wsRocketChat;
 
             if (!ws || ws.readyState !== WebSocket.OPEN) {
                 logger.error('Cannot send message: WebSocket is not connected');
@@ -256,7 +262,7 @@ export class RocketChat {
             // Nếu là bot và có username, thêm alias
             if (this.rocketChatType === ROCKET_CHAT_USER_TYPES.BOT && this.userContext?.username) {
                 params.alias = this.userContext.username;
-                params.position = 'Thư ký';
+                params.position = 'Không có chức danh';
             }
 
             // Gửi message qua WebSocket
@@ -264,12 +270,77 @@ export class RocketChat {
                 msg: 'method',
                 method: 'sendMessage',
                 id: '423',
-                params: [ params ]
+                params: [params]
             };
 
             ws.send(JSON.stringify(wsMessage));
+
+            logger.log('[RocketChat] Message sent:', message);
         } catch (error) {
             logger.error('Failed to send message to Rocket.Chat:', error);
+        }
+    }
+
+    async sendReaction(messageId, reaction) {
+        try {
+            if (!messageId || !reaction) {
+                return;
+            }
+
+            if (!this.rocketChatRoomId) {
+                logger.error('Cannot send reaction: Rocket.Chat room ID is not set');
+
+                return;
+            }
+
+            const ws = this.socketManager.wsRocketChat;
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                logger.error('Cannot send reaction: WebSocket is not connected');
+
+                return;
+            }
+
+            let alias = "";
+            if (this.rocketChatType === ROCKET_CHAT_USER_TYPES.BOT) {
+                alias = this.localParticipant.name;
+            }
+
+            const wsMessage = {
+                msg: 'method',
+                method: 'setReaction',
+                id: '22',
+                params: [reaction, messageId, true, alias]
+            };
+
+            ws.send(JSON.stringify(wsMessage));
+
+            logger.log('[RocketChat] Reaction sent:', reaction);
+        } catch (error) {
+            logger.error('Failed to send reaction to Rocket.Chat:', error);
+        }
+    }
+
+    async deleteMessage(messageId) {
+        try {
+            const ws = this.socketManager.wsRocketChat;
+
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                throw new Error('WebSocket not connected');
+            }
+
+            const wsMessage = {
+                msg: 'method',
+                method: 'deleteMessage',
+                id: `delete-${Date.now()}`,
+                params: [{ _id: messageId }]
+            };
+
+            ws.send(JSON.stringify(wsMessage));
+
+            logger.log('[RocketChat] Delete message sent:', messageId);
+        } catch (error) {
+            logger.error('Failed to delete message from Rocket.Chat:', error);
         }
     }
 
@@ -288,7 +359,7 @@ export class RocketChat {
     }
 
     destroy() {
-        this.wsManager.destroy();
+        this.socketManager.destroy();
         logger.log('Rocket.Chat module destroyed');
     }
 }

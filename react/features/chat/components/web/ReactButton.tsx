@@ -1,7 +1,7 @@
 import { Theme } from '@mui/material';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import { IconFaceSmile } from '../../../base/icons/svg';
@@ -11,6 +11,7 @@ import { BUTTON_TYPES } from '../../../base/ui/constants.any';
 import { sendReaction } from '../../actions.any';
 
 import EmojiSelector from './EmojiSelector';
+import { IReduxState } from '../../../app/types';
 
 interface IProps {
     messageId: string;
@@ -42,9 +43,9 @@ const ReactButton = ({ messageId, receiverId }: IProps) => {
 
     const onSendReaction = useCallback(emoji => {
         dispatch(sendReaction(emoji, messageId, receiverId));
-    }, [ dispatch, messageId, receiverId ]);
+    }, [dispatch, messageId, receiverId]);
 
-    const [ isPopoverOpen, setIsPopoverOpen ] = useState(false);
+    const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
     const handleReactClick = useCallback(() => {
         setIsPopoverOpen(true);
@@ -57,28 +58,28 @@ const ReactButton = ({ messageId, receiverId }: IProps) => {
     const handleEmojiSelect = useCallback((emoji: string) => {
         onSendReaction(emoji);
         handleClose();
-    }, [ onSendReaction, handleClose ]);
+    }, [onSendReaction, handleClose]);
 
     const popoverContent = (
-        <div className = { classes.popoverContent }>
-            <EmojiSelector onSelect = { handleEmojiSelect } />
+        <div className={classes.popoverContent}>
+            <EmojiSelector onSelect={handleEmojiSelect} />
         </div>
     );
 
     return (
         <Popover
-            content = { popoverContent }
-            onPopoverClose = { handleClose }
-            position = 'top'
-            trigger = 'click'
-            visible = { isPopoverOpen }>
-            <div className = { classes.reactionPanelContainer }>
+            content={popoverContent}
+            onPopoverClose={handleClose}
+            position='auto'
+            trigger='click'
+            visible={isPopoverOpen}>
+            <div className={classes.reactionPanelContainer}>
                 <Button
-                    accessibilityLabel = { t('toolbar.accessibilityLabel.react') }
-                    className = { classes.reactButton }
-                    icon = { IconFaceSmile }
-                    onClick = { handleReactClick }
-                    type = { BUTTON_TYPES.TERTIARY } />
+                    accessibilityLabel={t('toolbar.accessibilityLabel.react')}
+                    className={classes.reactButton}
+                    icon={IconFaceSmile}
+                    onClick={handleReactClick}
+                    type={BUTTON_TYPES.TERTIARY} />
             </div>
         </Popover>
     );
