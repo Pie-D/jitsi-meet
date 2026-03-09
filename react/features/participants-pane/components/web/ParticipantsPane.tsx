@@ -48,13 +48,14 @@ const useStyles = makeStyles<IStylesProps>()((theme, { isChatOpen }) => {
             position: 'relative',
             transition: 'width .16s ease-in-out',
             width: '315px',
-            zIndex: isMobileBrowser() && isChatOpen ? -1 : 0,
+            // Set consistent positive z-index to overlay video background on mobile
+            zIndex: isMobileBrowser() ? 2 : 0,
             display: 'flex',
             flexDirection: 'column',
             fontWeight: 600,
             height: '100%',
 
-            [[ '& > *:first-child', '& > *:last-child' ] as any]: {
+            [['& > *:first-child', '& > *:last-child'] as any]: {
                 flexShrink: 0
             },
 
@@ -155,14 +156,14 @@ const ParticipantsPane = () => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
 
-    const [ contextOpen, setContextOpen ] = useState(false);
-    const [ searchString, setSearchString ] = useState('');
+    const [contextOpen, setContextOpen] = useState(false);
+    const [searchString, setSearchString] = useState('');
 
     const onWindowClickListener = useCallback((e: any) => {
         if (contextOpen && !findAncestorByClass(e.target, classes.footerMoreContainer)) {
             setContextOpen(false);
         }
-    }, [ contextOpen ]);
+    }, [contextOpen]);
 
     useEffect(() => {
         window.addEventListener('click', onWindowClickListener);
@@ -194,47 +195,47 @@ const ParticipantsPane = () => {
 
     return (
         <div
-            className = { classes.participantsPane }
-            id = 'participants-pane'>
-            <div className = { classes.header }>
+            className={classes.participantsPane}
+            id='participants-pane'>
+            <div className={classes.header}>
                 <ClickableIcon
-                    accessibilityLabel = { t('participantsPane.close', 'Close') }
-                    icon = { IconCloseLarge }
-                    onClick = { onClosePane } />
+                    accessibilityLabel={t('participantsPane.close', 'Close')}
+                    icon={IconCloseLarge}
+                    onClick={onClosePane} />
             </div>
-            <div className = { classes.container }>
+            <div className={classes.container}>
                 <VisitorsList />
-                <br className = { classes.antiCollapse } />
+                <br className={classes.antiCollapse} />
                 <LobbyParticipants />
-                <br className = { classes.antiCollapse } />
+                <br className={classes.antiCollapse} />
                 <MeetingParticipants
-                    searchString = { searchString }
-                    setSearchString = { setSearchString } />
-                {isBreakoutRoomsSupported && <RoomList searchString = { searchString } />}
+                    searchString={searchString}
+                    setSearchString={setSearchString} />
+                {isBreakoutRoomsSupported && <RoomList searchString={searchString} />}
                 {showAddRoomButton && <AddBreakoutRoomButton />}
-                {showCurrentVisitorsList && <CurrentVisitorsList searchString = { searchString } />}
+                {showCurrentVisitorsList && <CurrentVisitorsList searchString={searchString} />}
             </div>
             {showFooter && (
-                <div className = { classes.footer }>
+                <div className={classes.footer}>
                     {showMuteAllButton && (
                         <Button
-                            accessibilityLabel = { t('participantsPane.actions.muteAll') }
-                            labelKey = { 'participantsPane.actions.muteAll' }
-                            onClick = { onMuteAll }
-                            type = { BUTTON_TYPES.SECONDARY } />
+                            accessibilityLabel={t('participantsPane.actions.muteAll')}
+                            labelKey={'participantsPane.actions.muteAll'}
+                            onClick={onMuteAll}
+                            type={BUTTON_TYPES.SECONDARY} />
                     )}
                     {showMoreActionsButton && (
-                        <div className = { classes.footerMoreContainer }>
+                        <div className={classes.footerMoreContainer}>
                             <Button
-                                accessibilityLabel = { t('participantsPane.actions.moreModerationActions') }
-                                icon = { IconDotsHorizontal }
-                                id = 'participants-pane-context-menu'
-                                onClick = { onToggleContext }
-                                type = { BUTTON_TYPES.SECONDARY } />
+                                accessibilityLabel={t('participantsPane.actions.moreModerationActions')}
+                                icon={IconDotsHorizontal}
+                                id='participants-pane-context-menu'
+                                onClick={onToggleContext}
+                                type={BUTTON_TYPES.SECONDARY} />
                             <FooterContextMenu
-                                isOpen = { contextOpen }
-                                onDrawerClose = { onDrawerClose }
-                                onMouseLeave = { onToggleContext } />
+                                isOpen={contextOpen}
+                                onDrawerClose={onDrawerClose}
+                                onMouseLeave={onToggleContext} />
                         </div>
                     )}
                 </div>

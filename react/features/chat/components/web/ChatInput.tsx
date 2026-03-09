@@ -219,44 +219,44 @@ class ChatInput extends Component<IProps, IState> {
 
         if (hideInput || this.state.isChatDisabled) {
             return (
-                <div className = { classes.chatDisabled }>
+                <div className={classes.chatDisabled}>
                     {this.props.t('chat.disabled')}
                 </div>
             );
         }
 
         return (
-            <div className = { `chat-input-container${this.state.message.trim().length ? ' populated' : ''}` }>
-                <div id = 'chat-input' >
+            <div className={`chat-input-container${this.state.message.trim().length ? ' populated' : ''}`}>
+                <div id='chat-input' >
                     {!this.props._areSmileysDisabled && this.state.showSmileysPanel && (
                         <div
-                            className = 'smiley-input'>
+                            className='smiley-input'>
                             <div
-                                className = { classes.smileysPanel } >
+                                className={classes.smileysPanel} >
                                 <SmileysPanel
-                                    onSmileySelect = { this._onSmileySelect } />
+                                    onSmileySelect={this._onSmileySelect} />
                             </div>
                         </div>
                     )}
                     <Input
-                        className = 'chat-input'
-                        disabled = { this.state.isChatDisabled }
-                        icon = { this.props._areSmileysDisabled ? undefined : IconFaceSmile }
-                        iconClick = { this._toggleSmileysPanel }
-                        id = 'chat-input-messagebox'
-                        maxRows = { 5 }
-                        onChange = { this._onMessageChange }
-                        onKeyPress = { this._onDetectSubmit }
-                        placeholder = { this.props.t('chat.messagebox') }
-                        ref = { this._textArea }
-                        textarea = { true }
-                        value = { this.state.message } />
+                        className='chat-input'
+                        disabled={this.state.isChatDisabled}
+                        icon={this.props._areSmileysDisabled ? undefined : IconFaceSmile}
+                        iconClick={this._toggleSmileysPanel}
+                        id='chat-input-messagebox'
+                        maxRows={5}
+                        onChange={this._onMessageChange}
+                        onKeyPress={this._onDetectSubmit}
+                        placeholder={this.props.t('chat.messagebox')}
+                        ref={this._textArea}
+                        textarea={true}
+                        value={this.state.message} />
                     <Button
-                        accessibilityLabel = { this.props.t('chat.sendButton') }
-                        disabled = { !this.state.message.trim() || this.state.isChatDisabled }
-                        icon = { IconSend }
-                        onClick = { this._onSubmitMessage }
-                        size = { isMobileBrowser() ? 'large' : 'medium' } />
+                        accessibilityLabel={this.props.t('chat.sendButton')}
+                        disabled={!this.state.message.trim() || this.state.isChatDisabled}
+                        icon={IconSend}
+                        onClick={this._onSubmitMessage}
+                        size={isMobileBrowser() ? 'large' : 'medium'} />
                 </div>
             </div>
         );

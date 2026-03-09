@@ -26,31 +26,32 @@ const useStyles = makeStyles()((theme: Theme) => {
 const EmojiSelector: React.FC<IProps> = ({ onSelect }) => {
     const { classes } = useStyles();
 
-    const emojiMap: Record<string, string> = {
-        thumbsUp: '👍',
-        redHeart: '❤️',
-        faceWithTearsOfJoy: '😂',
-        faceWithOpenMouth: '😮',
-        fire: '🔥'
-    };
-    const emojiNames = Object.keys(emojiMap);
+    // Match Rocket.Chat emoji order
+    const emojiList = [
+        { key: 'thumbsup', emoji: '👍' },      // Like
+        { key: 'hearts', emoji: '💖' },        // Love
+        { key: 'laughing', emoji: '😆' },     // Laugh
+        { key: 'disappointed_relieved', emoji: '😢' }, // Sad
+        { key: 'angry', emoji: '😠' },         // Angry
+        { key: 'fire', emoji: '🔥' }          // Fire
+    ];
 
     const handleSelect = useCallback(
         (emoji: string) => (event: React.MouseEvent<HTMLSpanElement>) => {
             event.preventDefault();
             onSelect(emoji);
         },
-        [ onSelect ]
+        [onSelect]
     );
 
     return (
-        <div className = { classes.emojiGrid }>
-            {emojiNames.map(name => (
+        <div className={classes.emojiGrid}>
+            {emojiList.map(item => (
                 <span
-                    className = { classes.emojiButton }
-                    key = { name }
-                    onClick = { handleSelect(emojiMap[name]) }>
-                    {emojiMap[name]}
+                    className={classes.emojiButton}
+                    key={item.key}
+                    onClick={handleSelect(item.emoji)}>
+                    {item.emoji}
                 </span>
             ))}
         </div>

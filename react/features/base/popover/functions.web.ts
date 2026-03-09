@@ -74,80 +74,99 @@ const getTopBotEndAlign = (bounds: DOMRect) => {
  * @returns {Object} = The style to apply to context menu for positioning it correctly.
  */
 export const getContextMenuStyle = (triggerBounds: DOMRect,
-        dialogSize: DOMRectReadOnly,
-        position: string) => {
+    dialogSize: DOMRectReadOnly,
+    position: string) => {
     const parsed = position.split('-');
 
     switch (parsed[0]) {
-    case 'top': {
-        let alignmentStyle = {};
+        case 'top': {
+            let alignmentStyle = {};
 
-        if (parsed[1]) {
-            alignmentStyle = parsed[1] === 'start'
-                ? getTopBotStartAlign(triggerBounds)
-                : getTopBotEndAlign(triggerBounds);
-        } else {
-            alignmentStyle = getTopBotMidAlign(triggerBounds, dialogSize);
+            if (parsed[1]) {
+                alignmentStyle = parsed[1] === 'start'
+                    ? getTopBotStartAlign(triggerBounds)
+                    : getTopBotEndAlign(triggerBounds);
+            } else {
+                alignmentStyle = getTopBotMidAlign(triggerBounds, dialogSize);
+            }
+
+            return {
+                ...getTopAlignedStyle(triggerBounds),
+                ...alignmentStyle
+            };
         }
+        case 'bottom': {
+            let alignmentStyle = {};
 
-        return {
-            ...getTopAlignedStyle(triggerBounds),
-            ...alignmentStyle
-        };
-    }
-    case 'bottom': {
-        let alignmentStyle = {};
+            if (parsed[1]) {
+                alignmentStyle = parsed[1] === 'start'
+                    ? getTopBotStartAlign(triggerBounds)
+                    : getTopBotEndAlign(triggerBounds);
+            } else {
+                alignmentStyle = getTopBotMidAlign(triggerBounds, dialogSize);
+            }
 
-        if (parsed[1]) {
-            alignmentStyle = parsed[1] === 'start'
-                ? getTopBotStartAlign(triggerBounds)
-                : getTopBotEndAlign(triggerBounds);
-        } else {
-            alignmentStyle = getTopBotMidAlign(triggerBounds, dialogSize);
+            return {
+                ...getBottomAlignedStyle(triggerBounds),
+                ...alignmentStyle
+            };
         }
+        case 'left': {
+            let alignmentStyle = {};
 
-        return {
-            ...getBottomAlignedStyle(triggerBounds),
-            ...alignmentStyle
-        };
-    }
-    case 'left': {
-        let alignmentStyle = {};
+            if (parsed[1]) {
+                alignmentStyle = parsed[1] === 'start'
+                    ? getLeftRightStartAlign(triggerBounds, dialogSize)
+                    : getLeftRightEndAlign(triggerBounds, dialogSize);
+            } else {
+                alignmentStyle = getLeftRightMidAlign(triggerBounds, dialogSize);
+            }
 
-        if (parsed[1]) {
-            alignmentStyle = parsed[1] === 'start'
-                ? getLeftRightStartAlign(triggerBounds, dialogSize)
-                : getLeftRightEndAlign(triggerBounds, dialogSize);
-        } else {
-            alignmentStyle = getLeftRightMidAlign(triggerBounds, dialogSize);
+            return {
+                ...getLeftAlignedStyle(triggerBounds),
+                ...alignmentStyle
+            };
         }
+        case 'right': {
+            let alignmentStyle = {};
 
-        return {
-            ...getLeftAlignedStyle(triggerBounds),
-            ...alignmentStyle
-        };
-    }
-    case 'right': {
-        let alignmentStyle = {};
+            if (parsed[1]) {
+                alignmentStyle = parsed[1] === 'start'
+                    ? getLeftRightStartAlign(triggerBounds, dialogSize)
+                    : getLeftRightEndAlign(triggerBounds, dialogSize);
+            } else {
+                alignmentStyle = getLeftRightMidAlign(triggerBounds, dialogSize);
+            }
 
-        if (parsed[1]) {
-            alignmentStyle = parsed[1] === 'start'
-                ? getLeftRightStartAlign(triggerBounds, dialogSize)
-                : getLeftRightEndAlign(triggerBounds, dialogSize);
-        } else {
-            alignmentStyle = getLeftRightMidAlign(triggerBounds, dialogSize);
+            return {
+                ...getRightAlignedStyle(triggerBounds),
+                ...alignmentStyle
+            };
         }
+        case 'auto': {
+            // Default to top align if there is enough space.
+            // If not, use bottom align.
+            const topAlign = getTopAlignedStyle(triggerBounds);
+            const { bottom } = topAlign;
+            const topOfMenu = window.innerHeight - parseFloat(bottom || '0') - dialogSize.height;
 
-        return {
-            ...getRightAlignedStyle(triggerBounds),
-            ...alignmentStyle
-        };
-    }
-    default: {
-        return {
-            ...getLeftAlignedStyle(triggerBounds),
-            ...getLeftRightEndAlign(triggerBounds, dialogSize)
-        };
-    }
+            if (topOfMenu >= 0) {
+                return {
+                    ...topAlign,
+                    ...getTopBotMidAlign(triggerBounds, dialogSize)
+                };
+            }
+
+            return {
+                ...getBottomAlignedStyle(triggerBounds),
+                ...getTopBotMidAlign(triggerBounds, dialogSize)
+            };
+        }
+        default: {
+            return {
+                ...getLeftAlignedStyle(triggerBounds),
+                ...getLeftRightEndAlign(triggerBounds, dialogSize)
+            };
+        }
     }
 };

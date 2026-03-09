@@ -310,6 +310,110 @@ export default {
         ...BaseTheme.typography.bodyShortRegular,
         color: BaseTheme.palette.text01,
         flex: 1
+    },
+
+    contextMenuContainer: {
+        backgroundColor: BaseTheme.palette.ui02,
+        paddingVertical: BaseTheme.spacing[3]
+    },
+
+    reactionRow: {
+        flexDirection: 'row',
+        paddingHorizontal: BaseTheme.spacing[3],
+        marginBottom: BaseTheme.spacing[3]
+    },
+
+    reactionButton: {
+        backgroundColor: BaseTheme.palette.ui04,
+        borderRadius: 24,
+        width: 48,
+        height: 48,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: BaseTheme.spacing[3]
+    },
+
+    reactionOption: {
+        fontSize: 24,
+        color: BaseTheme.palette.text01
+    },
+
+    contextMenuItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: BaseTheme.spacing[3],
+        paddingHorizontal: BaseTheme.spacing[4]
+    },
+
+    contextMenuItemText: {
+        ...BaseTheme.typography.bodyShortRegular,
+        color: BaseTheme.palette.text01,
+        marginLeft: BaseTheme.spacing[3]
+    },
+
+    divider: {
+        height: 1,
+        backgroundColor: BaseTheme.palette.ui07,
+        marginVertical: BaseTheme.spacing[2]
+    },
+
+    reactionsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginTop: BaseTheme.spacing[1],
+        alignItems: 'center'
+    },
+
+    reactionBubble: {
+        backgroundColor: BaseTheme.palette.ui04,
+        borderRadius: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: BaseTheme.spacing[2],
+        paddingVertical: 2,
+        marginRight: BaseTheme.spacing[1],
+        marginBottom: BaseTheme.spacing[1],
+        borderWidth: 1,
+        borderColor: BaseTheme.palette.ui07
+    },
+
+    reactionEmoji: {
+        fontSize: 14,
+        marginRight: BaseTheme.spacing[1]
+    },
+
+    reactionCount: {
+        ...BaseTheme.typography.labelBold,
+        color: BaseTheme.palette.text01,
+        fontSize: 12
+    },
+
+    reactorListContainer: {
+        maxHeight: 400,
+        paddingHorizontal: BaseTheme.spacing[3],
+        paddingBottom: BaseTheme.spacing[5]
+    },
+
+    reactorListTitle: {
+        ...BaseTheme.typography.bodyShortBold,
+        color: BaseTheme.palette.text01,
+        fontSize: 18,
+        marginVertical: BaseTheme.spacing[3],
+        textAlign: 'center'
+    },
+
+    reactorItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: BaseTheme.spacing[3],
+        borderBottomWidth: 1,
+        borderBottomColor: BaseTheme.palette.ui07
+    },
+
+    reactorName: {
+        ...BaseTheme.typography.bodyShortRegular,
+        color: BaseTheme.palette.text01,
+        fontSize: 16
     }
 };
 

@@ -9,9 +9,11 @@ import {
     ADD_MESSAGE_REACTION,
     CLEAR_MESSAGES,
     CLOSE_CHAT,
+    DELETE_MESSAGE,
     EDIT_MESSAGE,
     NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
     OPEN_CHAT,
+    PREPEND_MESSAGES,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
     SET_CHAT_IS_RESIZING,
     SET_CHAT_WIDTH,
@@ -21,8 +23,9 @@ import {
     SET_LOBBY_CHAT_RECIPIENT,
     SET_PRIVATE_MESSAGE_RECIPIENT,
     SET_USER_CHAT_WIDTH,
+    SET_ROCKET_CHAT_MESSAGES_LOADED
 } from './actionTypes';
-import { CHAT_SIZE, ChatTabs } from './constants';
+import { CHAT_SIZE, ChatTabs, MESSAGE_TYPE_LOCAL } from './constants';
 import { createMessageId } from './functions';
 import { IMessage } from './types';
 
@@ -38,18 +41,23 @@ const DEFAULT_STATE = {
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
     shownMessages: new Set<string>(),
+    recentlySentMessages: new Map<string, number>(),
     focusedTab: undefined,
     isResizing: false,
     width: {
         current: CHAT_SIZE,
         userSet: null
-    }
+    },
+    isRocketChatMessagesLoaded: true,
+    bufferedMessages: []
 };
 
 export interface IChatState {
+    bufferedMessages?: any[];
     focusedTab?: ChatTabs;
     groupChatWithPermissions: boolean;
     isLobbyChatActive: boolean;
+    isRocketChatMessagesLoaded?: boolean;
     isOpen: boolean;
     isResizing: boolean;
     lastReadMessage?: IMessage;
@@ -59,6 +67,7 @@ export interface IChatState {
     } | ILocalParticipant;
     messages: IMessage[];
     // nbUnreadMessages: number;
+    recentlySentMessages: Map<string, number>;
     shownMessages: Set<string>;
     notifyPrivateRecipientsChangedTimestamp?: number;
     privateMessageRecipient?: IParticipant | IVisitorChatParticipant;
@@ -72,242 +81,417 @@ export interface IChatState {
 
 ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, action): IChatState => {
     switch (action.type) {
-    case ADD_MESSAGE: {
-        const messageId = action.messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        case ADD_MESSAGE: {
+            const messageId = action.messageId || `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-        const specificMessageId = createMessageId(action.participantId, action.timestamp, action.message);
+            // Check if we need to buffer
+            const isRocketChatMessage = action.isRocketChatHistory;
 
-        if (state.shownMessages.has(specificMessageId)) {
-            return state;
-        }
-
-        const newMessage: IMessage = {
-            displayName: action.displayName,
-            error: action.error,
-            fileMetadata: action.fileMetadata,
-            isFromGuest: Boolean(action.isFromGuest),
-            isFromVisitor: Boolean(action.isFromVisitor),
-            participantId: action.participantId,
-            isReaction: action.isReaction,
-            messageId: messageId,
-            messageType: action.messageType,
-            message: action.message,
-            reactions: action.reactions,
-            privateMessage: action.privateMessage,
-            lobbyChat: action.lobbyChat,
-            recipient: action.recipient,
-            sentToVisitor: Boolean(action.sentToVisitor),
-            timestamp: action.timestamp
-        };
-
-        state.shownMessages.add(specificMessageId);
-
-        // React native, unlike web, needs a reverse sorted message list.
-        const messages = navigator.product === 'ReactNative'
-            ? [
-                newMessage,
-                ...state.messages
-            ]
-            : [
-                ...state.messages,
-                newMessage
-            ];
-
-        return {
-            ...state,
-            lastReadMessage:
-                action.hasRead ? newMessage : state.lastReadMessage,
-            unreadMessagesCount: state.focusedTab !== ChatTabs.CHAT ? state.unreadMessagesCount + 1 : state.unreadMessagesCount,
-            messages
-        };
-    }
-
-    case ADD_MESSAGE_REACTION: {
-        const { participantId, reactionList, messageId } = action;
-
-        const messages = state.messages.map(message => {
-            if (messageId === message.messageId) {
-                const newReactions = new Map(message.reactions);
-
-                reactionList.forEach((reaction: string) => {
-                    let participants = newReactions.get(reaction);
-
-                    if (!participants) {
-                        participants = new Set();
-                        newReactions.set(reaction, participants);
-                    }
-
-                    participants.add(participantId);
-                });
-
+            if (state.isRocketChatMessagesLoaded === false && !isRocketChatMessage) {
+                const bufferedMessages = state.bufferedMessages || [];
                 return {
-                    ...message,
-                    reactions: newReactions
+                    ...state,
+                    bufferedMessages: [...bufferedMessages, {
+                        ...action,
+                        messageId
+                    }]
                 };
             }
 
-            return message;
-        });
-
-        return {
-            ...state,
-            messages
-        };
-    }
-
-    case CLEAR_MESSAGES:
-        return {
-            ...state,
-            lastReadMessage: undefined,
-            messages: []
-        };
-
-    case EDIT_MESSAGE: {
-        let found = false;
-        const newMessage = action.message;
-        const messages = state.messages.map(m => {
-            if (m.messageId === newMessage.messageId) {
-                found = true;
-
-                return newMessage;
+            const specificMessageId = createMessageId(action.participantId, action.timestamp, action.message);
+            if (state.shownMessages.has(specificMessageId)) {
+                return state;
             }
 
-            return m;
-        });
+            if (action.messageId && state.messages.some(m => m.messageId === action.messageId)) {
+                return state;
+            }
 
-        // no change
-        if (!found) {
-            return state;
-        }
+            // Create content-based hash (without timestamp) for duplicate detection
+            const contentHash = `${action.participantId}-${action.message}`;
+            const now = Date.now();
+            const DUPLICATE_WINDOW_MS = 5000; // 5 seconds
 
-        return {
-            ...state,
-            messages
-        };
-    }
-
-    case SET_PRIVATE_MESSAGE_RECIPIENT:
-        return {
-            ...state,
-            privateMessageRecipient: action.participant
-        };
-
-    case OPEN_CHAT:
-        return {
-            ...state,
-            isOpen: true,
-            privateMessageRecipient: action.participant
-        };
-
-    case CLOSE_CHAT:
-        return {
-            ...state,
-            isOpen: false,
-            lastReadMessage: state.messages[
-                navigator.product === 'ReactNative' ? 0 : state.messages.length - 1],
-            privateMessageRecipient: action.participant,
-            isLobbyChatActive: false
-        };
-
-    case SET_LOBBY_CHAT_RECIPIENT:
-        return {
-            ...state,
-            isLobbyChatActive: true,
-            lobbyMessageRecipient: action.participant,
-            privateMessageRecipient: undefined,
-            isOpen: action.open
-        };
-    case SET_LOBBY_CHAT_ACTIVE_STATE:
-        return {
-            ...state,
-            isLobbyChatActive: action.payload,
-            isOpen: action.payload || state.isOpen,
-            privateMessageRecipient: undefined
-        };
-    case REMOVE_LOBBY_CHAT_PARTICIPANT:
-        return {
-            ...state,
-            messages: state.messages.filter(m => {
-                if (action.removeLobbyChatMessages) {
-                    return !m.lobbyChat;
+            // Clean up old entries from recentlySentMessages
+            const newRecentlySentMessages = new Map(state.recentlySentMessages);
+            for (const [hash, timestamp] of newRecentlySentMessages.entries()) {
+                if (now - timestamp > DUPLICATE_WINDOW_MS) {
+                    newRecentlySentMessages.delete(hash);
                 }
+            }
 
-                return true;
-            }),
-            isOpen: state.isOpen && state.isLobbyChatActive ? false : state.isOpen,
-            isLobbyChatActive: false,
-            lobbyMessageRecipient: undefined
-        };
-    case UPDATE_CONFERENCE_METADATA: {
-        const { metadata } = action;
+            // Check if this message was recently sent (within 5 seconds)
+            const recentSendTime = newRecentlySentMessages.get(contentHash);
 
-        if (metadata?.permissions) {
+            // Chỉ check duplicate nếu message không phải là history từ RC (vì RC history là source of truth)
+            if (!isRocketChatMessage && recentSendTime && (now - recentSendTime) < DUPLICATE_WINDOW_MS) {
+                console.log('[Chat Reducer] Duplicate detected by content hash, skipping');
+                // Remove from tracking since we found the echo
+                newRecentlySentMessages.delete(contentHash);
+                return {
+                    ...state,
+                    recentlySentMessages: newRecentlySentMessages
+                };
+            }
+
+            const newMessage: IMessage = {
+                displayName: action.displayName,
+                error: action.error,
+                fileMetadata: action.fileMetadata,
+                isFromGuest: Boolean(action.isFromGuest),
+                isFromVisitor: Boolean(action.isFromVisitor),
+                participantId: action.participantId,
+                isReaction: action.isReaction,
+                messageId: messageId,
+                rcMessageId: action.rcMessageId,
+                messageType: action.messageType,
+                message: action.message,
+                reactions: action.reactions,
+                privateMessage: action.privateMessage,
+                lobbyChat: action.lobbyChat,
+                recipient: action.recipient,
+                sentToVisitor: Boolean(action.sentToVisitor),
+                timestamp: action.timestamp
+            };
+
+            state.shownMessages.add(specificMessageId);
+
+            // Track local messages in recentlySentMessages to detect duplicates from RC echo
+            if (action.messageType === MESSAGE_TYPE_LOCAL) {
+                newRecentlySentMessages.set(contentHash, now);
+            }
+
+            // React native, unlike web, needs a reverse sorted message list.
+            const messages = navigator.product === 'ReactNative'
+                ? [
+                    newMessage,
+                    ...state.messages
+                ]
+                : [
+                    ...state.messages,
+                    newMessage
+                ];
+
             return {
                 ...state,
-                groupChatWithPermissions: Boolean(metadata.permissions.groupChatRestricted)
+                lastReadMessage:
+                    action.hasRead ? newMessage : state.lastReadMessage,
+                unreadMessagesCount: state.focusedTab !== ChatTabs.CHAT && !action.isReaction ? state.unreadMessagesCount + 1 : state.unreadMessagesCount,
+                recentlySentMessages: newRecentlySentMessages,
+                messages
             };
         }
 
-        break;
-    }
-    case SET_FOCUSED_TAB:
-        return {
-            ...state,
-            focusedTab: action.tabId,
-            unreadMessagesCount: action.tabId === ChatTabs.CHAT ? 0 : state.unreadMessagesCount,
-            unreadFilesCount: action.tabId === ChatTabs.FILE_SHARING ? 0 : state.unreadFilesCount
-        };
+        case ADD_MESSAGE_REACTION: {
+            const { participantId, displayName, reactionList, messageId } = action;
 
-    case SET_CHAT_WIDTH: {
-        return {
-            ...state,
-            width: {
-                ...state.width,
-                current: action.width
+            const messages = state.messages.map(message => {
+                if (messageId === message.messageId) {
+                    const newReactions = new Map(message.reactions);
+
+                    reactionList.forEach((reaction: string) => {
+                        let participants = newReactions.get(reaction);
+
+                        if (!participants) {
+                            participants = new Set();
+                            newReactions.set(reaction, participants);
+                        }
+
+                        // Use displayName instead of participantId for better display
+                        participants.add(displayName || participantId);
+                    });
+
+                    return {
+                        ...message,
+                        reactions: newReactions,
+                        hasRead: true
+                    };
+                }
+
+                return message;
+            });
+
+            return {
+                ...state,
+                messages
+            };
+        }
+
+        case CLEAR_MESSAGES:
+            return {
+                ...state,
+                lastReadMessage: undefined,
+                messages: [],
+                shownMessages: new Set<string>(),
+                recentlySentMessages: new Map<string, number>()
+            };
+
+        case DELETE_MESSAGE: {
+            const messages = state.messages.filter(m => m.messageId !== action.messageId);
+
+            return {
+                ...state,
+                messages
+            };
+        }
+
+        case PREPEND_MESSAGES: {
+            // Filter out any messages already in state (dedup by messageId)
+            const existingIds = new Set(state.messages.map(m => m.messageId));
+            const newOldMessages = (action.messages as any[])
+                .filter(m => !existingIds.has(m.messageId));
+
+            if (!newOldMessages.length) {
+                return state;
             }
-        };
-    }
 
-    case SET_USER_CHAT_WIDTH: {
-        const { width } = action;
+            // Merge and sort ascending by timestamp so older messages sit above newer ones
+            const merged = [...newOldMessages, ...state.messages]
+                .sort((a, b) => a.timestamp - b.timestamp);
 
-        return {
-            ...state,
-            width: {
-                current: width,
-                userSet: width
+            // React Native wants reverse order
+            const messages = navigator.product === 'ReactNative'
+                ? [...merged].reverse()
+                : merged;
+
+            return {
+                ...state,
+                messages
+            };
+        }
+
+        case EDIT_MESSAGE: {
+            let found = false;
+            const newMessage = action.message;
+            const matchId = action.originalMessageId || newMessage.messageId;
+            const messages = state.messages.map(m => {
+                if (m.messageId === matchId) {
+                    found = true;
+
+                    return newMessage;
+                }
+
+                return m;
+            });
+
+            // no change
+            if (!found) {
+                return state;
             }
-        };
-    }
 
-    case SET_CHAT_IS_RESIZING: {
-        return {
-            ...state,
-            isResizing: action.resizing
-        };
-    }
-    case NOTIFY_PRIVATE_RECIPIENTS_CHANGED:
-        return {
-            ...state,
-            notifyPrivateRecipientsChangedTimestamp: action.payload
-        };
+            return {
+                ...state,
+                messages
+            };
+        }
 
-    case ADD_FILE:
-        return {
-            ...state,
-            unreadFilesCount: action.shouldIncrementUnread ? state.unreadFilesCount + 1 : state.unreadFilesCount
-        };
+        case SET_PRIVATE_MESSAGE_RECIPIENT:
+            return {
+                ...state,
+                privateMessageRecipient: action.participant
+            };
 
-    case _FILE_LIST_RECEIVED: {
-        const remoteFilesCount = Object.values(action.files).filter(
-            (file: any) => file.authorParticipantId !== action.localParticipantId
-        ).length;
+        case OPEN_CHAT:
+            return {
+                ...state,
+                isOpen: true,
+                privateMessageRecipient: action.participant
+            };
 
-        return {
-            ...state,
-            unreadFilesCount: remoteFilesCount
-        };
-    }
+        case CLOSE_CHAT:
+            return {
+                ...state,
+                isOpen: false,
+                lastReadMessage: state.messages[
+                    navigator.product === 'ReactNative' ? 0 : state.messages.length - 1],
+                privateMessageRecipient: action.participant,
+                isLobbyChatActive: false
+            };
+
+        case SET_LOBBY_CHAT_RECIPIENT:
+            return {
+                ...state,
+                isLobbyChatActive: true,
+                lobbyMessageRecipient: action.participant,
+                privateMessageRecipient: undefined,
+                isOpen: action.open
+            };
+        case SET_LOBBY_CHAT_ACTIVE_STATE:
+            return {
+                ...state,
+                isLobbyChatActive: action.payload,
+                isOpen: action.payload || state.isOpen,
+                privateMessageRecipient: undefined
+            };
+        case REMOVE_LOBBY_CHAT_PARTICIPANT:
+            return {
+                ...state,
+                messages: state.messages.filter(m => {
+                    if (action.removeLobbyChatMessages) {
+                        return !m.lobbyChat;
+                    }
+
+                    return true;
+                }),
+                isOpen: state.isOpen && state.isLobbyChatActive ? false : state.isOpen,
+                isLobbyChatActive: false,
+                lobbyMessageRecipient: undefined
+            };
+        case UPDATE_CONFERENCE_METADATA: {
+            const { metadata } = action;
+
+            if (metadata?.permissions) {
+                return {
+                    ...state,
+                    groupChatWithPermissions: Boolean(metadata.permissions.groupChatRestricted)
+                };
+            }
+
+            break;
+        }
+        case SET_FOCUSED_TAB:
+            return {
+                ...state,
+                focusedTab: action.tabId,
+                unreadMessagesCount: action.tabId === ChatTabs.CHAT ? 0 : state.unreadMessagesCount,
+                unreadFilesCount: action.tabId === ChatTabs.FILE_SHARING ? 0 : state.unreadFilesCount
+            };
+
+        case SET_CHAT_WIDTH: {
+            return {
+                ...state,
+                width: {
+                    ...state.width,
+                    current: action.width
+                }
+            };
+        }
+
+        case SET_USER_CHAT_WIDTH: {
+            const { width } = action;
+
+            return {
+                ...state,
+                width: {
+                    current: width,
+                    userSet: width
+                }
+            };
+        }
+
+        case SET_CHAT_IS_RESIZING: {
+            return {
+                ...state,
+                isResizing: action.resizing
+            };
+        }
+        case NOTIFY_PRIVATE_RECIPIENTS_CHANGED:
+            return {
+                ...state,
+                notifyPrivateRecipientsChangedTimestamp: action.payload
+            };
+
+        case ADD_FILE:
+            return {
+                ...state,
+                unreadFilesCount: action.shouldIncrementUnread ? state.unreadFilesCount + 1 : state.unreadFilesCount
+            };
+
+        case _FILE_LIST_RECEIVED: {
+            const remoteFilesCount = Object.values(action.files).filter(
+                (file: any) => file.authorParticipantId !== action.localParticipantId
+            ).length;
+
+            return {
+                ...state,
+                unreadFilesCount: remoteFilesCount
+            };
+        }
+
+        case SET_ROCKET_CHAT_MESSAGES_LOADED: {
+            const { loaded } = action;
+            const newMessages = [...state.messages];
+            const newRecentlySentMessages = new Map(state.recentlySentMessages);
+
+            if (loaded && state.bufferedMessages?.length) {
+                // Flush buffer
+                state.bufferedMessages.forEach(msgAction => {
+                    const messageId = msgAction.messageId;
+                    const specificMessageId = createMessageId(msgAction.participantId, msgAction.timestamp, msgAction.message);
+
+                    if (state.shownMessages.has(specificMessageId)) {
+                        return;
+                    }
+
+                    if (messageId && newMessages.some(m => m.messageId === messageId)) {
+                        return;
+                    }
+
+                    const contentHash = `${msgAction.participantId}-${msgAction.message}`;
+                    const DUPLICATE_WINDOW_MS = 5000;
+                    // const now = Date.now();
+
+                    // Check duplicate against recentlySentMessages (local echo or fast replay)
+                    const recentSendTime = newRecentlySentMessages.get(contentHash);
+                    // Allow slight drift. Message timestamp is `msgAction.timestamp`
+                    if (recentSendTime && (msgAction.timestamp - recentSendTime) < DUPLICATE_WINDOW_MS) {
+                        // Duplicate
+                        return;
+                    }
+
+                    // Also check if any message in newMessages looks like this one (deduplicate against RC history by content)
+                    const isDuplicateContent = newMessages.some(m =>
+                        m.participantId === msgAction.participantId
+                        && m.message === msgAction.message
+                        && Math.abs(m.timestamp - msgAction.timestamp) < 5000
+                    );
+
+                    if (isDuplicateContent) {
+                        return;
+                    }
+
+                    const newMessage: IMessage = {
+                        displayName: msgAction.displayName,
+                        error: msgAction.error,
+                        fileMetadata: msgAction.fileMetadata,
+                        isFromGuest: Boolean(msgAction.isFromGuest),
+                        isFromVisitor: Boolean(msgAction.isFromVisitor),
+                        participantId: msgAction.participantId,
+                        isReaction: msgAction.isReaction,
+                        messageId,
+                        messageType: msgAction.messageType,
+                        message: msgAction.message,
+                        reactions: msgAction.reactions,
+                        privateMessage: msgAction.privateMessage,
+                        lobbyChat: msgAction.lobbyChat,
+                        recipient: msgAction.recipient,
+                        sentToVisitor: Boolean(msgAction.sentToVisitor),
+                        timestamp: msgAction.timestamp
+                    };
+
+                    state.shownMessages.add(specificMessageId);
+                    if (msgAction.messageType === MESSAGE_TYPE_LOCAL) {
+                        newRecentlySentMessages.set(contentHash, msgAction.timestamp);
+                    }
+
+                    newMessages.push(newMessage);
+                });
+
+                // Sort by timestamp
+                newMessages.sort((a, b) => a.timestamp - b.timestamp);
+                if (navigator.product === 'ReactNative') {
+                    newMessages.reverse();
+                }
+            }
+
+            return {
+                ...state,
+                isRocketChatMessagesLoaded: loaded,
+                bufferedMessages: [], // Clear buffer
+                messages: newMessages,
+                recentlySentMessages: newRecentlySentMessages
+            };
+        }
     }
 
     return state;

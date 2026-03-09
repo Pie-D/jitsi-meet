@@ -1,5 +1,9 @@
 @use './variables';
 
+#sideToolbarContainer {
+    z-index: 302;
+}
+
 #chat-conversation-container {
     // extract message input height
     box-sizing: border-box;
@@ -29,7 +33,7 @@
         box-shadow: 0px 0px 0px 2px #4687ed; // focus01/primary07
     }
 
-    & > :first-child {
+    &> :first-child {
         margin-top: auto;
     }
 
@@ -77,10 +81,11 @@
     padding: 0 16px;
 
     label[for="nickinput"] {
-        > div > span {
+        >div>span {
             color: #B8C7E0;
         }
     }
+
     input {
         height: 40px;
     }
