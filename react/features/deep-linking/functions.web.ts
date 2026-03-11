@@ -39,11 +39,11 @@ export function generateDeepLinkingURL(state: IReduxState) {
         const url = href.replace(regex, '').substr(2);
 
         // return `intent://${url}#Intent;scheme=${appScheme};package=${appPackage};end`;
-        return `cmeet://com.cmcati.cmeetglobal/meetingOnline?roomID=${state['features/base/conference'].room}`;
+        return `com.cmcati.cmeetglobal://cmeet/meetingOnline?roomID=${state['features/base/conference'].room}`;
     }
 
     // iOS: Replace the protocol part with the app scheme.
-    return `cmeet://com.cmcati.cmeetglobal/meetingOnline?roomID=${state['features/base/conference'].room}`;
+    return `com.cmcati.cmeetglobal://cmeet/meetingOnline?roomID=${state['features/base/conference'].room}`;
 }
 
 /**
