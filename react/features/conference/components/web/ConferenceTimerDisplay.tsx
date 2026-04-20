@@ -7,12 +7,11 @@ const useStyles = makeStyles()((theme) => {
     return {
         timer: {
             ...theme.typography.labelRegular,
-            color: theme.palette.text01,
-            padding: "6px 8px",
-            fontWeight: 600,
+            color: theme.palette.conferenceTimerText,
+            padding: '6px 8px',
             backgroundColor: "#539cc7ff",
-            boxSizing: "border-box",
-            height: "28px",
+            boxSizing: 'border-box',
+            height: '28px',
             borderRadius: `0 ${theme.shape.borderRadius}px ${theme.shape.borderRadius}px 0`,
             marginRight: "2px",
             borderLeft: `1px solid ${theme.palette.ui04}`,

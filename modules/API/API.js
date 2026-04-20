@@ -240,13 +240,27 @@ function initCommands() {
             APP.store.dispatch(muteAllParticipants(exclude, muteMediaType));
         },
         'mute-remote-participant': (participantId, mediaType) => {
-            if (!isLocalParticipantModerator(APP.store.getState())) {
-                logger.error('Missing moderator rights to mute remote participant');
+            const state = APP.store.getState();
+            const muteMediaType = mediaType ? mediaType : MEDIA_TYPE.AUDIO;
+            const localParticipant = getLocalParticipant(state);
+
+            // Check if targeting the local participant
+            if (participantId === localParticipant?.id) {
+
+                if (muteMediaType === MEDIA_TYPE.AUDIO) {
+                    APP.conference.toggleAudioMuted(false);
+                } else if (muteMediaType === MEDIA_TYPE.VIDEO) {
+                    APP.conference.toggleVideoMuted(false, true);
+                }
 
                 return;
             }
 
-            const muteMediaType = mediaType ? mediaType : MEDIA_TYPE.AUDIO;
+            if (!isLocalParticipantModerator(state)) {
+                logger.error('Missing moderator rights to mute remote participant');
+
+                return;
+            }
 
             APP.store.dispatch(muteRemote(participantId, muteMediaType));
         },
@@ -829,12 +843,8 @@ function initCommands() {
 
             const activeSession = getActiveSession(state, mode);
 
-            if (activeSession && activeSession.id) {
-                APP.store.dispatch(toggleScreenshotCaptureSummary(false));
-                conference.stopRecording(activeSession.id);
-            } else {
-                logger.error('No recording or streaming session found');
-            }
+            APP.store.dispatch(toggleScreenshotCaptureSummary(false));
+            conference.stopRecording(activeSession?.id);
         },
         'initiate-private-chat': participantId => {
             const state = APP.store.getState();
@@ -1417,17 +1427,15 @@ class API {
      *
      * @param {string} participantId - The ID of the participant.
      * @param {boolean} isMuted - True if muted, false if unmuted.
-     * @param {string} mediaType - Media type that was muted ('audio', 'video', or 'desktop').
-     * @param {boolean} isSelfMuted - True if participant muted themselves, false if muted by moderator.
+     * @param {string} mediaType - Media type that was muted ('audio' or 'video').
      * @returns {void}
      */
-    notifyParticipantMuted(participantId, isMuted, mediaType, isSelfMuted = true) {
+    notifyParticipantMuted(participantId, isMuted, mediaType) {
         this._sendEvent({
             name: 'participant-muted',
             id: participantId,
             isMuted,
-            mediaType,
-            isSelfMuted
+            mediaType
         });
     }
 
@@ -2242,6 +2250,32 @@ class API {
     }
 
     /**
+     * Notify the external application that a file has been uploaded.
+     *
+     * @param {Object} fileMetadata - The file metadata.
+     * @returns {void}
+     */
+    notifyFileUploaded(fileMetadata) {
+        this._sendEvent({
+            name: 'file-uploaded',
+            file: fileMetadata
+        });
+    }
+
+    /**
+     * Notify the external application that a file has been deleted.
+     *
+     * @param {string} fileId - The ID of the deleted file.
+     * @returns {void}
+     */
+    notifyFileDeleted(fileId) {
+        this._sendEvent({
+            name: 'file-deleted',
+            fileId
+        });
+    }
+
+    /**
      * Notify the external application that the audio or video is being shared by a participant.
      *
      * @param {string} mediaType - Whether the content which is being shared is audio or video.
@@ -2287,6 +2321,7 @@ class API {
      * @returns {void}
      */
     notifyPictureInPictureRequested() {
+        logger.debug('Sending _pip-requested event to External API');
         this._sendEvent({
             name: '_pip-requested'
         });
@@ -2298,6 +2333,7 @@ class API {
      * @returns {void}
      */
     notifyPictureInPictureEntered() {
+        logger.debug('Sending pip-entered event to External API');
         this._sendEvent({
             name: 'pip-entered'
         });
@@ -2309,6 +2345,7 @@ class API {
      * @returns {void}
      */
     notifyPictureInPictureLeft() {
+        logger.debug('Sending pip-left event to External API');
         this._sendEvent({
             name: 'pip-left'
         });

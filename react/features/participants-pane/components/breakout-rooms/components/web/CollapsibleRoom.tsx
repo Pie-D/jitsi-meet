@@ -33,6 +33,11 @@ interface IProps {
     isHighlighted?: boolean;
 
     /**
+     * Closes the room participant context menu.
+     */
+    lowerParticipantMenu: Function;
+
+    /**
      * Callback for when the mouse leaves this component.
      */
     onLeave?: (e?: React.MouseEvent) => void;
@@ -43,10 +48,13 @@ interface IProps {
     onRaiseMenu: Function;
 
     /**
-     * The context key of the participant for which the context menu is raised.
-     * This key encodes both room and participant identifiers.
+     * The raise context for the participant menu.
      */
-    participantContextKey?: string;
+    participantContextEntity?: {
+        jid: string;
+        participantName: string;
+        room: IRoom;
+    };
 
     /**
      * Callback to raise participant context menu.
@@ -56,7 +64,16 @@ interface IProps {
     /**
      * Room reference.
      */
-    room: IRoom;
+    room: {
+        id: string;
+        name: string;
+        participants: {
+            [jid: string]: {
+                displayName: string;
+                jid: string;
+            };
+        };
+    };
 
     /**
      * Participants search string.
@@ -83,7 +100,7 @@ const useStyles = makeStyles()(theme => {
         },
 
         arrowContainer: {
-            backgroundColor: theme.palette.ui03,
+            backgroundColor: theme.palette.breakoutRoomArrowBackground,
             width: '24px',
             height: '24px',
             borderRadius: '6px',
@@ -102,10 +119,11 @@ export const CollapsibleRoom = ({
     isHighlighted,
     onRaiseMenu,
     onLeave,
-    participantContextKey,
+    participantContextEntity,
     raiseParticipantContextMenu,
     room,
     searchString,
+    lowerParticipantMenu,
     toggleParticipantMenu
 }: IProps) => {
     const { t } = useTranslation();
@@ -136,13 +154,27 @@ export const CollapsibleRoom = ({
             || {}).length})`}
     </span>);
 
-    const raiseParticipantMenu = useCallback(({ participantID }) => {
-        if (moderator) {
-            const contextKey = `${room.jid}|${participantID}`;
+    const raiseParticipantMenu = useCallback(({ participantID, displayName }) => moderator
+    && raiseParticipantContextMenu({
+        room,
+        jid: participantID,
+        participantName: displayName
+    }), [ room, moderator ]);
 
-            raiseParticipantContextMenu(contextKey);
-        }
-    }, [ moderator, raiseParticipantContextMenu, room.jid ]);
+    const getEllipsisClickHandler = useCallback(
+        (jid: string, displayName: string) => {
+            if (participantContextEntity?.jid === jid) {
+                return lowerParticipantMenu;
+            }
+
+            return toggleParticipantMenu({
+                room,
+                jid,
+                participantName: displayName
+            });
+        },
+        [ participantContextEntity, lowerParticipantMenu, toggleParticipantMenu, room ]
+    );
 
     return (<>
         <ListItem
@@ -159,18 +191,12 @@ export const CollapsibleRoom = ({
             textChildren = { roomName }
             trigger = { actionsTrigger } />
         {!collapsed && room?.participants
-            && Object.values(room?.participants || {}).map(p => {
-                if (!participantMatchesSearch(p, searchString)) {
-                    return null;
-                }
-
-                const contextKey = `${room.jid}|${p.jid}`;
-
-                return (
+            && Object.values(room?.participants || {}).map(p =>
+                participantMatchesSearch(p, searchString) && (
                     <ParticipantItem
                         actionsTrigger = { ACTION_TRIGGER.HOVER }
                         displayName = { p.displayName || defaultRemoteDisplayName }
-                        isHighlighted = { participantContextKey === contextKey }
+                        isHighlighted = { participantContextEntity?.jid === p.jid }
                         key = { p.jid }
                         local = { false }
                         openDrawerForParticipant = { raiseParticipantMenu }
@@ -178,12 +204,11 @@ export const CollapsibleRoom = ({
                         participantID = { p.jid }>
                         {!overflowDrawer && moderator && (
                             <ParticipantActionEllipsis
-                                accessibilityLabel = { t('breakoutRoom.more') }
-                                onClick = { toggleParticipantMenu(contextKey) } />
+                                accessibilityLabel = { t('breakoutRooms.actions.more') }
+                                onClick = { getEllipsisClickHandler(p.jid, p.displayName) } />
                         )}
                     </ParticipantItem>
-                );
-            })
+                ))
         }
     </>);
 };

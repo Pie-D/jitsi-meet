@@ -3,6 +3,7 @@ import { batch } from 'react-redux';
 import { IStore } from '../../app/types';
 import { CHAT_SIZE } from '../../chat/constants';
 import { isMobileBrowser } from '../../base/environment/utils';
+import { getCustomPanelWidth } from '../../custom-panel/functions';
 import { getParticipantsPaneWidth } from '../../participants-pane/functions';
 
 import {
@@ -54,8 +55,8 @@ export function clientResized(clientWidth: number, clientHeight: number) {
                     availableWidth -= width?.current ?? CHAT_SIZE;
                 }
 
-                availableWidth -= getParticipantsPaneWidth(state);
-            }
+            availableWidth -= getParticipantsPaneWidth(state);
+            availableWidth -= getCustomPanelWidth(state);
 
             reducedUIEnabled && dispatch(setReducedUI(availableWidth, clientHeight));
         }

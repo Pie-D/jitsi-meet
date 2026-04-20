@@ -106,7 +106,7 @@
 }
 
 #preview {
-    background: #BBBBBB;
+    background: var(--prejoin-preview-background, #BBBBBB);
     display: flex;
     align-items: center;
     justify-content: center;

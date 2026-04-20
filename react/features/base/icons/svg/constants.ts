@@ -1,3 +1,4 @@
+import { default as IconAI } from './AI.svg';
 import { default as IconRecordAccount } from './account-record.svg';
 import { default as IconAddUser } from './add-user.svg';
 import { default as IconArrowBack } from './arrow-back.svg';
@@ -122,6 +123,7 @@ import { I } from '@jitsi/excalidraw/types/ga';
  */
 export const DEFAULT_ICON: Record<string, any> = {
     IconAddUser,
+    IconAI,
     IconArrowBack,
     IconArrowDown,
     IconArrowDownLarge,

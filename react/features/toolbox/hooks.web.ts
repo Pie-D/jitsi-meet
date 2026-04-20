@@ -12,9 +12,11 @@ import JitsiMeetJS from '../base/lib-jitsi-meet';
 import { raiseHand } from '../base/participants/actions';
 import { getLocalParticipant, hasRaisedHand } from '../base/participants/functions';
 import { isToggleCameraEnabled } from '../base/tracks/functions.web';
+import { isInBreakoutRoom } from '../breakout-rooms/functions';
 import { toggleChat } from '../chat/actions.web';
 import { isChatDisabled } from '../chat/functions';
 import { useChatButton } from '../chat/hooks.web';
+import { useCustomPanelButton } from '../custom-panel/hooks.web';
 import { useEmbedButton } from '../embed-meeting/hooks';
 import { useEtherpadButton } from '../etherpad/hooks';
 import { useFeedbackButton } from '../feedback/hooks.web';
@@ -261,6 +263,19 @@ function useHelpButton() {
 }
 
 /**
+ * Hide invite button for breakout-rooms.
+ *
+ * @returns {Object | undefined}
+ */
+function useInviteButton() {
+    const visible = useSelector((state: IReduxState) => !isInBreakoutRoom(state));
+
+    if (visible) {
+        return invite;
+    }
+}
+
+/**
 * Returns all buttons that could be rendered.
 *
 * @param {Object} _customToolbarButtons - An array containing custom buttons objects.
@@ -294,6 +309,8 @@ export function useToolboxButtons(
     const _download = useDownloadButton();
     const _help = useHelpButton();
     const saveSpeechToText = useSaveSpeechToTextButton();
+    const _invite = useInviteButton();
+    const customPanel = useCustomPanelButton();
 
     const buttons: { [key in ToolbarButton]?: IToolboxButton; } = {
         microphone,
@@ -304,7 +321,7 @@ export function useToolboxButtons(
         raisehand,
         reactions,
         'participants-pane': participants,
-        invite,
+        invite: _invite,
         tileview,
         'toggle-camera': toggleCameraButton,
         videoquality: videoQuality,
@@ -331,7 +348,8 @@ export function useToolboxButtons(
         feedback,
         download: _download,
         help: _help,
-        settings
+        settings,
+        'custom-panel': customPanel
     };
     const buttonKeys = Object.keys(buttons) as ToolbarButton[];
 

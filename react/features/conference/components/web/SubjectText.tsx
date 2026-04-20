@@ -10,13 +10,12 @@ const useStyles = makeStyles()((theme) => {
     return {
         container: {
             ...theme.typography.bodyLongRegular,
-            fontWeight: 600,
-            color: theme.palette.text01,
-            padding: "2px 16px",
+            color: theme.palette.conferenceSubjectText,
+            padding: '2px 16px',
             backgroundColor: "#539cc7ff",
-            // maxWidth: '324px',
-            boxSizing: "border-box",
-            height: "28px",
+            maxWidth: '324px',
+            boxSizing: 'border-box',
+            height: '28px',
             borderRadius: `${theme.shape.borderRadius}px 0 0 ${theme.shape.borderRadius}px`,
             marginLeft: "2px",
 

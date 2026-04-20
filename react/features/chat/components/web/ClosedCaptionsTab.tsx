@@ -1,11 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import Icon from '../../../base/icons/components/Icon';
 import { IconSubtitles } from '../../../base/icons/svg';
 import Button from '../../../base/ui/components/web/Button';
 import LanguageSelector from '../../../subtitles/components/web/LanguageSelector';
+import { ChatTabs } from '../../constants';
+import { getFocusedTab } from '../../functions';
 // @ts-ignore
 import AbstractClosedCaptions, { AbstractProps } from '../AbstractClosedCaptions';
 
@@ -24,7 +27,7 @@ const useStyles = makeStyles()(theme => {
             padding: '16px',
             flex: 1,
             boxSizing: 'border-box',
-            color: theme.palette.text01
+            color: theme.palette.chatMessageText
         },
         container: {
             display: 'flex',
@@ -48,7 +51,7 @@ const useStyles = makeStyles()(theme => {
             boxSizing: 'border-box',
             flexDirection: 'column',
             gap: '16px',
-            color: theme.palette.text01,
+            color: theme.palette.chatMessageText,
             textAlign: 'center'
         },
         emptyIcon: {
@@ -62,7 +65,7 @@ const useStyles = makeStyles()(theme => {
         },
         emptyState: {
             ...theme.typography.bodyLongBold,
-            color: theme.palette.text02
+            color: theme.palette.chatSenderName
         }
     };
 });
@@ -85,6 +88,7 @@ const ClosedCaptionsTab = ({
 }: AbstractProps): JSX.Element => {
     const { classes, theme } = useStyles();
     const { t } = useTranslation();
+    const isVisible = useSelector(getFocusedTab) === ChatTabs.CLOSED_CAPTIONS;
 
     if (!isTranscribing) {
         if (canStartSubtitles) {
@@ -106,7 +110,7 @@ const ClosedCaptionsTab = ({
             <div className = { classes.emptyContent }>
                 <Icon
                     className = { classes.emptyIcon }
-                    color = { theme.palette.icon03 }
+                    color = { theme.palette.chatEmptyText }
                     src = { IconSubtitles } />
                 <span className = { classes.emptyState }>
                     { t('closedCaptionsTab.emptyState') }
@@ -124,6 +128,7 @@ const ClosedCaptionsTab = ({
                 <SubtitlesMessagesContainer
                     groups = { groupedSubtitles }
                     messages = { filteredSubtitles }
+                    isVisible = { isVisible }
                     isBilingualMode = { isBilingualMode } />
             </div>
         </div>

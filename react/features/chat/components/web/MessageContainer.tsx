@@ -13,6 +13,12 @@ import NewMessagesButton from './NewMessagesButton';
 interface IProps {
     isLoadingMore?: boolean;
     loadMoreMessages: () => Promise<void>;
+
+    /**
+     * Whether the message container is currently visible to the user.
+     * Defaults to true when not provided.
+     */
+    isVisible?: boolean;
     messages: IMessage[];
 }
 
@@ -67,7 +73,14 @@ export default class MessageContainer extends Component<IProps, IState> {
      */
     _bottomListObserver: IntersectionObserver;
 
+    /**
+     * Whether the component has performed its initial scroll to the bottom.
+     * Used to ensure we scroll on first visibility but preserve scroll position on subsequent tab switches.
+     */
+    _hasInitiallyScrolled: boolean;
+
     static defaultProps = {
+        isVisible: true,
         messages: [] as IMessage[]
     };
 
@@ -82,6 +95,7 @@ export default class MessageContainer extends Component<IProps, IState> {
 
         this._messageListRef = React.createRef<HTMLDivElement>();
         this._messagesListEndRef = React.createRef<HTMLDivElement>();
+        this._hasInitiallyScrolled = false;
 
         // Bind event handlers so they are only bound once for every instance.
         this._handleIntersectBottomList = this._handleIntersectBottomList.bind(this);
@@ -141,7 +155,16 @@ export default class MessageContainer extends Component<IProps, IState> {
      * @inheritdoc
      */
     override componentDidMount() {
-        this.scrollToElement(false, null);
+        // Only scroll on mount if the component is visible, since scrollIntoView
+        // silently does nothing on hidden (display: none) elements. If hidden,
+        // componentDidUpdate will handle scrolling when the component first becomes visible.
+        if (this.props.isVisible) {
+            this._hasInitiallyScrolled = true;
+            requestAnimationFrame(() => {
+                this.scrollToElement(false, null);
+            });
+        }
+
         this._createBottomListObserver();
     }
 
@@ -187,6 +210,15 @@ export default class MessageContainer extends Component<IProps, IState> {
                 // eslint-disable-next-line react/no-did-update-set-state
                 this.setState({ hasNewMessages: true });
             }
+        }
+
+        // If the component was mounted while hidden, scrollIntoView was skipped.
+        // Scroll to the bottom the first time it becomes visible to show the latest messages.
+        if (this.props.isVisible && !prevProps.isVisible && !this._hasInitiallyScrolled) {
+            this._hasInitiallyScrolled = true;
+            requestAnimationFrame(() => {
+                this.scrollToElement(false, null);
+            });
         }
     }
 

@@ -133,6 +133,8 @@ const events = {
     'face-landmark-detected': 'faceLandmarkDetected',
     'feedback-submitted': 'feedbackSubmitted',
     'feedback-prompt-displayed': 'feedbackPromptDisplayed',
+    'file-deleted': 'fileDeleted',
+    'file-uploaded': 'fileUploaded',
     'filmstrip-display-changed': 'filmstripDisplayChanged',
     'incoming-message': 'incomingMessage',
     'knocking-participant': 'knockingParticipant',
@@ -773,7 +775,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      * @returns {void}
      *
      * @deprecated
-     * NOTE: This method is not removed for backward comatability purposes.
+     * NOTE: This method is not removed for backward compatibility purposes.
      */
     addEventListener(event, listener) {
         this.on(event, listener);
@@ -860,7 +862,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      * @returns {void}
      *
      * @deprecated
-     * NOTE: This method is not removed for backward comatability purposes.
+     * NOTE: This method is not removed for backward compatibility purposes.
      */
     addEventListeners(listeners) {
         for (const event in listeners) { // eslint-disable-line guard-for-in
@@ -1411,7 +1413,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      * @returns {void}
      *
      * @deprecated
-     * NOTE: This method is not removed for backward comatability purposes.
+     * NOTE: This method is not removed for backward compatibility purposes.
      */
     removeEventListener(event) {
         this.removeAllListeners(event);
@@ -1424,7 +1426,7 @@ export default class JitsiMeetExternalAPI extends EventEmitter {
      * @returns {void}
      *
      * @deprecated
-     * NOTE: This method is not removed for backward comatability purposes.
+     * NOTE: This method is not removed for backward compatibility purposes.
      */
     removeEventListeners(eventList) {
         eventList.forEach(event => this.removeEventListener(event));
