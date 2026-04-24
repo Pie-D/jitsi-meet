@@ -43,6 +43,7 @@ import { getDisplayName } from '../visitors/functions';
 import {
     ADD_MESSAGE,
     CLOSE_CHAT,
+    DELETE_MESSAGE,
     OPEN_CHAT,
     SEND_MESSAGE,
     SEND_REACTION,
@@ -53,6 +54,7 @@ import {
     addMessageReaction,
     clearChatState,
     closeChat,
+    deleteMessage,
     notifyPrivateRecipientsChanged,
     openChat,
     setPrivateMessageRecipient
@@ -144,11 +146,18 @@ MiddlewareRegistry.register(store => next => action => {
         case ENDPOINT_MESSAGE_RECEIVED: {
             const state = store.getState();
 
-            if (!isReactionsEnabled(state)) {
+            const { participant, data } = action;
+
+            // Handle delete message broadcast from other participants
+            if (data?.name === 'delete-message' && data?.messageId) {
+                store.dispatch({ ...deleteMessage(data.messageId), fromEndpoint: true });
+
                 return next(action);
             }
 
-            const { participant, data } = action;
+            if (!isReactionsEnabled(state)) {
+                return next(action);
+            }
 
             if (data?.name === ENDPOINT_REACTION_NAME) {
                 // Skip duplicates, keep just 3.
@@ -330,6 +339,28 @@ MiddlewareRegistry.register(store => next => action => {
                     lobbyChat: false
                 }, false, true);
             }
+            break;
+        }
+
+        case DELETE_MESSAGE: {
+            // Broadcast delete to other participants via XMPP endpoint message
+            // Skip if this delete originated from an endpoint message (to avoid loops)
+            // or from RocketChat (RC has its own sync)
+            if (!action.fromEndpoint && !action.fromRocketChat) {
+                const conference = getCurrentConference(getState());
+
+                if (conference) {
+                    try {
+                        conference.sendEndpointMessage('', {
+                            name: 'delete-message',
+                            messageId: action.messageId
+                        });
+                    } catch (e) {
+                        console.error('Failed to broadcast message deletion', e);
+                    }
+                }
+            }
+            break;
         }
     }
 
