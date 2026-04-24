@@ -54,6 +54,7 @@ export function clientResized(clientWidth: number, clientHeight: number) {
                 if (isChatOpen) {
                     availableWidth -= width?.current ?? CHAT_SIZE;
                 }
+            }
 
             availableWidth -= getParticipantsPaneWidth(state);
             availableWidth -= getCustomPanelWidth(state);

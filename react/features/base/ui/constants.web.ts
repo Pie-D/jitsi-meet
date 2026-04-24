@@ -277,7 +277,7 @@ export const commonStyles = (theme: Theme) => {
         },
 
         '.toolbox-content-items': {
-            background: theme.palette.toolboxBackground,
+            background: "#539cc744",
             borderRadius: 6,
             margin: "0 auto",
             padding: 6,
