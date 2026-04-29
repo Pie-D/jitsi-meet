@@ -141,6 +141,11 @@ end
             local main_room = get_room_by_name_and_subdomain(session.jitsi_web_query_room, session.jitsi_web_query_prefix);
             local occupant_jid = stanza.attr.from;
 
+            if not main_room then
+                module:log('warn', 'No main room found for %s %s', session.jitsi_web_query_room, session.jitsi_web_query_prefix);
+                return;
+            end
+
             occupant = main_room:get_occupant_by_real_jid(occupant_jid);
 
             if main_room._data.breakout_rooms_active and not occupant then
@@ -148,10 +153,13 @@ end
                 -- not in main room, let's check breakout rooms
                 for breakout_room_jid, subject in pairs(main_room._data.breakout_rooms or {}) do
                     local breakout_room = get_room_from_jid(breakout_room_jid);
-                    occupant = breakout_room:get_occupant_by_real_jid(occupant_jid);
-                    if occupant then
-                        room = breakout_room;
-                        break;
+
+                    if breakout_room then
+                        occupant = breakout_room:get_occupant_by_real_jid(occupant_jid);
+                        if occupant then
+                            room = breakout_room;
+                            break;
+                        end
                     end
                 end
             else
@@ -280,6 +288,46 @@ end
             end
 
             local voter = occupant_details;
+
+            -- Capture the voter's current vote state so we can detect changes.
+            local previous_answers = {};
+            for idx, answer in ipairs(poll.answers) do
+                previous_answers[idx] = false;
+                if answer.voters then
+                    for _, v in ipairs(answer.voters) do
+                        if v.id == voter.occupant_id then
+                            previous_answers[idx] = true;
+                            break;
+                        end
+                    end
+                end
+            end
+
+            -- Skip processing if the vote is identical to the previous one.
+            local vote_changed = false;
+            for idx, vote_flag in ipairs(data.answers) do
+                if previous_answers[idx] ~= vote_flag then
+                    vote_changed = true;
+                    break;
+                end
+            end
+            if not vote_changed then
+                return true;
+            end
+
+            -- Remove any previous votes by this voter before recording new ones,
+            -- preventing duplicate votes for the same option.
+            for _, answer in ipairs(poll.answers) do
+                if answer.voters then
+                    local filtered = {};
+                    for _, v in ipairs(answer.voters) do
+                        if v.id ~= voter.occupant_id then
+                            table.insert(filtered, v);
+                        end
+                    end
+                    answer.voters = filtered;
+                end
+            end
 
             local answers = {};
             for vote_option_idx, vote_flag in ipairs(data.answers) do

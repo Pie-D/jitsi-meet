@@ -8,12 +8,14 @@ import VideoLayout from '../../../../../modules/UI/videolayout/VideoLayout';
 import { IReduxState, IStore } from '../../../app/types';
 import { getConferenceNameForTitle } from '../../../base/conference/functions';
 import { hangup } from '../../../base/connection/actions.web';
-import { isMobileBrowser } from '../../../base/environment/utils';
+import { isMobileBrowser } from '../../../base/environment/utils.web';
 import { translate } from '../../../base/i18n/functions';
+import AudioTracksContainer from '../../../base/media/components/web/AudioTracksContainer';
 import { setColorAlpha } from '../../../base/util/helpers';
 import { openChat, setFocusedTab } from '../../../chat/actions.web';
 import Chat from '../../../chat/components/web/Chat';
 import { ChatTabs } from '../../../chat/constants';
+import CustomPanel from '../../../custom-panel/components/web/CustomPanel';
 import { isFileUploadingEnabled, processFiles } from '../../../file-sharing/functions.any';
 import MainFilmstrip from '../../../filmstrip/components/web/MainFilmstrip';
 import ScreenshareFilmstrip from '../../../filmstrip/components/web/ScreenshareFilmstrip';
@@ -259,6 +261,7 @@ class Conference extends AbstractConference<IProps, any> {
                             onTouchStart = { this._onVideospaceTouchStart }>
                             <LargeVideo />
                         </div>
+                        <AudioTracksContainer />
                         <span
                             aria-level = { 1 }
                             className = 'sr-only'
@@ -298,7 +301,7 @@ class Conference extends AbstractConference<IProps, any> {
                             </>)
                         }
                     </div>
-
+                    <AudioTracksContainer />
                     { _showPrejoin || _showLobby || (
                         <>
                             <span
@@ -317,14 +320,13 @@ class Conference extends AbstractConference<IProps, any> {
                         </JitsiPortal>
                         : this.renderNotificationsContainer())
                     }
-
                     <CalleeInfoContainer />
-
                     { shouldShowPrejoin(this.props) && <Prejoin />}
                     { (_showLobby && !_showVisitorsQueue) && <LobbyScreen />}
                     { _showVisitorsQueue && <VisitorsQueue />}
                 </div>
                 <ParticipantsPane />
+                <CustomPanel />
                 <ReactionAnimations />
             </div>
         );
@@ -483,6 +485,7 @@ export default reactReduxConnect(_mapStateToProps)(translate(props => {
 
     const { isOpen: isChatOpen } = useSelector((state: IReduxState) => state['features/chat']);
     const isFileUploadEnabled = useSelector(isFileUploadingEnabled);
+    const isOnPrejoin = useSelector(isPrejoinPageVisible);
 
     const handleDragEnter = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -500,7 +503,7 @@ export default reactReduxConnect(_mapStateToProps)(translate(props => {
         e.preventDefault();
         e.stopPropagation();
 
-        if (!isFileUploadEnabled) {
+        if (!isFileUploadEnabled || isOnPrejoin) {
             return;
         }
 
@@ -510,7 +513,7 @@ export default reactReduxConnect(_mapStateToProps)(translate(props => {
             }
             dispatch(setFocusedTab(ChatTabs.FILE_SHARING));
         }
-    }, [ isChatOpen, isDragging, isFileUploadEnabled ]);
+    }, [ isChatOpen, isDragging, isFileUploadEnabled, isOnPrejoin ]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -528,6 +531,7 @@ export default reactReduxConnect(_mapStateToProps)(translate(props => {
 
     return (
         <div
+            data-testid = 'conference-drag-zone'
             onDragEnter = { handleDragEnter }
             onDragLeave = { handleDragLeave }
             onDragOver = { handleDragOver }

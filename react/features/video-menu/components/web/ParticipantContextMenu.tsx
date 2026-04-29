@@ -116,7 +116,7 @@ interface IProps {
 const useStyles = makeStyles()(theme => {
     return {
         text: {
-            color: theme.palette.text02,
+            color: theme.palette.videoMenuText,
             padding: '10px 16px',
             height: '40px',
             overflow: 'hidden',

@@ -3,6 +3,8 @@ import { multiremotebrowser } from '@wdio/globals';
 import { Buffer } from 'buffer';
 import fs from 'fs';
 import { glob } from 'glob';
+import junitReportBuilder from 'junit-report-builder';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import process from 'node:process';
 import pretty from 'pretty';
@@ -68,7 +70,7 @@ const specs = [
  */
 function generateCapabilitiesFromSpecs(): Record<string, any> {
     const allSpecFiles: string[] = [];
-    const browsers = [ 'p1', 'p2', 'p3', 'p4' ];
+    const browsers = [ 'p1', 'p2', 'p3', 'p4', 'p5', 'p6' ];
 
     for (const pattern of specs) {
         const matches = glob.sync(pattern, { cwd: path.join(__dirname) });
@@ -87,7 +89,9 @@ function generateCapabilitiesFromSpecs(): Record<string, any> {
         p1: new Set(),
         p2: new Set(),
         p3: new Set(),
-        p4: new Set()
+        p4: new Set(),
+        p5: new Set(),
+        p6: new Set()
     };
 
     for (const file of allSpecFiles) {
@@ -144,7 +148,7 @@ export const config: WebdriverIO.MultiremoteConfig = {
 
     // Default timeout in milliseconds for request
     // if browser driver or grid doesn't send response
-    connectionRetryTimeout: 15_000,
+    connectionRetryTimeout: 30_000,
 
     // Default request retries count
     connectionRetryCount: 3,
@@ -193,6 +197,8 @@ export const config: WebdriverIO.MultiremoteConfig = {
             useCucumberStepReporter: false
         } ]
     ],
+
+    execArgv: [ '--stack-trace-limit=100' ],
 
     // =====
     // Hooks
@@ -286,8 +292,22 @@ export const config: WebdriverIO.MultiremoteConfig = {
         keepAlive.forEach(clearInterval);
     },
 
-    beforeSession(c, capabilities_, specs_, cid) {
+    async beforeSession(c, capabilities_, spec, cid) {
         const originalBefore = c.before;
+
+        if (spec && spec.length == 1) {
+            const testFilePath = spec[0].replace(/^file:\/\//, '');
+            const testProperties = await getTestProperties(testFilePath);
+
+            if (testProperties.retry) {
+                c.specFileRetries = 1;
+                c.specFileRetriesDeferred = true;
+                c.specFileRetriesDelay = 1;
+                console.log(`Enabling retry for ${testFilePath}`);
+            }
+        } else {
+            console.log('No test file or multiple test files specified, will not enable retries');
+        }
 
         if (!originalBefore || !Array.isArray(originalBefore) || originalBefore.length !== 1) {
             console.warn('No before hook found or more than one found, skipping');
@@ -451,6 +471,60 @@ export const config: WebdriverIO.MultiremoteConfig = {
     },
 
     /**
+     * Gets executed after a worker process has exited.
+     * If the worker crashed (e.g. session DELETE timeout), the JUnit reporter never flushes,
+     * leaving a zero-byte XML file. This hook detects that and writes a failure entry so the
+     * report generator has something to show.
+     */
+    onWorkerEnd(cid, exitCode, workerSpecs) {
+        if (exitCode === 0) {
+            return;
+        }
+        const xmlPath = path.join(TEST_RESULTS_DIR, `results-${cid}.xml`);
+
+        try {
+            if (fs.statSync(xmlPath).size > 0) {
+                return;
+            }
+        } catch {
+            // file doesn't exist yet — fall through and create it
+        }
+
+        const specName = workerSpecs?.[0] ? path.basename(workerSpecs[0], '.spec.ts') : 'unknown';
+        const dirMatch = workerSpecs?.[0]?.match(/\/tests\/specs\/([^/]+)\//);
+        const dir = dirMatch ? dirMatch[1] : 'unknown';
+        const message = `Worker exited with code ${exitCode} before results were written. Test result is unknown - tests may have passed.`;
+
+        const b = junitReportBuilder.newBuilder();
+
+        b.testSuite().name(specName).testCase()
+            .name('Test runner crashed')
+            .className(specName)
+            .error(message);
+        b.writeTo(xmlPath);
+
+        const allureResult = {
+            uuid: randomUUID(),
+            name: 'Test runner crashed',
+            status: 'broken',
+            statusDetails: { message },
+            stage: 'finished',
+            steps: [],
+            attachments: [],
+            parameters: [],
+            labels: [
+                { name: 'parentSuite', value: dir },
+                { name: 'suite', value: specName }
+            ],
+            links: []
+        };
+        const allurePath = path.join(TEST_RESULTS_DIR, 'allure-results', `${allureResult.uuid}-result.json`);
+
+        fs.writeFileSync(allurePath, JSON.stringify(allureResult));
+        console.log(`[onWorkerEnd] Wrote error XML and allure result for crashed worker ${cid} (spec: ${specName})`);
+    },
+
+    /**
      * Gets executed after all workers have shut down and the process is about to exit.
      * An error thrown in the `onComplete` hook will result in the test run failing.
      *
@@ -485,7 +559,6 @@ export const config: WebdriverIO.MultiremoteConfig = {
             }
         });
 
-        const reportError = new Error('Could not generate Allure report');
         const generation = allure([
             'generate', `${TEST_RESULTS_DIR}/allure-results`,
             '--clean', '--single-file',
@@ -494,15 +567,15 @@ export const config: WebdriverIO.MultiremoteConfig = {
 
         return new Promise<void>((resolve, reject) => {
             const generationTimeout = setTimeout(
-                () => reject(reportError),
-                5000);
+                () => reject(new Error('Could not generate Allure report: timed out after 60s')),
+                60_000);
 
             // @ts-ignore
             generation.on('exit', eCode => {
                 clearTimeout(generationTimeout);
 
                 if (eCode !== 0) {
-                    return reject(reportError);
+                    return reject(new Error(`Could not generate Allure report: allure exited with code ${eCode}`));
                 }
 
                 console.log('Allure report successfully generated');

@@ -93,10 +93,11 @@ export function commonUserJoinedHandling(
     if (!user.isHidden()) {
         const isReplacing = user?.isReplacing();
         const isPromoted = conference?.getMetadataHandler().getMetadata()?.visitors?.promoted?.[id];
+        const userIdentity = user.getIdentity()?.user;
 
         // the identity and avatar come from jwt and never change in the presence
         dispatch(participantJoined({
-            avatarURL: user.getIdentity()?.user?.avatar,
+            avatarURL: userIdentity?.avatar,
             botType: user.getBotType(),
             conference,
             id,
@@ -105,7 +106,8 @@ export function commonUserJoinedHandling(
             role: user.getRole(),
             isPromoted,
             isReplacing,
-            sources: user.getSources()
+            sources: user.getSources(),
+            userContext: userIdentity
         }));
     }
 }

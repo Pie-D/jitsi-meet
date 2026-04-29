@@ -39,7 +39,7 @@ const styles = (_theme: Theme, { _chatWidth }: IProps) => {
             }
         },
         chatDisabled: {
-            borderTop: `1px solid ${_theme.palette.ui02}`,
+            borderTop: `1px solid ${_theme.palette.chatInputBorder}`,
             boxSizing: 'border-box' as const,
             padding: _theme.spacing(4),
             textAlign: 'center' as const,

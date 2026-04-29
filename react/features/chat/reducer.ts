@@ -7,7 +7,7 @@ import { IVisitorChatParticipant } from '../visitors/types';
 import {
     ADD_MESSAGE,
     ADD_MESSAGE_REACTION,
-    CLEAR_MESSAGES,
+    CLEAR_CHAT_STATE,
     CLOSE_CHAT,
     DELETE_MESSAGE,
     EDIT_MESSAGE,
@@ -217,7 +217,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             };
         }
 
-        case CLEAR_MESSAGES:
+        case CLEAR_CHAT_STATE:
             return {
                 ...state,
                 lastReadMessage: undefined,

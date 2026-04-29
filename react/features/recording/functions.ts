@@ -7,7 +7,7 @@ import { JitsiRecordingConstants } from '../base/lib-jitsi-meet';
 import { getSoundFileSrc } from '../base/media/functions';
 import { getLocalParticipant, getRemoteParticipants, isLocalRoomOwner } from '../base/participants/functions';
 import { registerSound, unregisterSound } from '../base/sounds/actions';
-import { isEmbedded } from '../base/util/embedUtils';
+import { isEmbedded, isEmbeddedFromSameDomain } from '../base/util/embedUtils';
 import { isSpotTV } from '../base/util/spot';
 import { isInBreakoutRoom as isInBreakoutRoomF } from '../breakout-rooms/functions';
 import { isEnabled as isDropboxEnabled } from '../dropbox/functions';
@@ -153,7 +153,7 @@ export function getSessionStatusToShow(state: IReduxState, mode: string): string
  * @returns {boolean} - Whether local recording is supported or not.
  */
 export function supportsLocalRecording() {
-    return LocalRecordingManager.isSupported() && !isEmbedded();
+    return LocalRecordingManager.isSupported() && (!isEmbedded() || isEmbeddedFromSameDomain());
 }
 
 /**
@@ -201,7 +201,8 @@ export function canStopRecording(state: IReduxState) {
     }
 
     if (isCloudRecordingRunning(state) || isRecorderTranscriptionsRunning(state)) {
-        return isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false);
+        return isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)
+            || isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false);
     }
 
     return false;
@@ -248,24 +249,28 @@ export function getRecordButtonProps(state: IReduxState) {
     // a button can be disabled/enabled if enableFeaturesBasedOnToken
     // is on or if the livestreaming is running.
     let disabled = false;
-    let tooltip = '';
+    let tooltip = isRecordingRunning(state) ? 'dialog.stopRecording' : 'dialog.startRecording';
 
     // If the containing component provides the visible prop, that is one
     // above all, but if not, the button should be autonomus and decide on
     // its own to be visible or not.
     const {
         recordingService,
-        localRecording
+        localRecording,
+        transcription
     } = state['features/base/config'];
     const localRecordingEnabled = !localRecording?.disable && supportsLocalRecording() && isLocalRoomOwner(state);
 
     const dropboxEnabled = isDropboxEnabled(state);
     const recordingEnabled = recordingService?.enabled || dropboxEnabled;
+    const transcriptionEnabled = transcription?.enabled;
 
     if (localRecordingEnabled) {
         visible = true;
     } else if (isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)) {
         visible = recordingEnabled;
+    } else if (isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false)) {
+        visible = transcriptionEnabled;
     }
 
     // disable the button if the livestreaming is running.
