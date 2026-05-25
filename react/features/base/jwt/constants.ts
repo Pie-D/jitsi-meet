@@ -12,6 +12,7 @@ export const MEET_FEATURES: Record<string, ParticipantFeaturesKey> = {
     INBOUND_CALL: 'inbound-call',
     LIVESTREAMING: 'livestreaming',
     LOBBY: 'lobby',
+    LOCAL_RECORDING: 'local-recording',
     MODERATION: 'moderation',
     OUTBOUND_CALL: 'outbound-call',
     RECORDING: 'recording',

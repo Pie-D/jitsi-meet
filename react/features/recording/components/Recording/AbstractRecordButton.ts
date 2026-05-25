@@ -78,11 +78,17 @@ export default class AbstractRecordButton<P extends IProps> extends AbstractButt
                 'is_recording': _isRecordingRunning,
                 type: JitsiRecordingConstants.mode.FILE
             }));
-        const dialogShown = dispatch(maybeShowPremiumFeatureDialog(MEET_FEATURES.RECORDING));
+        
+        // Check both RECORDING (cloud) and LOCAL_RECORDING features
+        // Only block if BOTH features are disabled
+        const cloudRecordingBlocked = dispatch(maybeShowPremiumFeatureDialog(MEET_FEATURES.RECORDING));
+        const localRecordingBlocked = dispatch(maybeShowPremiumFeatureDialog(MEET_FEATURES.LOCAL_RECORDING));
 
-        if (!dialogShown) {
-            this._onHandleClick();
+        if (cloudRecordingBlocked && localRecordingBlocked) {
+            return;
         }
+
+        this._onHandleClick();
     }
 
     /**
