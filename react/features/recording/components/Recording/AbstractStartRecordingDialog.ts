@@ -483,8 +483,10 @@ export function mapStateToProps(state: IReduxState, _ownProps: any) {
         _localRecordingEnabled: !localRecording?.disable,
         _rToken: state['features/dropbox'].rToken ?? '',
         recordAudioAndVideo:
-            isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)
-                ? _ownProps.recordAudioAndVideo ?? recordings?.recordAudioAndVideo ?? true : false,
+            (isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false) 
+                || isJwtFeatureEnabled(state, MEET_FEATURES.LOCAL_RECORDING, false))
+                ? _ownProps.recordAudioAndVideo ?? recordings?.recordAudioAndVideo ?? true 
+                : false,
         _subtitlesLanguage,
         _tokenExpireDate: state['features/dropbox'].expireDate,
         _token: state['features/dropbox'].token ?? ''

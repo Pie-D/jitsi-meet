@@ -71,6 +71,7 @@ export interface IParticipantFeatures {
     'list-visitors'?: boolean | string;
     'livestreaming'?: boolean | string;
     'lobby'?: boolean | string;
+    'local-recording'?: boolean | string; //add feature  local-recording
     'moderation'?: boolean | string;
     'outbound-call'?: boolean | string;
     'recording'?: boolean | string;

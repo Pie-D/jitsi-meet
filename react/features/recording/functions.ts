@@ -265,9 +265,16 @@ export function getRecordButtonProps(state: IReduxState) {
     const recordingEnabled = recordingService?.enabled || dropboxEnabled;
     const transcriptionEnabled = transcription?.enabled;
 
+     // Check for local-recording and cloud recording features
+    const hasLocalRecordingFeature = isJwtFeatureEnabled(state, MEET_FEATURES.LOCAL_RECORDING, false);
+    const hasCloudRecordingFeature = isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false);
+
     if (localRecordingEnabled) {
         visible = true;
-    } else if (isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)) {
+    } else if (hasLocalRecordingFeature && supportsLocalRecording()) {
+        // Show button if user has local-recording feature
+        visible = true;
+    } else if (hasCloudRecordingFeature) {
         visible = recordingEnabled;
     } else if (isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false)) {
         visible = transcriptionEnabled;
