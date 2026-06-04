@@ -424,7 +424,7 @@ const ChatMessage = ({
             id={message.messageId}
             tabIndex={-1}>
             <div className={classes.sideBySideContainer}>
-                {message.messageType === 'system' ? (
+                {message.messageType === 'system_chat_message' ? (
                     <div
                         className={cx(
                             'chatmessage',

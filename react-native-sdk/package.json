@@ -2,8 +2,7 @@
     "name": "@jitsi/react-native-sdk",
     "version": "0.0.0",
     "description": "React Native SDK for C-Meet.",
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
+    "main": "index.tsx",
     "license": "Apache-2.0",
     "author": "",
     "homepage": "https://jitsi.org",
@@ -67,7 +66,7 @@
         "@react-native-google-signin/google-signin": "0.0.0",
         "@sayem314/react-native-keep-awake": "0.0.0",
         "react-native": "0.0.0",
-        "react": "*",
+        "react": "0.0.0",
         "react-native-background-timer": "0.0.0",
         "react-native-calendar-events": "0.0.0",
         "react-native-default-preference": "0.0.0",
@@ -83,7 +82,6 @@
         "react-native-splash-view": "0.0.0",
         "react-native-svg": "0.0.0",
         "react-native-video": "0.0.0",
-        "react-native-watch-connectivity": "0.0.0",
         "react-native-webrtc": "0.0.0",
         "react-native-webview": "0.0.0",
         "react-native-worklets-core": "0.0.0"
@@ -93,27 +91,9 @@
         "@babel/plugin-proposal-optional-chaining": "0.0.0"
     },
     "scripts": {
-        "build": "tsc -p tsconfig.json",
         "postinstall": "node sdk_instructions.js",
-        "prepare": "node prepare_sdk.js && npm run build"
+        "prepare": "node prepare_sdk.js"
     },
-    "files": [
-        "dist",
-        "android",
-        "ios",
-        "index.tsx",
-        "jitsi-meet-rnsdk.podspec",
-        "prepare_sdk.js",
-        "sdk_instructions.js",
-        "update_dependencies.js",
-        "update_sdk_dependencies.js",
-        "README.md",
-        "images",
-        "sounds",
-        "lang",
-        "modules",
-        "react"
-    ],
     "bugs": {
         "url": "https://github.com/Pie-D/jitsi-meet/issues"
     },

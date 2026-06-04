@@ -1,4 +1,3 @@
-local LOGLEVEL = "debug"
 
 -- Set this parameter in Prosody config if you dont want cascading updates for
 -- affiliation. Cascading updates are needed when the authentication is enabled
@@ -6,6 +5,26 @@ local LOGLEVEL = "debug"
 local DISABLE_CASCADING_SET = module:get_option_boolean(
     "disable_cascading_set", false
 )
+-- mod_token_affiliation.lua
+--
+-- Grants owner affiliation (and thus moderator role) to MUC occupants whose
+-- JWT contains moderator/affiliation claims, and member affiliation to all
+-- other authenticated occupants.
+--
+-- JWT claims inspected (context.user.*):
+--   affiliation == "owner" | "moderator" | "teacher"  →  owner
+--   moderator   == true | "true"                       →  owner
+--   Authenticated user with none of the above          →  member
+--
+-- The affiliation is written to the room's affiliation list inside
+-- muc-occupant-pre-join (before the join completes), so the very first
+-- presence broadcast already carries the correct affiliation and role.
+-- No filtering or second hook required.
+--
+-- Originally imported from:
+--   https://github.com/jitsi-contrib/prosody-plugins/tree/main/token_affiliation
+
+local LOGLEVEL = module:get_option_string("token_affiliation_log_level", "debug")
 
 local util = module:require 'util';
 local is_admin = util.is_admin;

@@ -57,7 +57,7 @@ const useStyles = makeStyles()(theme => {
 const ChatMessageGroup = ({ className = '', messages }: IProps) => {
     const { classes } = useStyles();
     const messagesLength = messages.length;
-    const isSystemMessage = messages[0].messageType === 'system';
+    const isSystemMessage = messages[0].messageType === 'system_chat_message';
 
     if (!messagesLength) {
         return null;

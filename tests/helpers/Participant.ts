@@ -1,6 +1,5 @@
 /* global APP $ */
 
-import { multiremotebrowser } from '@wdio/globals';
 import assert from 'assert';
 import { Key } from 'webdriverio';
 
@@ -26,6 +25,7 @@ import SecurityDialog from '../pageobjects/SecurityDialog';
 import SettingsDialog from '../pageobjects/SettingsDialog';
 import Toolbar from '../pageobjects/Toolbar';
 import VideoQualityDialog from '../pageobjects/VideoQualityDialog';
+import VirtualBackgroundDialog from '../pageobjects/VirtualBackgroundDialog';
 import Visitors from '../pageobjects/Visitors';
 
 import { LOG_PREFIX, logInfo } from './browserLogger';
@@ -175,7 +175,7 @@ export class Participant {
      * The driver it uses.
      */
     get driver() {
-        return multiremotebrowser.getInstance(this._name);
+        return multiRemoteBrowser.getInstance(this._name);
     }
 
     /**
@@ -259,6 +259,13 @@ export class Participant {
         await this.driver.url(url);
 
         await this.waitForPageToLoad();
+
+        // If the URL changed, wait for the new page to load before proceeding.
+        const currentUrl = await this.driver.getUrl();
+
+        if (!currentUrl.includes(url)) {
+            await this.waitForPageToLoad();
+        }
 
         if (this._iFrameApi) {
             await this.switchToIFrame();
@@ -635,6 +642,13 @@ export class Participant {
      */
     getPasswordDialog(): PasswordDialog {
         return new PasswordDialog(this);
+    }
+
+    /**
+     * Returns the virtual background dialog.
+     */
+    getVirtualBackgroundDialog(): VirtualBackgroundDialog {
+        return new VirtualBackgroundDialog(this);
     }
 
     /**

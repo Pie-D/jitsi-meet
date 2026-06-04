@@ -2,17 +2,18 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 
-import { IReduxState, IStore } from "../../../app/types";
-import { JitsiRecordingConstants } from "../../../base/lib-jitsi-meet";
-import E2EELabel from "../../../e2ee/components/E2EELabel";
-import HighlightButton from "../../../recording/components/Recording/web/HighlightButton";
-import RecordingLabel from "../../../recording/components/web/RecordingLabel";
-import { showToolbox } from "../../../toolbox/actions.web";
-import { isToolboxVisible } from "../../../toolbox/functions.web";
-import VideoQualityLabel from "../../../video-quality/components/VideoQualityLabel.web";
-import VisitorsCountLabel from "../../../visitors/components/web/VisitorsCountLabel";
-import ConferenceTimer from "../ConferenceTimer";
-import { getConferenceInfo } from "../functions.web";
+import { IReduxState, IStore } from '../../../app/types';
+import { JitsiRecordingConstants } from '../../../base/lib-jitsi-meet';
+import E2EELabel from '../../../e2ee/components/E2EELabel';
+import HighlightButton from '../../../recording/components/Recording/web/HighlightButton';
+import RecordingLabel from '../../../recording/components/web/RecordingLabel';
+import TranscribingLabel from '../../../recording/components/web/TranscribingLabel';
+import { showToolbox } from '../../../toolbox/actions.web';
+import { isToolboxVisible } from '../../../toolbox/functions.web';
+import VideoQualityLabel from '../../../video-quality/components/VideoQualityLabel.web';
+import VisitorsCountLabel from '../../../visitors/components/web/VisitorsCountLabel';
+import ConferenceTimer from '../ConferenceTimer';
+import { getConferenceInfo } from '../functions.web';
 
 import ConferenceInfoContainer from "./ConferenceInfoContainer";
 import InsecureRoomNameLabel from "./InsecureRoomNameLabel";
@@ -77,8 +78,9 @@ const COMPONENTS: Array<{
     {
         Component: () => (
             <>
-                <RecordingLabel mode={JitsiRecordingConstants.mode.FILE} />
-                <RecordingLabel mode={JitsiRecordingConstants.mode.STREAM} />
+                <RecordingLabel mode = { JitsiRecordingConstants.mode.FILE } />
+                <RecordingLabel mode = { JitsiRecordingConstants.mode.STREAM } />
+                <TranscribingLabel />
             </>
         ),
         id: "recording",
