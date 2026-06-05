@@ -80,14 +80,6 @@ const useStyles = makeStyles()((theme: Theme) => {
                 '&.privatemessage': {
                     backgroundColor: theme.palette.chatMessagePrivate
                 },
-                '&.local': {
-                    backgroundColor: theme.palette.chatMessageLocal,
-                    borderRadius: '12px 4px 12px 12px',
-
-                    '&.privatemessage': {
-                        backgroundColor: theme.palette.chatMessagePrivate
-                    }
-                },
 
                 '&.error': {
                     backgroundColor: theme.palette.ui02,
@@ -274,7 +266,7 @@ const ChatMessage = ({
 }: IProps) => {
     const { classes, cx } = useStyles();
     const [isReactionsOpen, setIsReactionsOpen] = useState(false);
-    const systemMessageTitle = 'Tin nhắn hệ thống';
+    const systemMessageTitle = t('chat.systemDisplayName');
 
     const emojiList = [
         { key: ':thumbsup:', emoji: '👍' },      // Like
