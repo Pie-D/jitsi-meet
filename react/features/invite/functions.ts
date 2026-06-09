@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { jitsiLocalStorage } from '@jitsi/js-utils';
 
 import { IReduxState } from '../app/types';
@@ -504,10 +503,9 @@ export function isDialOutEnabled(state: IReduxState): boolean {
  * @returns {boolean} Indication of whether dial out is currently enabled.
  */
 export function isDialInEnabled(state: IReduxState): boolean {
-    const dialInDisabled = state['features/base/conference']
-        .conference?.getMetadataHandler()?.getMetadata()?.dialinEnabled === false;
+    const { metadata } = state['features/base/conference'];
 
-    if (dialInDisabled) {
+    if (metadata?.dialinEnabled === false) {
         return false;
     }
 

@@ -93,6 +93,7 @@ import { default as IconGalleryView } from './gallery.svg';
 import { default as IconSpeakerView } from './speaker.svg';
 import { default as IconMultiSpeakerView } from './multi-speaker.svg';
 import { default as IconImmersiveView } from './immersive.svg';
+import { default as IconTranscription } from './transcription.svg';
 import { default as IconTrash } from './trash.svg';
 import { default as IconUserDeleted } from './user-deleted.svg';
 import { default as IconUser } from './user.svg';
@@ -117,7 +118,6 @@ import { default as IconMemberImmersiveView } from './member.svg';
 import { default as IconLanguageVN } from './VN.svg';
 import { default as IconLanguageEN } from './EN.svg';
 
-import { I } from '@jitsi/excalidraw/types/ga';
 /**
  * Map containing the default icons.
  */
@@ -193,6 +193,7 @@ export const DEFAULT_ICON: Record<string, any> = {
     IconPlus,
     IconRaiseHand,
     IconRecord,
+    IconTranscription,
     IconRecordAccount,
     IconRecordContact,
     IconRecordLead,

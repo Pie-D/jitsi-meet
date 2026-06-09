@@ -1,4 +1,3 @@
-// @ts-expect-error
 import { getGravatarURL } from '@jitsi/js-utils/avatar';
 import {env} from "../../../../ENV";
 import { IReduxState, IStore } from '../../app/types';

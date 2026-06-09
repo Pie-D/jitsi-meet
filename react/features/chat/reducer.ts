@@ -1,4 +1,5 @@
 import { UPDATE_CONFERENCE_METADATA } from '../base/conference/actionTypes';
+import logger from './logger';
 import { ILocalParticipant, IParticipant } from '../base/participants/types';
 import ReducerRegistry from '../base/redux/ReducerRegistry';
 import { ADD_FILE, _FILE_LIST_RECEIVED } from '../file-sharing/actionTypes';
@@ -125,7 +126,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
 
             // Chỉ check duplicate nếu message không phải là history từ RC (vì RC history là source of truth)
             if (!isRocketChatMessage && recentSendTime && (now - recentSendTime) < DUPLICATE_WINDOW_MS) {
-                console.log('[Chat Reducer] Duplicate detected by content hash, skipping');
+                logger.debug('Duplicate detected by content hash, skipping');
                 // Remove from tracking since we found the echo
                 newRecentlySentMessages.delete(contentHash);
                 return {
@@ -142,14 +143,14 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
                 isFromVisitor: Boolean(action.isFromVisitor),
                 participantId: action.participantId,
                 isReaction: action.isReaction,
-                messageId: messageId,
-                rcMessageId: action.rcMessageId,
+                messageId: action.messageId,
                 messageType: action.messageType,
                 message: action.message,
                 reactions: action.reactions,
                 privateMessage: action.privateMessage,
                 lobbyChat: action.lobbyChat,
                 recipient: action.recipient,
+                replyToMessageId: action.replyToMessageId,
                 sentToVisitor: Boolean(action.sentToVisitor),
                 timestamp: action.timestamp
             };
