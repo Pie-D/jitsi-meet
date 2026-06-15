@@ -1,82 +1,55 @@
-declare global {
-    interface Window {
-        config?: {
-            cmeetEnv?: {
-                appName?: string;
-                apiUrl?: string;
-                debugMode?: boolean | string;
-                welcomePageMessage?: string;
-                language?: string;
-                iosLink?: string;
-                androidLink?: string;
-                logoLink?: string;
-                rocketChatApiUrl?: string;
-                rocketChatToken?: string;
-                rocketChatUserId?: string;
-                rocketChatWsUrl?: string;
-                cmeetUrl?: string;
-                cmeetWsUrl?: string;
-                gstStreamUrl?: string;
-                xmppDomain?: string;
-                domain?: string;
-                gstStreamWs?: string;
-            }
-        }
-    }
-}
-
-const getWelcomePageMessage = (): string[] | null => {
-    const customMessage = window.config?.cmeetEnv?.welcomePageMessage;
+const getWelcomePageMessage = (): string[] => {
+    const customMessage = (window as any).config?.cmeetEnv?.welcomePageMessage;
     if (customMessage) {
         return customMessage.split('|');
     }
-    return null;
+    return [];
 };
 
-const getDebugMode = (): boolean | null => {
-    const val = window.config?.cmeetEnv?.debugMode;
-    if (val === undefined || val === null || val === '') return null;
+const getDebugMode = (): boolean => {
+    const val = (window as any).config?.cmeetEnv?.debugMode;
+    if (val === undefined || val === null || val === '') return false;
     return val === true || val === 'true';
 };
 
 export interface Environment {
-    APP_NAME: string | null;
-    API_URL: string | null;
-    DEBUG_MODE: boolean | null;
-    WELCOME_PAGE_MESSAGE: string[] | null;
-    LANGUAGE: string | null;
-    IOS_LINK: string | null;
-    ANDROID_LINK: string | null;
-    LOGO_LINK: string | null;
-    ROCKET_CHAT_API_URL: string | null;
-    ROCKET_CHAT_TOKEN: string | null;
-    ROCKET_CHAT_USER_ID: string | null;
-    ROCKET_CHAT_WS_URL: string | null;
-    CMEET_URL: string | null;
-    CMEET_WS_URL: string | null;
-    GST_STREAM_URL: string | null;
-    XMPP_DOMAIN: string | null;
-    DOMAIN: string | null;
-    GST_STREAM_WS: string | null;
+    APP_NAME: string;
+    API_URL: string;
+    DEBUG_MODE: boolean;
+    WELCOME_PAGE_MESSAGE: string[];
+    LANGUAGE: string;
+    IOS_LINK: string;
+    ANDROID_LINK: string;
+    LOGO_LINK: string;
+    ROCKET_CHAT_API_URL: string;
+    ROCKET_CHAT_TOKEN: string;
+    ROCKET_CHAT_USER_ID: string;
+    ROCKET_CHAT_WS_URL: string;
+    CMEET_URL: string;
+    CMEET_WS_URL: string;
+    GST_STREAM_URL: string;
+    XMPP_DOMAIN: string;
+    DOMAIN: string;
+    GST_STREAM_WS: string;
 }
 
 export const env: Environment = {
-    APP_NAME: window.config?.cmeetEnv?.appName || null,
-    API_URL: window.config?.cmeetEnv?.apiUrl || null,
+    APP_NAME: (window as any).config?.cmeetEnv?.appName || "",
+    API_URL: (window as any).config?.cmeetEnv?.apiUrl || "",
     DEBUG_MODE: getDebugMode(),
     WELCOME_PAGE_MESSAGE: getWelcomePageMessage(),
-    LANGUAGE: window.config?.cmeetEnv?.language || null,
-    IOS_LINK: window.config?.cmeetEnv?.iosLink || null,
-    ANDROID_LINK: window.config?.cmeetEnv?.androidLink || null,
-    LOGO_LINK: window.config?.cmeetEnv?.logoLink || null,
-    ROCKET_CHAT_API_URL: window.config?.cmeetEnv?.rocketChatApiUrl || null,
-    ROCKET_CHAT_TOKEN: window.config?.cmeetEnv?.rocketChatToken || null,
-    ROCKET_CHAT_USER_ID: window.config?.cmeetEnv?.rocketChatUserId || null,
-    ROCKET_CHAT_WS_URL: window.config?.cmeetEnv?.rocketChatWsUrl || null,
-    CMEET_URL: window.config?.cmeetEnv?.cmeetUrl || null,
-    CMEET_WS_URL: window.config?.cmeetEnv?.cmeetWsUrl || null,
-    GST_STREAM_URL: window.config?.cmeetEnv?.gstStreamUrl || null,
-    XMPP_DOMAIN: window.config?.cmeetEnv?.xmppDomain || null,
-    DOMAIN: window.config?.cmeetEnv?.domain || null,
-    GST_STREAM_WS: window.config?.cmeetEnv?.gstStreamWs || null
+    LANGUAGE: (window as any).config?.cmeetEnv?.language || "",
+    IOS_LINK: (window as any).config?.cmeetEnv?.iosLink || "",
+    ANDROID_LINK: (window as any).config?.cmeetEnv?.androidLink || "",
+    LOGO_LINK: (window as any).config?.cmeetEnv?.logoLink || "",
+    ROCKET_CHAT_API_URL: (window as any).config?.cmeetEnv?.rocketChatApiUrl || "",
+    ROCKET_CHAT_TOKEN: (window as any).config?.cmeetEnv?.rocketChatToken || "",
+    ROCKET_CHAT_USER_ID: (window as any).config?.cmeetEnv?.rocketChatUserId || "",
+    ROCKET_CHAT_WS_URL: (window as any).config?.cmeetEnv?.rocketChatWsUrl || "",
+    CMEET_URL: (window as any).config?.cmeetEnv?.cmeetUrl || "",
+    CMEET_WS_URL: (window as any).config?.cmeetEnv?.cmeetWsUrl || "",
+    GST_STREAM_URL: (window as any).config?.cmeetEnv?.gstStreamUrl || "",
+    XMPP_DOMAIN: (window as any).config?.cmeetEnv?.xmppDomain || "",
+    DOMAIN: (window as any).config?.cmeetEnv?.domain || "",
+    GST_STREAM_WS: (window as any).config?.cmeetEnv?.gstStreamWs || ""
 };
