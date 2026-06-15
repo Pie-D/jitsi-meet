@@ -209,22 +209,33 @@ export function hasRecordingOrTranscriptionFeature(state: IReduxState) {
         || isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false);
 }
 
-/**
- * Returns true if the participant can stop recording.
- *
- * @param {Object} state - The redux state to search in.
- * @returns {boolean}
- */
 export function canStopRecording(state: IReduxState) {
     if (LocalRecordingManager.isRecordingLocally()) {
         return true;
     }
 
-    if (isCloudRecordingRunning(state) || isRecorderTranscriptionsRunning(state)) {
-        return hasRecordingOrTranscriptionFeature(state);
+    let canStop = false;
+
+    if (isCloudRecordingRunning(state)) {
+        canStop = canStop || isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false);
     }
 
-    return false;
+    if (isRecorderTranscriptionsRunning(state)) {
+        canStop = canStop || isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false);
+    }
+
+    return canStop;
+}
+
+/**
+ * Returns true if the participant can control (start/stop) file recording.
+ *
+ * @param {Object} state - The redux state to search in.
+ * @returns {boolean}
+ */
+export function canControlRecording(state: IReduxState) {
+    return isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)
+        || LocalRecordingManager.isRecordingLocally();
 }
 
 /**
@@ -278,7 +289,10 @@ export function getRecordButtonProps(state: IReduxState) {
         localRecording,
         transcription
     } = state['features/base/config'];
-    const localRecordingEnabled = !localRecording?.disable && supportsLocalRecording() && isLocalRoomOwner(state);
+    const localRecordingEnabled = !localRecording?.disable 
+        && supportsLocalRecording() 
+        && isLocalRoomOwner(state)
+        && isJwtFeatureEnabled(state, MEET_FEATURES.LOCAL_RECORDING, false);
 
     const dropboxEnabled = isDropboxEnabled(state);
     const recordingEnabled = recordingService?.enabled || dropboxEnabled;
@@ -295,8 +309,6 @@ export function getRecordButtonProps(state: IReduxState) {
         visible = true;
     } else if (hasCloudRecordingFeature) {
         visible = recordingEnabled;
-    } else if (isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false)) {
-        visible = transcriptionEnabled;
     }
 
     // disable the button if the livestreaming is running.

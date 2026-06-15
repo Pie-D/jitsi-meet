@@ -10,7 +10,8 @@ import { IconTranscription } from '../../../base/icons/svg';
 import Label from '../../../base/label/components/web/Label';
 import Tooltip from '../../../base/tooltip/components/Tooltip';
 import { isRecorderTranscriptionsRunning } from '../../../transcribing/functions';
-import { hasRecordingOrTranscriptionFeature } from '../../functions';
+import { MEET_FEATURES } from '../../../base/jwt/constants';
+import { isJwtFeatureEnabled } from '../../../base/jwt/functions';
 import AbstractRecordingLabel, {
     IProps as AbstractProps
 } from '../AbstractRecordingLabel';
@@ -120,7 +121,7 @@ function _mapStateToProps(state: IReduxState) {
     return {
         _isVisible: _isTranscribing,
         _iAmRecorder: Boolean(state['features/base/config'].iAmRecorder),
-        _canControlRecording: hasRecordingOrTranscriptionFeature(state),
+        _canControlRecording: isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false),
         _isTranscribing,
         mode: 'transcribing' // Custom mode for transcription
     };

@@ -413,7 +413,9 @@ class AbstractStartRecordingDialogContent extends Component<IProps, IState> {
  */
 export function mapStateToProps(state: IReduxState) {
     const { localRecording, recordingService } = state['features/base/config'];
-    const _localRecordingAvailable = !localRecording?.disable && supportsLocalRecording();
+    const _localRecordingAvailable = !localRecording?.disable 
+        && supportsLocalRecording()
+        && isJwtFeatureEnabled(state, MEET_FEATURES.LOCAL_RECORDING, false);
 
     return {
         ..._abstractMapStateToProps(state),

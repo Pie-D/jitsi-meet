@@ -3,6 +3,7 @@ import { sendAnalytics } from '../../../analytics/functions';
 import { IReduxState } from '../../../app/types';
 import { IconRecord, IconStop } from '../../../base/icons/svg';
 import { MEET_FEATURES } from '../../../base/jwt/constants';
+import { isJwtFeatureEnabled } from '../../../base/jwt/functions';
 import { JitsiRecordingConstants } from '../../../base/lib-jitsi-meet';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
 import { maybeShowPremiumFeatureDialog } from '../../../jaas/actions';
@@ -28,6 +29,11 @@ export interface IProps extends AbstractButtonProps {
      * The tooltip to display when hovering over the button.
      */
     _tooltip?: string;
+
+    /**
+     * True if the user only has the transcription feature enabled.
+     */
+    _isTranscriptionOnly?: boolean;
 }
 
 /**
@@ -48,7 +54,38 @@ export default class AbstractRecordButton<P extends IProps> extends AbstractButt
      * @returns {string}
      */
     override _getTooltip() {
+        if (this.props._isTranscriptionOnly) {
+            return this._isToggled() ? 'transcribing.stop' : 'transcribing.start';
+        }
         return this.props._tooltip ?? '';
+    }
+
+    /**
+     * Gets the current label, taking the transcribing state into account.
+     *
+     * @override
+     * @protected
+     * @returns {string}
+     */
+    override _getLabel() {
+        if (this.props._isTranscriptionOnly) {
+            return this._isToggled() ? 'transcribing.stop' : 'transcribing.start';
+        }
+        return super._getLabel();
+    }
+
+    /**
+     * Gets the current accessibility label, taking the transcribing state into account.
+     *
+     * @override
+     * @protected
+     * @returns {string}
+     */
+    override _getAccessibilityLabel() {
+        if (this.props._isTranscriptionOnly) {
+            return this._isToggled() ? 'transcribing.stop' : 'transcribing.start';
+        }
+        return super._getAccessibilityLabel();
     }
 
     /**
@@ -135,10 +172,15 @@ export function _mapStateToProps(state: IReduxState) {
         visible
     } = getRecordButtonProps(state);
 
+    const hasRecording = isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)
+        || isJwtFeatureEnabled(state, MEET_FEATURES.LOCAL_RECORDING, false);
+    const hasTranscription = isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false);
+
     return {
         _disabled,
         _isRecordingRunning: canStopRecording(state),
         _tooltip,
+        _isTranscriptionOnly: !hasRecording && hasTranscription,
         visible
     };
 }

@@ -8,9 +8,11 @@ import { openDialog } from '../../../base/dialog/actions';
 import { translate } from '../../../base/i18n/functions';
 import { IconRecord, IconSites } from '../../../base/icons/svg';
 import Label from '../../../base/label/components/web/Label';
+import { MEET_FEATURES } from '../../../base/jwt/constants';
+import { isJwtFeatureEnabled } from '../../../base/jwt/functions';
 import { JitsiRecordingConstants } from '../../../base/lib-jitsi-meet';
 import Tooltip from '../../../base/tooltip/components/Tooltip';
-import { hasRecordingOrTranscriptionFeature } from '../../functions';
+import { canControlRecording } from '../../functions';
 import AbstractRecordingLabel, {
     IProps as AbstractProps,
     _mapStateToProps as _abstractMapStateToProps
@@ -122,9 +124,14 @@ class RecordingLabel extends AbstractRecordingLabel<IProps> {
  * @returns {Object}
  */
 function _mapStateToProps(state: IReduxState, ownProps: any) {
+    const { mode } = ownProps;
+    const _canControlRecording = mode === JitsiRecordingConstants.mode.FILE
+        ? canControlRecording(state)
+        : isJwtFeatureEnabled(state, MEET_FEATURES.LIVESTREAMING, false);
+
     return {
         ..._abstractMapStateToProps(state, ownProps),
-        _canControlRecording: hasRecordingOrTranscriptionFeature(state)
+        _canControlRecording
     };
 }
 

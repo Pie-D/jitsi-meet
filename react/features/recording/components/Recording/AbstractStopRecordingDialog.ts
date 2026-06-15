@@ -14,6 +14,8 @@ import { RECORDING_METADATA_ID } from '../../constants';
 import { getActiveSession } from '../../functions';
 import { ISessionData } from '../../reducer';
 
+import { MEET_FEATURES } from '../../../base/jwt/constants';
+import { isJwtFeatureEnabled } from '../../../base/jwt/functions';
 import LocalRecordingManager from './LocalRecordingManager';
 
 /**
@@ -61,6 +63,16 @@ export interface IProps extends WithTranslation {
      * The user trying to stop the video while local recording is running.
      */
     localRecordingVideoStop?: boolean;
+
+    /**
+     * Whether the user can control cloud recording.
+     */
+    _canControlRecording?: boolean;
+
+    /**
+     * Whether the user can control transcription.
+     */
+    _canControlTranscription?: boolean;
 }
 
 /**
@@ -100,6 +112,8 @@ export default class AbstractStopRecordingDialog<P extends IProps>
             _localRecording,
             _subtitlesLanguage,
             _transcriptionRunning,
+            _canControlRecording,
+            _canControlTranscription,
             dispatch,
             localRecordingVideoStop
         } = this.props;
@@ -109,12 +123,13 @@ export default class AbstractStopRecordingDialog<P extends IProps>
         // what to wait for. Local recording has its own inline sound path and
         // does not flow through this coordinator.
         if (!_localRecording) {
-            const recordingRunning = Boolean(_fileRecordingSession);
+            const recordingRunning = Boolean(_fileRecordingSession && _canControlRecording);
+            const transcriptionRunning = Boolean(_transcriptionRunning && _canControlTranscription);
 
-            if (recordingRunning || _transcriptionRunning) {
+            if (recordingRunning || transcriptionRunning) {
                 dispatch(setStopRecordingIntent({
                     recording: recordingRunning,
-                    transcription: _transcriptionRunning
+                    transcription: transcriptionRunning
                 }));
             }
         }
@@ -124,19 +139,21 @@ export default class AbstractStopRecordingDialog<P extends IProps>
             if (localRecordingVideoStop) {
                 dispatch(setVideoMuted(true));
             }
-        } else if (_fileRecordingSession) {
+        } else if (_fileRecordingSession && _canControlRecording) {
             _conference?.stopRecording(_fileRecordingSession.id);
             this._toggleScreenshotCapture();
         }
 
         // TODO: this should be an action in transcribing. -saghul
-        this.props.dispatch(
-            setRequestingSubtitles(Boolean(_displaySubtitles), _displaySubtitles, _subtitlesLanguage, true));
+        if (_canControlTranscription) {
+            this.props.dispatch(
+                setRequestingSubtitles(Boolean(_displaySubtitles), _displaySubtitles, _subtitlesLanguage, true));
 
-        this.props._conference?.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
-            isRecordingRequested: false,
-            isTranscribingEnabled: false
-        });
+            this.props._conference?.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
+                isRecordingRequested: false,
+                isTranscribingEnabled: false
+            });
+        }
 
         return true;
     }
@@ -172,6 +189,8 @@ export function _mapStateToProps(state: IReduxState) {
             getActiveSession(state, JitsiRecordingConstants.mode.FILE),
         _localRecording: LocalRecordingManager.isRecordingLocally(),
         _subtitlesLanguage,
-        _transcriptionRunning: isRecorderTranscriptionsRunning(state)
+        _transcriptionRunning: isRecorderTranscriptionsRunning(state),
+        _canControlRecording: isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false),
+        _canControlTranscription: isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false)
     };
 }
