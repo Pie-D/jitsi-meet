@@ -68,7 +68,7 @@ export class AbstractClosedCaptionButton
                 'requesting_subtitles': Boolean(_requestingSubtitles)
             }));
 
-        const dialogShown = dispatch(maybeShowPremiumFeatureDialog(MEET_FEATURES.RECORDING));
+        const dialogShown = dispatch(maybeShowPremiumFeatureDialog(MEET_FEATURES.TRANSCRIPTION));
 
         if (!dialogShown) {
             this._handleClickOpenLanguageSelector();

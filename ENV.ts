@@ -1,3 +1,17 @@
+const getWelcomePageMessage = (): string[] => {
+    const customMessage = (window as any).config?.cmeetEnv?.welcomePageMessage;
+    if (customMessage) {
+        return customMessage.split('|');
+    }
+    return [];
+};
+
+const getDebugMode = (): boolean => {
+    const val = (window as any).config?.cmeetEnv?.debugMode;
+    if (val === undefined || val === null || val === '') return false;
+    return val === true || val === 'true';
+};
+
 export interface Environment {
     APP_NAME: string;
     API_URL: string;
@@ -20,28 +34,22 @@ export interface Environment {
 }
 
 export const env: Environment = {
-    APP_NAME: "C-MEET",
-    API_URL: "https://meet.cmcati.vn/",
-    DEBUG_MODE: false,
-    WELCOME_PAGE_MESSAGE: [
-        "C-Meet phần mềm họp online xin chào !",
-        "Hệ thống an toàn và bảo mật",
-        "Trải nghiệm tốc độ và chính xác",
-        "Mang đến tiện lợi và thân thiện",
-    ],
-    LANGUAGE: "vi",
-    IOS_LINK: "https://apps.apple.com/us/app/c-meet/id6599835526",
-    ANDROID_LINK: "https://play.google.com/store/apps/details?id=com.cmcati.cmeetglobal",
-    LOGO_LINK: "https://sec.cmcati.vn/c-meet",
-    ROCKET_CHAT_API_URL: "https://sec.cmcati.vn/rocket-chat/api/v1",
-    ROCKET_CHAT_TOKEN: "NYP7Dyr5VWVNwl0GQ-WMuY27JY8j0DKbTLdqfYWqbyh",
-    ROCKET_CHAT_USER_ID: "DAcDiHYEn7cLqyBoB",
-    ROCKET_CHAT_WS_URL: "wss://sec.cmcati.vn/rocket-chat/websocket",
-    CMEET_URL: "https://sec.cmcati.vn/cmeet-server-manager",
-    CMEET_WS_URL: "https://sec.cmcati.vn/cmeet-server-socket",
-    GST_STREAM_URL: "https://meet.cmcati.vn/api/gst-meet/whip-connect",
-    XMPP_DOMAIN: "meet.jitsi",
-    DOMAIN: "meet.cmcati.vn",
-    GST_STREAM_WS: "https://meet.cmcati.vn/ws",
-    // XMPP_DOMAIN: "xmpp.meet.jitsi",
+    APP_NAME: (window as any).config?.cmeetEnv?.appName || "",
+    API_URL: (window as any).config?.cmeetEnv?.apiUrl || "",
+    DEBUG_MODE: getDebugMode(),
+    WELCOME_PAGE_MESSAGE: getWelcomePageMessage(),
+    LANGUAGE: (window as any).config?.cmeetEnv?.language || "",
+    IOS_LINK: (window as any).config?.cmeetEnv?.iosLink || "",
+    ANDROID_LINK: (window as any).config?.cmeetEnv?.androidLink || "",
+    LOGO_LINK: (window as any).config?.cmeetEnv?.logoLink || "",
+    ROCKET_CHAT_API_URL: (window as any).config?.cmeetEnv?.rocketChatApiUrl || "",
+    ROCKET_CHAT_TOKEN: (window as any).config?.cmeetEnv?.rocketChatToken || "",
+    ROCKET_CHAT_USER_ID: (window as any).config?.cmeetEnv?.rocketChatUserId || "",
+    ROCKET_CHAT_WS_URL: (window as any).config?.cmeetEnv?.rocketChatWsUrl || "",
+    CMEET_URL: (window as any).config?.cmeetEnv?.cmeetUrl || "",
+    CMEET_WS_URL: (window as any).config?.cmeetEnv?.cmeetWsUrl || "",
+    GST_STREAM_URL: (window as any).config?.cmeetEnv?.gstStreamUrl || "",
+    XMPP_DOMAIN: (window as any).config?.cmeetEnv?.xmppDomain || "",
+    DOMAIN: (window as any).config?.cmeetEnv?.domain || "",
+    GST_STREAM_WS: (window as any).config?.cmeetEnv?.gstStreamWs || ""
 };

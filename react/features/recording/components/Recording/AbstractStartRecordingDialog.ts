@@ -487,7 +487,8 @@ export function mapStateToProps(state: IReduxState, _ownProps: any) {
         _autoTranscribeOnRecord: shouldAutoTranscribeOnRecord(state),
         _conference: state['features/base/conference'].conference,
         _displaySubtitles,
-        _fileRecordingsServiceEnabled: recordingService?.enabled ?? false,
+        _fileRecordingsServiceEnabled: (recordingService?.enabled ?? false)
+            && isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false),
         _fileRecordingsServiceSharingEnabled: isRecordingSharingEnabled(state),
         _isDropboxEnabled: isDropboxEnabled(state),
         _localRecordingEnabled: !localRecording?.disable,
