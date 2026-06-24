@@ -225,6 +225,21 @@ class AbstractStartRecordingDialogContent extends Component<IProps, IState> {
                 && this.props.selectedRecordingService !== RECORDING_TYPES.DROPBOX && this.props.isTokenValid) {
             this._onSignOut();
         }
+
+        const {
+            _localRecordingAvailable,
+            _renderRecording,
+            integrationsEnabled,
+            selectedRecordingService,
+            onChange
+        } = this.props;
+
+        if (_localRecordingAvailable
+            && !_renderRecording
+            && !integrationsEnabled
+            && selectedRecordingService !== RECORDING_TYPES.LOCAL) {
+            onChange(RECORDING_TYPES.LOCAL);
+        }
     }
 
     /**
