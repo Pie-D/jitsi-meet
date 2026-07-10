@@ -6,8 +6,9 @@ import { makeStyles } from 'tss-react/mui';
 import { IReduxState } from '../../../app/types';
 import Select from '../../../base/ui/components/web/Select';
 import { setRequestingSubtitles } from '../../actions.any';
-import { getAvailableSubtitlesLanguages } from '../../functions.any';
 import i18next from 'i18next';
+import { getAvailableSubtitlesLanguages, isTranslationEnabled } from '../../functions.any';
+
 /**
  * The styles for the LanguageSelector component.
  *
@@ -76,9 +77,9 @@ function LanguageSelector({ isBilingualMode = false, onBilingualToggle }: IProps
     ));
     const isAsyncTranscriptionEnabled = useSelector((state: IReduxState) =>
         state['features/base/conference'].conference?.getMetadataHandler()?.getMetadata()?.asyncTranscription);
+    const translationEnabled = useSelector(isTranslationEnabled);
 
-    // Hide the "Translate to" option when asyncTranscription is enabled
-    if (isAsyncTranscriptionEnabled) {
+    if (isAsyncTranscriptionEnabled || !translationEnabled) {
         return null;
     }
 
@@ -87,7 +88,7 @@ function LanguageSelector({ isBilingualMode = false, onBilingualToggle }: IProps
      *
      * @type {Array<{value: string, label: string}>}
      */
-    const languages = [ 'transcribing.original', ...languageCodes.map(lang => `translation-languages:${lang}`) ]
+    const languages = ['transcribing.original', ...languageCodes.map(lang => `translation-languages:${lang}`)]
         .map(lang => {
             return {
                 value: lang,
@@ -113,28 +114,28 @@ function LanguageSelector({ isBilingualMode = false, onBilingualToggle }: IProps
         if (value !== null) {
             value = value.replace('translation-languages:', '');
         }
-    }, [ dispatch ]);
+    }, [dispatch]);
 
     const handleBilingualToggle = useCallback(() => {
         if (onBilingualToggle) {
             onBilingualToggle(!isBilingualMode);
         }
-    }, [ isBilingualMode, onBilingualToggle ]);
+    }, [isBilingualMode, onBilingualToggle]);
 
     return (
-        <div className = { classes.container }>
-            <span className = { classes.label }>
+        <div className={classes.container}>
+            <span className={classes.label}>
                 {t('transcribing.translateTo')}:
             </span>
             <Select
-                className = { classes.select }
-                id = 'subtitles-language-select'
-                onChange = { onLanguageChange }
-                options = { languages }
-                value = { selectedLanguage || 'transcribing.original' } />
+                className={classes.select}
+                id='subtitles-language-select'
+                onChange={onLanguageChange}
+                options={languages}
+                value={selectedLanguage || 'transcribing.original'} />
             <button
-                className = { `${classes.bilingualButton} ${isBilingualMode ? 'active' : ''}` }
-                onClick = { handleBilingualToggle }>
+                className={`${classes.bilingualButton} ${isBilingualMode ? 'active' : ''}`}
+                onClick={handleBilingualToggle}>
                 {t('transcribing.bilingual')}
             </button>
         </div>
