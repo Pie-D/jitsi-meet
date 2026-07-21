@@ -37,6 +37,8 @@ import { INotificationProps } from '../notifications/types';
 import { open as openParticipantsPane } from '../participants-pane/actions';
 import { joinConference } from '../prejoin/actions';
 
+import { destroyLocalTracks } from '../base/tracks/actions';
+
 import { VisitorsListWebsocketClient } from './VisitorsListWebsocketClient';
 import { SUBSCRIBE_VISITORS_LIST, UPDATE_VISITORS_IN_QUEUE_COUNT } from './actionTypes';
 import {
@@ -45,6 +47,7 @@ import {
     denyRequest,
     goLive,
     promotionRequestReceived,
+    setIAmVisitor,
     setInVisitorsQueue,
     setVisitorDemoteActor,
     setVisitorsSupported,
@@ -101,9 +104,12 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
 
                 if (localParticipant && localParticipant.id === msg.id) {
                     // handle demote
+                    dispatch(setIAmVisitor(true));
+                    dispatch(destroyLocalTracks());
                     dispatch(disconnect(true))
                         .then(() => {
                             dispatch(setPreferVisitor(true));
+                            dispatch(setIAmVisitor(true));
 
                             // we need to set the name, so we can use it later in the notification
                             if (participantById) {

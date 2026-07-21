@@ -5,6 +5,7 @@ import { isJwtFeatureEnabled } from '../base/jwt/functions';
 import { IGUMPendingState } from '../base/media/types';
 import { isScreenMediaShared } from '../screen-share/functions';
 import { isWhiteboardVisible } from '../whiteboard/functions';
+import { iAmVisitor } from '../visitors/functions';
 
 import { DEFAULT_REDUCED_UI_MAIN_TOOLBAR_BUTTONS, MAIN_TOOLBAR_BUTTONS_PRIORITY, TOOLBAR_TIMEOUT } from './constants';
 import { isButtonEnabled } from './functions.any';
@@ -99,7 +100,8 @@ export function isVideoMuteButtonDisabled(state: IReduxState) {
 
     return !hasAvailableDevices(state, 'videoInput')
         || (unmuteBlocked && Boolean(muted))
-        || gumPending !== IGUMPendingState.NONE;
+        || gumPending !== IGUMPendingState.NONE
+        || iAmVisitor(state);
 }
 
 /**

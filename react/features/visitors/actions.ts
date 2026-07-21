@@ -5,6 +5,7 @@ import { IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
 import { connect, disconnect, setPreferVisitor } from '../base/connection/actions';
 import { getLocalParticipant } from '../base/participants/functions';
+import { destroyLocalTracks } from '../base/tracks/actions';
 import i18n from 'i18next';
 import {
     CLEAR_VISITOR_PROMOTION_REQUEST,
@@ -101,9 +102,12 @@ export function demoteRequest(id: string) {
         }
 
         if (id === localParticipant?.id) {
+            dispatch(setIAmVisitor(true));
+            dispatch(destroyLocalTracks());
             dispatch(disconnect(true))
                 .then(() => {
                     dispatch(setPreferVisitor(true));
+                    dispatch(setIAmVisitor(true));
                     logger.info('Dispatching connect to demote the local participant.');
 
                     return dispatch(connect());

@@ -712,6 +712,9 @@ export function isIconUrl(icon?: string | Object) {
  * @returns {boolean}
  */
 export function isLocalParticipantModerator(stateful: IStateful) {
+    if (iAmVisitor(stateful)) {
+        return false;
+    }
     const state = toState(stateful)['features/base/participants'];
 
     const { local } = state;
