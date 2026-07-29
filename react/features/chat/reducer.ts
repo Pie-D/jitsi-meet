@@ -99,7 +99,9 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
                 };
             }
 
-            const specificMessageId = createMessageId(action.participantId, action.timestamp, action.message);
+            const specificMessageId = action.fileMetadata
+                ? `${action.participantId}-${action.timestamp}-file-${action.fileMetadata.fileId || action.messageId}`
+                : createMessageId(action.participantId, action.timestamp, action.message);
             if (state.shownMessages.has(specificMessageId)) {
                 return state;
             }
@@ -418,7 +420,9 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
                 // Flush buffer
                 state.bufferedMessages.forEach(msgAction => {
                     const messageId = msgAction.messageId;
-                    const specificMessageId = createMessageId(msgAction.participantId, msgAction.timestamp, msgAction.message);
+                    const specificMessageId = msgAction.fileMetadata
+                        ? `${msgAction.participantId}-${msgAction.timestamp}-file-${msgAction.fileMetadata.fileId || msgAction.messageId}`
+                        : createMessageId(msgAction.participantId, msgAction.timestamp, msgAction.message);
 
                     if (state.shownMessages.has(specificMessageId)) {
                         return;

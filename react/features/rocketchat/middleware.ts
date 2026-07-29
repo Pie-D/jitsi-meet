@@ -64,7 +64,7 @@ MiddlewareRegistry.register(store => next => action => {
                     const instance = await initRocketChat(store, token, roomName, localParticipant);
 
                     if (instance) {
-                        await syncRocketChatMessages(0, 30, (msg: IRocketChatMessage) => {
+                        await syncRocketChatMessages(0, 500, (msg: IRocketChatMessage) => {
                             dispatch(addMessage({ ...msg, hasRead: false, isRocketChatHistory: true }));
                         });
                         console.log('RocketChat Middleware: Synced messages from RocketChat successfully');

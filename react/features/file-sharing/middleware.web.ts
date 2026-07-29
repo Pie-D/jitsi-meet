@@ -266,10 +266,11 @@ MiddlewareRegistry.register(store => next => action => {
         const fileMessage = messages.find(msg => msg.messageId === action.fileId);
 
         if (fileMessage?.fileMetadata) {
-            // Replace the file metadata with just the isDeleted flag to avoid keeping unnecessary data.
+            // Preserve the file metadata and add the isDeleted flag to avoid losing file details.
             store.dispatch(editMessage({
                 ...fileMessage,
                 fileMetadata: {
+                    ...fileMessage.fileMetadata,
                     isDeleted: true
                 } as any
             }));

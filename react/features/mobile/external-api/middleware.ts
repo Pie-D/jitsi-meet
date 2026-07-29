@@ -224,8 +224,8 @@ externalAPIEnabled && MiddlewareRegistry.register(store => next => action => {
                     const instance = await initRocketChat(store, token, roomName, localParticipant);
 
                     if (instance) {
-                        await syncRocketChatMessages(0, 30, (msg: IRocketChatMessage) => {
-                            store.dispatch(addMessage({ ...msg, hasRead: false }));
+                        await syncRocketChatMessages(0, 500, (msg: IRocketChatMessage) => {
+                            store.dispatch(addMessage({ ...msg, hasRead: false, isRocketChatHistory: true }));
                         });
                     }
                 } catch (err) {
