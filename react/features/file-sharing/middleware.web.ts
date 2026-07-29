@@ -119,14 +119,24 @@ MiddlewareRegistry.register(store => next => action => {
         const state = store.getState();
         const conference = getCurrentConference(state);
 
-        conference?.getShortTermCredentials(conference?.getFileSharing()?.getIdentityType()).then((token: string) => {
+        conference?.getShortTermCredentials(conference?.getFileSharing()?.getIdentityType()).then(async (token: string) => {
             for (const file of action.files) {
-                uploadFile(file, store, token);
+                console.log('[RocketChat Debug] Start processing file upload sequentially:', file.name);
                 
-                // Upload to Rocket.Chat in parallel
-                uploadFileToRocketChat(file).catch((err: any) => {
-                    logger.error('Failed to upload file to Rocket.Chat middleware:', err);
-                });
+                try {
+                    await uploadFile(file, store, token);
+                } catch (err) {
+                    console.error('[RocketChat Debug] Jitsi file upload failed:', err);
+                }
+                
+                // Upload to Rocket.Chat sequentially
+                console.log('[RocketChat Debug] Calling uploadFileToRocketChat for:', file.name);
+                try {
+                    const result = await uploadFileToRocketChat(file);
+                    console.log('[RocketChat Debug] uploadFileToRocketChat returned:', result, 'for file:', file.name);
+                } catch (err: any) {
+                    console.error('[RocketChat Debug] Failed to upload file to Rocket.Chat middleware:', err);
+                }
             }
         });
 
@@ -310,10 +320,11 @@ MiddlewareRegistry.register(store => next => action => {
  * @param {File} file - The file to upload.
  * @param {IStore} store - The redux store.
  * @param {string} token - The token to use for requests.
- * @returns {void}
+ * @returns {Promise<void>}
  */
-function uploadFile(file: File, store: IStore, token: string): void {
-    const state = store.getState();
+function uploadFile(file: File, store: IStore, token: string): Promise<void> {
+    return new Promise((resolve) => {
+        const state = store.getState();
     const conference = getCurrentConference(state);
     const sessionId = conference?.getMeetingUniqueId();
     const localParticipant = getLocalParticipant(state);
@@ -387,12 +398,18 @@ function uploadFile(file: File, store: IStore, token: string): void {
             store.dispatch(showSuccessNotification({
                 titleKey: 'fileSharing.fileUploadedSuccessfully'
             }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+            resolve();
         } else {
             handleError();
+            resolve(); // Resolve even on error to continue queue
         }
     };
 
-    xhr.onerror = handleError;
+    xhr.onerror = () => {
+        handleError();
+        resolve(); // Resolve even on error to continue queue
+    };
 
     xhr.send(formData);
+    });
 }
