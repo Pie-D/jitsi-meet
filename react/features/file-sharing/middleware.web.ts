@@ -234,7 +234,7 @@ MiddlewareRegistry.register(store => next => action => {
                 titleKey: 'fileSharing.downloadStarted'
             }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
             
-            const url = getRocketChatFileDownloadUrl(fileMessage.fileMetadata.url);
+            const url = getRocketChatFileDownloadUrl(fileMessage.fileMetadata.url || '');
             downloadFile(url, fileMessage.fileMetadata.fileName);
             
             return next(action);
