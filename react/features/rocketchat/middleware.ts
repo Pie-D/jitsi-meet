@@ -7,7 +7,8 @@ import {
     sendMessageToRocketChat,
     sendReactionToRocketChat,
     stopRocketChat,
-    syncRocketChatMessages
+    syncRocketChatMessages,
+    uploadFileToRocketChat
 } from '../../../rocketchat/index';
 import { CONFERENCE_FAILED, CONFERENCE_JOINED, CONFERENCE_LEFT } from '../base/conference/actionTypes';
 import { getRoomName } from '../base/conference/functions';

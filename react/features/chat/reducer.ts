@@ -111,7 +111,9 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             }
 
             // Create content-based hash (without timestamp) for duplicate detection
-            const contentHash = `${action.participantId}-${action.message}`;
+            const contentHash = action.fileMetadata
+                ? `${action.participantId}-file-${action.fileMetadata.fileName}-${action.fileMetadata.fileSize}`
+                : `${action.participantId}-${action.message}`;
             const now = Date.now();
             const DUPLICATE_WINDOW_MS = 5000; // 5 seconds
 
@@ -418,7 +420,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
 
             if (loaded && state.bufferedMessages?.length) {
                 // Flush buffer
-                state.bufferedMessages.forEach(msgAction => {
+                state.bufferedMessages.forEach((msgAction: any) => {
                     const messageId = msgAction.messageId;
                     const specificMessageId = msgAction.fileMetadata
                         ? `${msgAction.participantId}-${msgAction.timestamp}-file-${msgAction.fileMetadata.fileId || msgAction.messageId}`
@@ -432,7 +434,9 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
                         return;
                     }
 
-                    const contentHash = `${msgAction.participantId}-${msgAction.message}`;
+                    const contentHash = msgAction.fileMetadata
+                        ? `${msgAction.participantId}-file-${msgAction.fileMetadata.fileName}-${msgAction.fileMetadata.fileSize}`
+                        : `${msgAction.participantId}-${msgAction.message}`;
                     const DUPLICATE_WINDOW_MS = 5000;
                     // const now = Date.now();
 
@@ -445,9 +449,11 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
                     }
 
                     // Also check if any message in newMessages looks like this one (deduplicate against RC history by content)
-                    const isDuplicateContent = newMessages.some(m =>
+                    const isDuplicateContent = newMessages.some((m: any) =>
                         m.participantId === msgAction.participantId
-                        && m.message === msgAction.message
+                        && (msgAction.fileMetadata
+                            ? m.fileMetadata && m.fileMetadata.fileName === msgAction.fileMetadata.fileName && m.fileMetadata.fileSize === msgAction.fileMetadata.fileSize
+                            : m.message === msgAction.message && !m.fileMetadata)
                         && Math.abs(m.timestamp - msgAction.timestamp) < 5000
                     );
 

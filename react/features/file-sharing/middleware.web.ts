@@ -10,6 +10,7 @@ import { addMessage, editMessage } from '../chat/actions.any';
 import { ChatTabs, MESSAGE_TYPE_LOCAL, MESSAGE_TYPE_REMOTE } from '../chat/constants';
 import { showErrorNotification, showNotification, showSuccessNotification } from '../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE, NOTIFICATION_TYPE } from '../notifications/constants';
+import { getRocketChatFileDownloadUrl, uploadFileToRocketChat } from '../../../rocketchat/index';
 import { I_AM_VISITOR_MODE } from '../visitors/actionTypes';
 
 import {
@@ -121,6 +122,11 @@ MiddlewareRegistry.register(store => next => action => {
         conference?.getShortTermCredentials(conference?.getFileSharing()?.getIdentityType()).then((token: string) => {
             for (const file of action.files) {
                 uploadFile(file, store, token);
+                
+                // Upload to Rocket.Chat in parallel
+                uploadFileToRocketChat(file).catch((err: any) => {
+                    logger.error('Failed to upload file to Rocket.Chat middleware:', err);
+                });
             }
         });
 
@@ -219,6 +225,21 @@ MiddlewareRegistry.register(store => next => action => {
 
     case DOWNLOAD_FILE: {
         const state = store.getState();
+        
+        const { messages } = state['features/chat'];
+        const fileMessage = messages.find((msg: any) => msg.messageId === action.fileId);
+        
+        if (fileMessage?.fileMetadata?.isRocketChatFile) {
+            store.dispatch(showNotification({
+                titleKey: 'fileSharing.downloadStarted'
+            }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+            
+            const url = getRocketChatFileDownloadUrl(fileMessage.fileMetadata.url);
+            downloadFile(url, fileMessage.fileMetadata.fileName);
+            
+            return next(action);
+        }
+
         const { fileSharing } = state['features/base/config'];
         const conference = getCurrentConference(state);
         const sessionId = conference?.getMeetingUniqueId();
