@@ -33,7 +33,7 @@ import { hideNotification, showErrorNotification, showNotification } from '../no
 import { NOTIFICATION_TIMEOUT_TYPE } from '../notifications/constants';
 import { setRequestingSubtitles } from '../subtitles/actions.any';
 import { getWhipLink } from '../base/util/cMeetUtils';
-import { startGstStream, stopGstStream } from '../base/util/gstStreamUtils';
+import { startGstStream, stopGstStream, connectGstWebSocket } from '../base/util/gstStreamUtils';
 import { isGstStreamConnected } from '../base/util/gstStreamUtils';
 import { isRecorderTranscriptionsRunning, isTranscribing } from '../transcribing/functions';
 
@@ -824,6 +824,8 @@ async function _autoStartSpeechToText(state: any, dispatch: IStore['dispatch']) 
         // Start GST stream
         const isStart = await startGstStream(roomJid, whipLink);
         if (isStart) {
+            // Kết nối STOMP WebSocket để tự động dọn bot khi user đóng tab
+            connectGstWebSocket(roomJid);
             console.log('Auto-started speech to text for recording');
         } else {
             console.warn('Failed to auto-start speech to text for recording');

@@ -5,8 +5,13 @@ import {CONNECT_GST_STREAM, DISCONNECT_GST_STREAM} from "../conference/actionTyp
 import {AnyAction} from "redux";
 import { toast } from 'react-toastify';
 import i18next from 'i18next';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
 
 const logger = getLogger(__filename);
+
+// Map lưu STOMP clients theo roomId để quản lý lifecycle
+const stompClients: Map<string, Client> = new Map();
 
 /**
  * Action creator to indicate GST stream is connected.
@@ -125,6 +130,9 @@ export const startGstStream = async (meetingId: string, whipLink: string): Promi
  */
 export const stopGstStream = async (meetingId: string): Promise<void> => {
     try {
+        // Ngắt STOMP WebSocket trước khi gọi REST stop
+        disconnectGstWebSocket(meetingId);
+
         await fetch(
             `${env.GST_STREAM_URL}/stop?roomId=${meetingId}_record`,
             {
@@ -136,3 +144,66 @@ export const stopGstStream = async (meetingId: string): Promise<void> => {
         logger.error('Could not stop gst stream: ', err);
     }
 }
+
+/**
+ * Kết nối STOMP WebSocket đến gst-meet-whip để đăng ký session.
+ * Khi client disconnect (đóng tab, mất mạng), server sẽ tự động dọn bot.
+ *
+ * @param {string} roomId - ID của phòng họp.
+ */
+export const connectGstWebSocket = (roomId: string): void => {
+    if (!env.GST_STREAM_WS) {
+        logger.warn('GST_STREAM_WS not configured, skipping STOMP connection');
+        return;
+    }
+
+    // Nếu đã có connection cho room này, không tạo thêm
+    if (stompClients.has(roomId)) {
+        logger.info(`STOMP client already exists for room: ${roomId}`);
+        return;
+    }
+
+    try {
+        const client = new Client({
+            webSocketFactory: () => new SockJS(env.GST_STREAM_WS),
+            // Auto-reconnect mỗi 5s khi mất kết nối.
+            // Server có grace period 30s trước khi kill bot, nên client có thời gian reconnect.
+            reconnectDelay: 5000,
+            onConnect: () => {
+                logger.info(`STOMP connected for room: ${roomId}`);
+                client.publish({
+                    destination: `/app/conference/${roomId}`,
+                    body: JSON.stringify({ roomId })
+                });
+            },
+            onStompError: (frame) => {
+                logger.error(`STOMP error for room ${roomId}:`, frame.headers['message']);
+            },
+            onWebSocketClose: () => {
+                logger.info(`STOMP WebSocket closed for room: ${roomId}`);
+                stompClients.delete(roomId);
+            }
+        });
+
+        client.activate();
+        stompClients.set(roomId, client);
+        logger.info(`STOMP client created and activating for room: ${roomId}`);
+    } catch (error) {
+        logger.error(`Failed to create STOMP connection for room ${roomId}:`, error);
+    }
+};
+
+/**
+ * Ngắt kết nối STOMP WebSocket cho phòng họp.
+ *
+ * @param {string} roomId - ID của phòng họp.
+ */
+export const disconnectGstWebSocket = (roomId: string): void => {
+    const client = stompClients.get(roomId);
+    if (client) {
+        client.deactivate()
+            .then(() => logger.info(`STOMP disconnected for room: ${roomId}`))
+            .catch((err: any) => logger.error(`STOMP deactivate failed for room ${roomId}:`, err));
+        stompClients.delete(roomId);
+    }
+};
