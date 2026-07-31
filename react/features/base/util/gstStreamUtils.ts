@@ -134,7 +134,7 @@ export const stopGstStream = async (meetingId: string): Promise<void> => {
         disconnectGstWebSocket(meetingId);
 
         await fetch(
-            `${env.GST_STREAM_URL}/stop?roomId=${meetingId}_record`,
+            `${env.GST_STREAM_URL}/stop?roomId=${meetingId}&isRecord=true`,
             {
                 method: 'POST'
             });
