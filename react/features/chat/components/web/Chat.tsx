@@ -485,12 +485,12 @@ const Chat = ({
      * Collected messages are prepended before existing messages so they appear above.
      */
     const loadMoreMessages = useCallback(async () => {
-        const newOffset = offset + 30;
+        const newOffset = offset + 500;
         const collected: any[] = [];
 
         try {
             setIsLoadingMore(true);
-            await syncRocketChatMessages(newOffset, 30, (msg: any) => {
+            await syncRocketChatMessages(newOffset, 500, (msg: any) => {
                 collected.push({
                     ...msg,
                     hasRead: true,

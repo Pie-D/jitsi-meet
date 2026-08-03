@@ -281,6 +281,48 @@ export class RocketChatService {
         }
     }
 
+    async uploadFile(file) {
+        try {
+            console.log('[RocketChat Debug] uploadFile started for:', file.name, 'Size:', file.size);
+            if (!this.rocketChatRoomId) {
+                logger.error('Cannot upload file: Rocket.Chat room ID is not set');
+                console.error('[RocketChat Debug] Cannot upload file: Rocket.Chat room ID is not set');
+                return false;
+            }
+
+            const url = `${this.config.apiUrl}/rooms.upload/${this.rocketChatRoomId}`;
+            console.log('[RocketChat Debug] Upload URL:', url);
+            const formData = new FormData();
+            formData.append('file', file, file.name);
+            formData.append('msg', '');
+
+            console.log('[RocketChat Debug] Making fetch request...');
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-Auth-Token': this.rocketChatAuthToken,
+                    'X-User-Id': this.rocketChatUserId
+                },
+                body: formData
+            });
+
+            if (!res.ok) {
+                const text = await res.text();
+                logger.error('Failed to upload file to Rocket.Chat:', text);
+                console.error('[RocketChat Debug] Failed to upload file to Rocket.Chat:', res.status, text);
+                return false;
+            }
+
+            logger.log('[RocketChat] File uploaded:', file.name);
+            console.log('[RocketChat Debug] File uploaded successfully:', file.name);
+            return true;
+        } catch (error) {
+            logger.error('Failed to upload file to Rocket.Chat:', error);
+            console.error('[RocketChat Debug] Exception during upload:', error);
+            return false;
+        }
+    }
+
     async sendReaction(messageId, reaction) {
         try {
             if (!messageId || !reaction) {

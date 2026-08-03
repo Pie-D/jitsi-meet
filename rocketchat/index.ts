@@ -128,3 +128,24 @@ export async function deleteMessageFromRocketChat(messageId: string): Promise<vo
     }
 }
 
+export async function uploadFileToRocketChat(file: File): Promise<boolean> {
+    if (instance) {
+        return await instance.uploadFile(file);
+    }
+    return false;
+}
+
+export function getRocketChatFileDownloadUrl(url: string): string {
+    if (!instance) {
+        return url;
+    }
+    const token = instance.rocketChatAuthToken;
+    const uid = instance.rocketChatUserId;
+    // Extract base URL from apiUrl (e.g. https://domain.com from https://domain.com/api/v1)
+    const baseUrl = instance.config.apiUrl.replace(/\/api\/v1\/?$/, '');
+    
+    // Add tokens to the URL query string
+    const separator = url.includes('?') ? '&' : '?';
+    return `${baseUrl}${url}${separator}rc_uid=${uid}&rc_token=${token}`;
+}
+

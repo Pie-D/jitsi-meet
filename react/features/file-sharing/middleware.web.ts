@@ -10,6 +10,7 @@ import { addMessage, editMessage } from '../chat/actions.any';
 import { ChatTabs, MESSAGE_TYPE_LOCAL, MESSAGE_TYPE_REMOTE } from '../chat/constants';
 import { showErrorNotification, showNotification, showSuccessNotification } from '../notifications/actions';
 import { NOTIFICATION_TIMEOUT_TYPE, NOTIFICATION_TYPE } from '../notifications/constants';
+import { getRocketChatFileDownloadUrl, uploadFileToRocketChat } from '../../../rocketchat/index';
 import { I_AM_VISITOR_MODE } from '../visitors/actionTypes';
 
 import {
@@ -103,180 +104,212 @@ StateListenerRegistry.register(
  */
 MiddlewareRegistry.register(store => next => action => {
     switch (action.type) {
-    case I_AM_VISITOR_MODE: {
-        if (!action.iAmVisitor) {
-            const state = store.getState();
-            const conference = getCurrentConference(state);
+        case I_AM_VISITOR_MODE: {
+            if (!action.iAmVisitor) {
+                const state = store.getState();
+                const conference = getCurrentConference(state);
 
-            conference?.getFileSharing()?.requestFileList?.();
-        }
-
-        return next(action);
-    }
-
-    case UPLOAD_FILES: {
-        const state = store.getState();
-        const conference = getCurrentConference(state);
-
-        conference?.getShortTermCredentials(conference?.getFileSharing()?.getIdentityType()).then((token: string) => {
-            for (const file of action.files) {
-                uploadFile(file, store, token);
+                conference?.getFileSharing()?.requestFileList?.();
             }
-        });
 
-        return next(action);
-    }
-
-    case UPDATE_FILE_UPLOAD_PROGRESS:
-    case ADD_FILE: {
-        const result = next(action);
-        const state = store.getState();
-        const { files } = state['features/file-sharing'];
-        const file = action.type === ADD_FILE ? action.file as IFileMetadata : files.get(action.fileId);
-
-        if (!file) {
-            return result;
-        }
-
-        const localParticipant = getLocalParticipant(state);
-        const isLocalFile = localParticipant?.id === file.authorParticipantId;
-
-        // Only dispatch chat message for fully uploaded files (progress === 100).
-        // Files that are still uploading have progress < 100, so we skip creating the message.
-        // Once upload completes, for the local participant the file is broadcast with progress: 100 and the message
-        // is created. Remote participants receive the file metadata only once the file is successfully uploaded and
-        // the progress field will be undefined.
-        if (file.progress === 100 || !isLocalFile) {
-            store.dispatch(addMessage({
-                displayName: file.authorParticipantName,
-                fileMetadata: file,
-                hasRead: isLocalFile,
-                isReaction: false,
-                lobbyChat: false,
-                message: '', // Empty message as the file metadata contains all info
-                messageId: file.fileId,
-                messageType: isLocalFile ? MESSAGE_TYPE_LOCAL : MESSAGE_TYPE_REMOTE,
-                participantId: file.authorParticipantId,
-                privateMessage: false,
-                timestamp: file.timestamp
-            }));
-
-            APP.API.notifyFileUploaded(file);
-        }
-
-        return result;
-    }
-
-    case REMOVE_FILE: {
-        const state = store.getState();
-        const conference = getCurrentConference(state);
-        const { files } = state['features/file-sharing'];
-        const fileId = action.fileId;
-        const existingMetadata = files.get(fileId);
-
-        // ignore remove a file till the file is actually uploaded
-        if (!conference || (existingMetadata?.progress ?? 100) !== 100) {
             return next(action);
         }
 
-        // First, remove the file metadata so others won't attempt to download it anymore.
-        conference.getFileSharing().removeFile(fileId);
+        case UPLOAD_FILES: {
+            const state = store.getState();
+            const conference = getCurrentConference(state);
 
-        // remove it from local state
-        store.dispatch({
-            type: _FILE_REMOVED,
-            fileId
-        });
+            conference?.getShortTermCredentials(conference?.getFileSharing()?.getIdentityType()).then(async (token: string) => {
+                for (const file of action.files) {
+                    console.log('[RocketChat Debug] Start processing file upload sequentially:', file.name);
 
-        // Notify external API about file deletion (for the local participant who deleted it)
-        APP.API.notifyFileDeleted(fileId);
+                    try {
+                        await uploadFile(file, store, token);
+                    } catch (err) {
+                        console.error('[RocketChat Debug] Jitsi file upload failed:', err);
+                    }
 
-        const { fileSharing } = state['features/base/config'];
-        const sessionId = conference.getMeetingUniqueId();
+                    // Upload to Rocket.Chat sequentially
+                    // Tạm thời chưa cần đồng bộ file upload
+                    // console.log('[RocketChat Debug] Calling uploadFileToRocketChat for:', file.name);
+                    // try {
+                    //     const result = await uploadFileToRocketChat(file);
+                    //     console.log('[RocketChat Debug] uploadFileToRocketChat returned:', result, 'for file:', file.name);
+                    // } catch (err: any) {
+                    //     console.error('[RocketChat Debug] Failed to upload file to Rocket.Chat middleware:', err);
+                    // }
+                }
+            });
 
-        // Now delete it from the server.
-        conference.getShortTermCredentials(conference.getFileSharing().getIdentityType())
-        .then((token: string) => fetch(`${fileSharing!.apiUrl!}/sessions/${sessionId}/files/${fileId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        }))
-        .then((response: { ok: any; statusText: any; }) => {
-            if (!response.ok) {
-                throw new Error(`Failed to delete file: ${response.statusText}`);
-            }
-            store.dispatch(showSuccessNotification({
-                titleKey: 'fileSharing.removeFileSuccess'
-            }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
-        })
-        .catch((error: any) => {
-            logger.warn('Could not delete file:', error);
-        });
-
-        return next(action);
-    }
-
-    case DOWNLOAD_FILE: {
-        const state = store.getState();
-        const { fileSharing } = state['features/base/config'];
-        const conference = getCurrentConference(state);
-        const sessionId = conference?.getMeetingUniqueId();
-
-        conference?.getShortTermCredentials(conference?.getFileSharing()?.getIdentityType())
-        .then((token: string) => fetch(`${fileSharing!.apiUrl!}/sessions/${sessionId}/files/${action.fileId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        }))
-        .then((response: any) => response.json())
-        .then((data: { fileName: string; presignedUrl: string; }) => {
-            const { presignedUrl, fileName } = data;
-
-            if (!presignedUrl) {
-                throw new Error('No presigned URL found in the response.');
-            }
-
-            store.dispatch(showNotification({
-                titleKey: 'fileSharing.downloadStarted'
-            }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
-
-            return downloadFile(presignedUrl, fileName);
-        })
-        .catch((error: any) => {
-            logger.warn('Could not download file:', error);
-
-            store.dispatch(showErrorNotification({
-                titleKey: 'fileSharing.downloadFailedTitle',
-                descriptionKey: 'fileSharing.downloadFailedDescription',
-                appearance: NOTIFICATION_TYPE.ERROR
-            }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
-        });
-
-        return next(action);
-    }
-
-    case _FILE_REMOVED: {
-        const result = next(action);
-        const state = store.getState();
-        const { messages } = state['features/chat'];
-
-        // Find the message corresponding to this file and mark it as deleted.
-        const fileMessage = messages.find(msg => msg.messageId === action.fileId);
-
-        if (fileMessage?.fileMetadata) {
-            // Replace the file metadata with just the isDeleted flag to avoid keeping unnecessary data.
-            store.dispatch(editMessage({
-                ...fileMessage,
-                fileMetadata: {
-                    isDeleted: true
-                } as any
-            }));
+            return next(action);
         }
 
-        return result;
-    }
+        case UPDATE_FILE_UPLOAD_PROGRESS:
+        case ADD_FILE: {
+            const result = next(action);
+            const state = store.getState();
+            const { files } = state['features/file-sharing'];
+            const file = action.type === ADD_FILE ? action.file as IFileMetadata : files.get(action.fileId);
+
+            if (!file) {
+                return result;
+            }
+
+            const localParticipant = getLocalParticipant(state);
+            const isLocalFile = localParticipant?.id === file.authorParticipantId;
+
+            // Only dispatch chat message for fully uploaded files (progress === 100).
+            // Files that are still uploading have progress < 100, so we skip creating the message.
+            // Once upload completes, for the local participant the file is broadcast with progress: 100 and the message
+            // is created. Remote participants receive the file metadata only once the file is successfully uploaded and
+            // the progress field will be undefined.
+            if (file.progress === 100 || !isLocalFile) {
+                store.dispatch(addMessage({
+                    displayName: file.authorParticipantName,
+                    fileMetadata: file,
+                    hasRead: isLocalFile,
+                    isReaction: false,
+                    lobbyChat: false,
+                    message: '', // Empty message as the file metadata contains all info
+                    messageId: file.fileId,
+                    messageType: isLocalFile ? MESSAGE_TYPE_LOCAL : MESSAGE_TYPE_REMOTE,
+                    participantId: file.authorParticipantId,
+                    privateMessage: false,
+                    timestamp: file.timestamp
+                }));
+
+                APP.API.notifyFileUploaded(file);
+            }
+
+            return result;
+        }
+
+        case REMOVE_FILE: {
+            const state = store.getState();
+            const conference = getCurrentConference(state);
+            const { files } = state['features/file-sharing'];
+            const fileId = action.fileId;
+            const existingMetadata = files.get(fileId);
+
+            // ignore remove a file till the file is actually uploaded
+            if (!conference || (existingMetadata?.progress ?? 100) !== 100) {
+                return next(action);
+            }
+
+            // First, remove the file metadata so others won't attempt to download it anymore.
+            conference.getFileSharing().removeFile(fileId);
+
+            // remove it from local state
+            store.dispatch({
+                type: _FILE_REMOVED,
+                fileId
+            });
+
+            // Notify external API about file deletion (for the local participant who deleted it)
+            APP.API.notifyFileDeleted(fileId);
+
+            const { fileSharing } = state['features/base/config'];
+            const sessionId = conference.getMeetingUniqueId();
+
+            // Now delete it from the server.
+            conference.getShortTermCredentials(conference.getFileSharing().getIdentityType())
+                .then((token: string) => fetch(`${fileSharing!.apiUrl!}/sessions/${sessionId}/files/${fileId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }))
+                .then((response: { ok: any; statusText: any; }) => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to delete file: ${response.statusText}`);
+                    }
+                    store.dispatch(showSuccessNotification({
+                        titleKey: 'fileSharing.removeFileSuccess'
+                    }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+                })
+                .catch((error: any) => {
+                    logger.warn('Could not delete file:', error);
+                });
+
+            return next(action);
+        }
+
+        case DOWNLOAD_FILE: {
+            const state = store.getState();
+
+            const { messages } = state['features/chat'];
+            const fileMessage = messages.find((msg: any) => msg.messageId === action.fileId);
+
+            if (fileMessage?.fileMetadata?.isRocketChatFile) {
+                store.dispatch(showNotification({
+                    titleKey: 'fileSharing.downloadStarted'
+                }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+
+                const url = getRocketChatFileDownloadUrl(fileMessage.fileMetadata.url || '');
+                downloadFile(url, fileMessage.fileMetadata.fileName);
+
+                return next(action);
+            }
+
+            const { fileSharing } = state['features/base/config'];
+            const conference = getCurrentConference(state);
+            const sessionId = conference?.getMeetingUniqueId();
+
+            conference?.getShortTermCredentials(conference?.getFileSharing()?.getIdentityType())
+                .then((token: string) => fetch(`${fileSharing!.apiUrl!}/sessions/${sessionId}/files/${action.fileId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }))
+                .then((response: any) => response.json())
+                .then((data: { fileName: string; presignedUrl: string; }) => {
+                    const { presignedUrl, fileName } = data;
+
+                    if (!presignedUrl) {
+                        throw new Error('No presigned URL found in the response.');
+                    }
+
+                    store.dispatch(showNotification({
+                        titleKey: 'fileSharing.downloadStarted'
+                    }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+
+                    return downloadFile(presignedUrl, fileName);
+                })
+                .catch((error: any) => {
+                    logger.warn('Could not download file:', error);
+
+                    store.dispatch(showErrorNotification({
+                        titleKey: 'fileSharing.downloadFailedTitle',
+                        descriptionKey: 'fileSharing.downloadFailedDescription',
+                        appearance: NOTIFICATION_TYPE.ERROR
+                    }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
+                });
+
+            return next(action);
+        }
+
+        case _FILE_REMOVED: {
+            const result = next(action);
+            const state = store.getState();
+            const { messages } = state['features/chat'];
+
+            // Find the message corresponding to this file and mark it as deleted.
+            const fileMessage = messages.find(msg => msg.messageId === action.fileId);
+
+            if (fileMessage?.fileMetadata) {
+                // Preserve the file metadata and add the isDeleted flag to avoid losing file details.
+                store.dispatch(editMessage({
+                    ...fileMessage,
+                    fileMetadata: {
+                        ...fileMessage.fileMetadata,
+                        isDeleted: true
+                    } as any
+                }));
+            }
+
+            return result;
+        }
     }
 
     return next(action);
@@ -288,89 +321,96 @@ MiddlewareRegistry.register(store => next => action => {
  * @param {File} file - The file to upload.
  * @param {IStore} store - The redux store.
  * @param {string} token - The token to use for requests.
- * @returns {void}
+ * @returns {Promise<void>}
  */
-function uploadFile(file: File, store: IStore, token: string): void {
-    const state = store.getState();
-    const conference = getCurrentConference(state);
-    const sessionId = conference?.getMeetingUniqueId();
-    const localParticipant = getLocalParticipant(state);
-    const { fileSharing } = state['features/base/config'];
-    const { connection } = state['features/base/connection'];
-    const roomJid = conference?.room?.roomjid;
+function uploadFile(file: File, store: IStore, token: string): Promise<void> {
+    return new Promise((resolve) => {
+        const state = store.getState();
+        const conference = getCurrentConference(state);
+        const sessionId = conference?.getMeetingUniqueId();
+        const localParticipant = getLocalParticipant(state);
+        const { fileSharing } = state['features/base/config'];
+        const { connection } = state['features/base/connection'];
+        const roomJid = conference?.room?.roomjid;
 
-    const jid = connection!.getJid();
-    const fileId = uuidv4();
-    const fileMetadata: IFileMetadata = {
-        authorParticipantId: localParticipant!.id,
-        authorParticipantJid: jid,
-        authorParticipantName: getParticipantDisplayName(state, localParticipant!.id),
-        conferenceFullName: roomJid ?? '',
-        fileId,
-        fileName: file.name,
-        fileSize: file.size,
-        fileType: getFileExtension(file.name),
-        timestamp: Date.now()
-    };
+        const jid = connection!.getJid();
+        const fileId = uuidv4();
+        const fileMetadata: IFileMetadata = {
+            authorParticipantId: localParticipant!.id,
+            authorParticipantJid: jid,
+            authorParticipantName: getParticipantDisplayName(state, localParticipant!.id),
+            conferenceFullName: roomJid ?? '',
+            fileId,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: getFileExtension(file.name),
+            timestamp: Date.now()
+        };
 
-    store.dispatch(addFile(fileMetadata));
-    store.dispatch(updateFileProgress(fileId, 1));
+        store.dispatch(addFile(fileMetadata));
+        store.dispatch(updateFileProgress(fileId, 1));
 
-    // Upload file.
-    const formData = new FormData();
+        // Upload file.
+        const formData = new FormData();
 
-    formData.append('metadata', JSON.stringify(fileMetadata));
+        formData.append('metadata', JSON.stringify(fileMetadata));
 
-    // @ts-ignore
-    formData.append('file', file as Blob, file.name);
+        // @ts-ignore
+        formData.append('file', file as Blob, file.name);
 
-    // Use XMLHttpRequest to track upload
-    const xhr = new XMLHttpRequest();
+        // Use XMLHttpRequest to track upload
+        const xhr = new XMLHttpRequest();
 
-    const handleError = () => {
-        logger.warn('Could not upload file:', xhr.statusText);
+        const handleError = () => {
+            logger.warn('Could not upload file:', xhr.statusText);
 
-        store.dispatch(removeFile(fileId));
-        store.dispatch(showErrorNotification({
-            titleKey: 'fileSharing.uploadFailedTitle',
-            descriptionKey: 'fileSharing.uploadFailedDescription',
-            appearance: NOTIFICATION_TYPE.ERROR
-        }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
-    };
+            store.dispatch(removeFile(fileId));
+            store.dispatch(showErrorNotification({
+                titleKey: 'fileSharing.uploadFailedTitle',
+                descriptionKey: 'fileSharing.uploadFailedDescription',
+                appearance: NOTIFICATION_TYPE.ERROR
+            }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
+        };
 
-    xhr.open('POST', `${fileSharing!.apiUrl!}/sessions/${sessionId}/files`);
-    xhr.responseType = 'json';
+        xhr.open('POST', `${fileSharing!.apiUrl!}/sessions/${sessionId}/files`);
+        xhr.responseType = 'json';
 
-    if (token) {
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    }
-
-    xhr.upload.onprogress = event => {
-        if (event.lengthComputable) {
-            // We use 99% as the max value to avoid showing 100% before the
-            // upload is actually finished, that is, when the request is completed.
-            const percent = Math.min((event.loaded / event.total) * 100, 99);
-
-            store.dispatch(updateFileProgress(fileId, percent));
+        if (token) {
+            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
         }
-    };
 
-    xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-            store.dispatch(updateFileProgress(fileId, 100));
+        xhr.upload.onprogress = event => {
+            if (event.lengthComputable) {
+                // We use 99% as the max value to avoid showing 100% before the
+                // upload is actually finished, that is, when the request is completed.
+                const percent = Math.min((event.loaded / event.total) * 100, 99);
 
-            const fileSharingHandler = conference?.getFileSharing();
+                store.dispatch(updateFileProgress(fileId, percent));
+            }
+        };
 
-            fileSharingHandler.addFile(fileMetadata);
-            store.dispatch(showSuccessNotification({
-                titleKey: 'fileSharing.fileUploadedSuccessfully'
-            }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
-        } else {
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                store.dispatch(updateFileProgress(fileId, 100));
+
+                const fileSharingHandler = conference?.getFileSharing();
+
+                fileSharingHandler.addFile(fileMetadata);
+                store.dispatch(showSuccessNotification({
+                    titleKey: 'fileSharing.fileUploadedSuccessfully'
+                }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+                resolve();
+            } else {
+                handleError();
+                resolve(); // Resolve even on error to continue queue
+            }
+        };
+
+        xhr.onerror = () => {
             handleError();
-        }
-    };
+            resolve(); // Resolve even on error to continue queue
+        };
 
-    xhr.onerror = handleError;
-
-    xhr.send(formData);
+        xhr.send(formData);
+    });
 }

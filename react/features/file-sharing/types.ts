@@ -8,6 +8,8 @@ export interface IFileMetadata {
     fileSize: number;
     fileType: string;
     isDeleted?: boolean;
+    isRocketChatFile?: boolean;
     progress?: number;
     timestamp: number;
+    url?: string;
 }

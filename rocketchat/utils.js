@@ -62,12 +62,32 @@ export const Utils = {
             });
         }
 
+        let fileMetadata = undefined;
+        if (msg.file) {
+            let url = '';
+            if (msg.attachments && msg.attachments.length > 0 && msg.attachments[0].title_link) {
+                url = msg.attachments[0].title_link;
+            }
+            fileMetadata = {
+                fileId: msg.file._id,
+                fileName: msg.file.name,
+                fileType: msg.file.type || msg.file.typeGroup || 'file',
+                fileSize: msg.file.size || 0,
+                authorParticipantId: msg.customFields?.participantId || sender._id,
+                authorParticipantName: displayName,
+                timestamp,
+                isRocketChatFile: true,
+                url
+            };
+        }
+
         return {
             displayName,
             participantId: msg.customFields?.participantId || sender._id || 'unknown',
             messageId: msg._id,
             messageType: isSystem ? 'system' : isLocal ? 'local' : 'remote',
             message: msg.msg,
+            fileMetadata,
             timestamp,
             reactions,
             privateMessage: false,
