@@ -2259,7 +2259,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-video (6.18.0):
+  - react-native-video (6.19.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2277,7 +2277,7 @@ PODS:
     - React-graphics
     - React-ImageManager
     - React-jsi
-    - react-native-video/Video (= 6.18.0)
+    - react-native-video/Video (= 6.19.1)
     - React-NativeModulesApple
     - React-RCTFabric
     - React-renderercss
@@ -2288,7 +2288,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-video/Fabric (6.18.0):
+  - react-native-video/Fabric (6.19.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2316,7 +2316,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-video/Video (6.18.0):
+  - react-native-video/Video (6.19.1):
     - boost
     - DoubleConversion
     - fast_float
@@ -2345,7 +2345,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - react-native-webrtc (124.0.7):
+  - react-native-webrtc (124.0.8):
     - JitsiWebRTC (~> 124.0.0)
     - React-Core
   - react-native-webview (13.16.0):
@@ -3142,7 +3142,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNSVG (15.15.4):
+  - RNSVG (15.15.5):
     - boost
     - DoubleConversion
     - fast_float
@@ -3168,10 +3168,10 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNSVG/common (= 15.15.4)
+    - RNSVG/common (= 15.15.5)
     - SocketRocket
     - Yoga
-  - RNSVG/common (15.15.4):
+  - RNSVG/common (15.15.5):
     - boost
     - DoubleConversion
     - fast_float
@@ -3651,8 +3651,8 @@ SPEC CHECKSUMS:
   react-native-performance: b48d1aba7501a54af5e1a7efb0dab1ab25dc734f
   react-native-safe-area-context: c6e2edd1c1da07bdce287fa9d9e60c5f7b514616
   react-native-slider: 34064ca1a6864d7b263e44dd76a2d794e8d26744
-  react-native-video: 7b821291837d8ba7b9d7574bfeb0cd651e910141
-  react-native-webrtc: e8f0ce746353adc2744a2b933645e1aeb41eaa74
+  react-native-video: ce907959c67ad2abaa0411082db621036944737a
+  react-native-webrtc: da75ba1f85a36981cbcb3fdae7dfbab7ad63c040
   react-native-webview: 654f794a7686b47491cf43aa67f7f428bea00eed
   react-native-worklets-core: 28a6e2121dcf62543b703e81bc4860e9a0150cee
   React-NativeModulesApple: 4426a35571bd5b935a22766733cd8bcedb52f8de
@@ -3697,7 +3697,7 @@ SPEC CHECKSUMS:
   RNGoogleSignin: 30e1aee80140dc0706cd78a4951c411376c88329
   RNScreens: 833237c48c756d40764540246a501b47dadb2cac
   RNSound: b6bd5e049ad15c0b03f9dda1f817d0bb1d5e87cb
-  RNSVG: c9d7c940ad9655eba72c5b9ca7b017c95bb58083
+  RNSVG: 9037a5826c3e0ad3f7e2aee7607b64d6710f048e
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   SplashView: 06e084339d80e51113ad4ecf465f7820598ddc95
   Yoga: 6eb5d794e5d7a35a2750bb469e2e5320d41492f5

@@ -5,15 +5,22 @@ import { IconRecord, IconStop } from '../../../base/icons/svg';
 import { MEET_FEATURES } from '../../../base/jwt/constants';
 import { isJwtFeatureEnabled } from '../../../base/jwt/functions';
 import { JitsiRecordingConstants } from '../../../base/lib-jitsi-meet';
+import { isLocalParticipantModerator } from '../../../base/participants/functions';
 import AbstractButton, { IProps as AbstractButtonProps } from '../../../base/toolbox/components/AbstractButton';
 import { maybeShowPremiumFeatureDialog } from '../../../jaas/actions';
-import { canStopRecording, getRecordButtonProps } from '../../functions';
+import { canAddTranscriber } from '../../../transcribing/functions';
+import { canStopRecording, getRecordButtonProps, supportsLocalRecording } from '../../functions';
 
 /**
  * The type of the React {@code Component} props of
  * {@link AbstractRecordButton}.
  */
 export interface IProps extends AbstractButtonProps {
+
+    /**
+     * True if the local participant can start/stop transcription.
+     */
+    _canTranscribe: boolean;
 
     /**
      * True if the button needs to be disabled.
@@ -40,12 +47,20 @@ export interface IProps extends AbstractButtonProps {
  * An abstract implementation of a button for starting and stopping recording.
  */
 export default class AbstractRecordButton<P extends IProps> extends AbstractButton<P> {
-    override accessibilityLabel = 'dialog.startRecording';
-    override toggledAccessibilityLabel = 'dialog.stopRecording';
+    override accessibilityLabel = 'toolbar.recordAndTranscribe';
+    override toggledAccessibilityLabel = 'toolbar.recordAndTranscribe';
     override icon = IconRecord;
-    override label = 'dialog.startRecording';
-    override toggledLabel = 'dialog.stopRecording';
+    override label = 'toolbar.recordAndTranscribe';
+    override toggledLabel = 'toolbar.recordAndTranscribe';
     override toggledIcon = IconStop;
+
+    override _getLabel() {
+        return this.props._canTranscribe ? super._getLabel() : 'toolbar.record';
+    }
+
+    override _getAccessibilityLabel() {
+        return this.props._canTranscribe ? super._getAccessibilityLabel() : 'toolbar.record';
+    }
 
     /**
      * Returns the tooltip that should be displayed when the button is disabled.
@@ -115,7 +130,7 @@ export default class AbstractRecordButton<P extends IProps> extends AbstractButt
                 'is_recording': _isRecordingRunning,
                 type: JitsiRecordingConstants.mode.FILE
             }));
-        
+
         // Check both RECORDING (cloud) and LOCAL_RECORDING features
         // Only block if BOTH features are disabled
         const cloudRecordingBlocked = dispatch(maybeShowPremiumFeatureDialog(MEET_FEATURES.RECORDING));
@@ -171,12 +186,17 @@ export function _mapStateToProps(state: IReduxState) {
         tooltip: _tooltip,
         visible
     } = getRecordButtonProps(state);
+    const { localRecording } = state['features/base/config'];
+    const localRecordingEnabled = !localRecording?.disable && supportsLocalRecording();
+    const isModerator = isLocalParticipantModerator(state);
+    const hasRecordingJwt = isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false);
 
     const hasRecording = isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false)
         || isJwtFeatureEnabled(state, MEET_FEATURES.LOCAL_RECORDING, false);
     const hasTranscription = isJwtFeatureEnabled(state, MEET_FEATURES.TRANSCRIPTION, false);
 
     return {
+        _canTranscribe: canAddTranscriber(state),
         _disabled,
         _isRecordingRunning: canStopRecording(state),
         _tooltip,

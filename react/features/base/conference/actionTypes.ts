@@ -47,6 +47,15 @@ export const CONNECT_GST_STREAM = 'CONNECT_GST_STREAM';
  * disconnecting from a remote streaming source.
  */
 export const DISCONNECT_GST_STREAM = 'DISCONNECT_GST_STREAM';
+/** The type of (redux) action which signals that the conference's ICE connection
+ * was established (media is flowing).
+ *
+ * {
+ *     type: CONFERENCE_CONNECTION_ESTABLISHED,
+ *     conference: JitsiConference
+ * }
+ */
+export const CONFERENCE_CONNECTION_ESTABLISHED = 'CONFERENCE_CONNECTION_ESTABLISHED';
 
 /**
  * The type of (redux) action which signals that a specific conference joining is in progress.
@@ -96,7 +105,7 @@ export const CONFERENCE_FOCUSED = 'CONFERENCE_FOCUSED';
  *     subject: string
  * }
  */
- export const CONFERENCE_LOCAL_SUBJECT_CHANGED = 'CONFERENCE_LOCAL_SUBJECT_CHANGED';
+export const CONFERENCE_LOCAL_SUBJECT_CHANGED = 'CONFERENCE_LOCAL_SUBJECT_CHANGED';
 
 /**
  * The type of (redux) action, which indicates conference properties change.
@@ -109,16 +118,16 @@ export const CONFERENCE_FOCUSED = 'CONFERENCE_FOCUSED';
  *     }
  * }
  */
- export const CONFERENCE_PROPERTIES_CHANGED = 'CONFERENCE_PROPERTIES_CHANGED';
+export const CONFERENCE_PROPERTIES_CHANGED = 'CONFERENCE_PROPERTIES_CHANGED';
 
- /**
- * The type of (redux) action, which indicates conference subject changes.
- *
- * {
- *     type: CONFERENCE_SUBJECT_CHANGED
- *     subject: string
- * }
- */
+/**
+* The type of (redux) action, which indicates conference subject changes.
+*
+* {
+*     type: CONFERENCE_SUBJECT_CHANGED
+*     subject: string
+* }
+*/
 export const CONFERENCE_SUBJECT_CHANGED = 'CONFERENCE_SUBJECT_CHANGED';
 
 /**
@@ -284,7 +293,7 @@ export const SEND_TONES = 'SEND_TONES';
  *     obfuscatedRoom: string
  * }
  */
- export const SET_OBFUSCATED_ROOM = 'SET_OBFUSCATED_ROOM';
+export const SET_OBFUSCATED_ROOM = 'SET_OBFUSCATED_ROOM';
 
 /**
  * The type of (redux) action which updates the current known status of the

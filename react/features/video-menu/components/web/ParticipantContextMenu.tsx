@@ -7,6 +7,7 @@ import { makeStyles } from 'tss-react/mui';
 declare const APP: any;
 
 import { IReduxState, IStore } from '../../../app/types';
+import { isAudioTranslationAvailable } from '../../../audio-translation/functions';
 import { MEDIA_TYPE as AVM_MEDIA_TYPE } from '../../../av-moderation/constants';
 import { isSupported as isAvModerationSupported, isForceMuted } from '../../../av-moderation/functions';
 import Avatar from '../../../base/avatar/components/Avatar';
@@ -53,6 +54,7 @@ import PrivateMessageMenuButton from './PrivateMessageMenuButton';
 import RemoteControlButton, { REMOTE_CONTROL_MENU_STATES } from './RemoteControlButton';
 import SendToRoomButton from './SendToRoomButton';
 import TogglePinToStageButton from './TogglePinToStageButton';
+import TranslateParticipantButton from './TranslateParticipantButton';
 import VerifyParticipantButton from './VerifyParticipantButton';
 import VolumeSlider from './VolumeSlider';
 
@@ -153,6 +155,7 @@ const ParticipantContextMenu = ({
     const _overflowDrawer: boolean = useSelector(showOverflowDrawer);
     const { remoteVideoMenu = {}, disableRemoteMute, startSilent, customParticipantMenuButtons }
         = useSelector((state: IReduxState) => state['features/base/config']);
+    const _audioTranslationAvailable = useSelector(isAudioTranslationAvailable);
     const visitorsSupported = useSelector((state: IReduxState) => state['features/visitors'].supported);
     const { disableDemote, disableKick, disableGrantModerator } = remoteVideoMenu;
     const { participantsVolume } = useSelector((state: IReduxState) => state['features/filmstrip']);
@@ -199,6 +202,10 @@ const ParticipantContextMenu = ({
         }, [ buttonsWithNotifyClick, _getCurrentParticipantId ]);
 
     const onBreakoutRoomButtonClick = useCallback(() => {
+        onSelect(true);
+    }, [ onSelect ]);
+
+    const onClickOutside = useCallback(() => {
         onSelect(true);
     }, [ onSelect ]);
 
@@ -333,6 +340,10 @@ const ParticipantContextMenu = ({
         );
     }
 
+    if (_audioTranslationAvailable && !participant?.local) {
+        buttons2.push(<TranslateParticipantButton { ...getButtonProps(BUTTONS.TRANSLATE_AUDIO) } />);
+    }
+
     const breakoutRoomsButtons: any = [];
 
     if (!thumbnailMenu && _isModerator) {
@@ -351,6 +362,7 @@ const ParticipantContextMenu = ({
 
     return (
         <ContextMenu
+            activateFocusTrap = { !thumbnailMenu }
             className = { className }
             entity = { participant }
             hidden = { thumbnailMenu ? false : undefined }
@@ -358,6 +370,7 @@ const ParticipantContextMenu = ({
             isDrawerOpen = { Boolean(drawerParticipant) }
             offsetTarget = { offsetTarget }
             onClick = { onSelect }
+            onClickOutside = { thumbnailMenu ? undefined : onClickOutside }
             onDrawerClose = { thumbnailMenu ? onSelect : closeDrawer }
             onMouseEnter = { onEnter }
             onMouseLeave = { onLeave }>

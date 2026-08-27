@@ -69,6 +69,7 @@ export interface IParticipantFeatures {
     'flip'?: boolean | string;
     'inbound-call'?: boolean | string;
     'list-visitors'?: boolean | string;
+    'live-translation'?: boolean | string;
     'livestreaming'?: boolean | string;
     'lobby'?: boolean | string;
     'local-recording'?: boolean | string; //add feature  local-recording
@@ -95,9 +96,13 @@ export interface IJitsiParticipant {
     getDisplayName: () => string;
     getId: () => string;
     getJid: () => string;
+    getProperty: (name: string) => any;
     getRole: () => string;
     getSources: () => Map<string, Map<string, ISourceInfo>>;
+    isAudioMuted: () => boolean;
     isHidden: () => boolean;
+    isHiddenFromRecorder: () => boolean;
+    isVideoMuted: () => boolean;
 }
 
 export type ParticipantFeaturesKey = keyof IParticipantFeatures;

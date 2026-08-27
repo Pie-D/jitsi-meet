@@ -69,7 +69,7 @@ export const RoomParticipantContextMenu = ({
     const { classes: styles } = useStyles();
     const { t } = useTranslation();
     const isLocalModerator = useSelector(isLocalParticipantModerator);
-    const lowerMenu = useCallback(() => onSelect(true), [ onSelect ]);
+    const lowerMenu = useCallback(() => onSelect(true), [onSelect]);
     const rooms: any = useSelector(getBreakoutRooms);
     const overflowDrawer = useSelector(showOverflowDrawer);
     const buttonsWithNotifyClick = useSelector(getParticipantMenuButtonsWithNotifyClick);
@@ -87,7 +87,7 @@ export const RoomParticipantContextMenu = ({
                 participantId,
                 notifyMode === NOTIFY_CLICK_MODE.PREVENT_AND_NOTIFY
             );
-        }, [ buttonsWithNotifyClick ]);
+        }, [buttonsWithNotifyClick]);
 
     const {
         roomJid,
@@ -102,7 +102,7 @@ export const RoomParticipantContextMenu = ({
             };
         }
 
-        const [ parsedRoomJid, parsedParticipantJid ] = participantKey.split('|');
+        const [parsedRoomJid, parsedParticipantJid] = participantKey.split('|');
         const room = rooms?.[parsedRoomJid];
         const participant = room?.participants?.[parsedParticipantJid];
 
@@ -111,7 +111,7 @@ export const RoomParticipantContextMenu = ({
             participantJid: parsedParticipantJid,
             participantName: participant?.displayName
         };
-    }, [ participantKey, rooms ]);
+    }, [participantKey, rooms]);
 
     const breakoutRoomsButtons = useMemo(
         () => Object.values(rooms || {}).map((room: any) => {
@@ -120,38 +120,40 @@ export const RoomParticipantContextMenu = ({
             }
 
             return (<SendToRoomButton
-                key = { room.id }
+                key={room.id}
                 // eslint-disable-next-line react/jsx-no-bind
-                notifyClick = { () => notifyClick(BUTTONS.SEND_PARTICIPANT_TO_ROOM, participantJid) }
-                notifyMode = { buttonsWithNotifyClick?.get(BUTTONS.SEND_PARTICIPANT_TO_ROOM) }
-                onClick = { lowerMenu }
-                participantID = { participantJid }
-                room = { room } />);
+                notifyClick={() => notifyClick(BUTTONS.SEND_PARTICIPANT_TO_ROOM, participantJid)}
+                notifyMode={buttonsWithNotifyClick?.get(BUTTONS.SEND_PARTICIPANT_TO_ROOM)}
+                onClick={lowerMenu}
+                participantID={participantJid}
+                room={room} />);
         })
-        .filter(Boolean),
-        [ participantJid, roomJid, rooms, buttonsWithNotifyClick, lowerMenu, notifyClick ]
+            .filter(Boolean),
+        [participantJid, roomJid, rooms, buttonsWithNotifyClick, lowerMenu, notifyClick]
     );
 
     return isLocalModerator ? (
         <ContextMenu
-            entity = { participantKey }
-            isDrawerOpen = { Boolean(participantKey) }
-            offsetTarget = { offsetTarget }
-            onClick = { lowerMenu }
-            onDrawerClose = { onSelect }
-            onMouseEnter = { onEnter }
-            onMouseLeave = { onLeave }>
+            entity={participantKey}
+            isDrawerOpen={Boolean(participantKey)}
+            activateFocusTrap={true}
+            offsetTarget={offsetTarget}
+            onClick={lowerMenu}
+            onClickOutside={lowerMenu}
+            onDrawerClose={onSelect}
+            onMouseEnter={onEnter}
+            onMouseLeave={onLeave}>
             {overflowDrawer && participantJid && <ContextMenuItemGroup
-                actions = { [ {
+                actions={[{
                     accessibilityLabel: participantName,
                     customIcon: <Avatar
-                        displayName = { participantName }
-                        size = { AVATAR_SIZE } />,
+                        displayName={participantName}
+                        size={AVATAR_SIZE} />,
                     text: participantName
-                } ] } />}
+                }]} />}
 
             <ContextMenuItemGroup>
-                <div className = { styles.text }>
+                <div className={styles.text}>
                     {t('breakoutRooms.actions.sendToBreakoutRoom')}
                 </div>
                 {breakoutRoomsButtons}

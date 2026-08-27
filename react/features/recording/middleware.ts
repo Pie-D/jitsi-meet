@@ -7,6 +7,8 @@ import { APP_WILL_MOUNT, APP_WILL_UNMOUNT } from '../base/app/actionTypes';
 import { CONFERENCE_JOIN_IN_PROGRESS } from '../base/conference/actionTypes';
 import { getCurrentConference } from '../base/conference/functions';
 import { openDialog } from '../base/dialog/actions';
+import { MEET_FEATURES } from '../base/jwt/constants';
+import { isJwtFeatureEnabled } from '../base/jwt/functions';
 import JitsiMeetJS, {
     JitsiConferenceEvents,
     JitsiRecordingConstants
@@ -21,7 +23,11 @@ import { MEDIA_TYPE } from '../base/media/constants';
 import { PARTICIPANT_LEFT, PARTICIPANT_UPDATED } from '../base/participants/actionTypes';
 import { updateLocalRecordingStatus } from '../base/participants/actions';
 import { PARTICIPANT_ROLE } from '../base/participants/constants';
-import { getLocalParticipant, getParticipantDisplayName } from '../base/participants/functions';
+import {
+    getLocalParticipant,
+    getParticipantDisplayName,
+    isLocalParticipantModerator
+} from '../base/participants/functions';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import StateListenerRegistry from '../base/redux/StateListenerRegistry';
 import {
@@ -35,13 +41,14 @@ import { setRequestingSubtitles } from '../subtitles/actions.any';
 import { getWhipLink } from '../base/util/cMeetUtils';
 import { startGstStream, stopGstStream, connectGstWebSocket } from '../base/util/gstStreamUtils';
 import { isGstStreamConnected } from '../base/util/gstStreamUtils';
-import { isRecorderTranscriptionsRunning, isTranscribing } from '../transcribing/functions';
+import { canAddTranscriber, isRecorderTranscriptionsRunning, isTranscribing } from '../transcribing/functions';
 
 import { RECORDING_SESSION_UPDATED, START_LOCAL_RECORDING, STOP_LOCAL_RECORDING } from './actionTypes';
 import {
     clearRecordingSessions,
     hidePendingRecordingNotification,
     markConsentRequested,
+    setLocalRecordingRunning,
     setStartRecordingIntent,
     setStopRecordingIntent,
     showPendingRecordingNotification,
@@ -75,6 +82,7 @@ import {
     unregisterRecordingAudioFiles
 } from './functions';
 import logger from './logger';
+import { getNudge } from './nudge';
 import { ISessionData } from './reducer';
 
 /**
@@ -167,18 +175,37 @@ export function maybeNotifyRecordingStart(dispatch: IStore['dispatch'], getState
         dispatch(playSound(soundID));
     }
 
+    // Nudge to start the complementary service when only one was just started and the other is not
+    // already running — shown to any participant that has the right to start that other service:
+    // transcription needs the transcription feature; cloud recording needs moderator + the recording
+    // feature. (A recording-only participant is never nudged to transcribe, nor vice versa.)
+    const canStartTranscription = canAddTranscriber(state);
+    const canStartRecording = isLocalParticipantModerator(state)
+        && isJwtFeatureEnabled(state, MEET_FEATURES.RECORDING, false);
+    const nudgeNeeded = (wantsRecording !== wantsTranscription)
+        && (wantsRecording ? (!transcriptionOn && canStartTranscription) : (!recordingOn && canStartRecording));
+    const nudge = nudgeNeeded
+        ? getNudge(wantsRecording ? 'recording' : 'transcription', dispatch)
+        : null;
+
     if (recordingOn && fileSession?.initiator && fileSession.id) {
         dispatch(showStartedRecordingNotification(
             modeConstants.FILE,
             fileSession.initiator,
             fileSession.id,
-            recordingOn && transcriptionOn));
+            recordingOn && transcriptionOn,
+            nudge ?? undefined));
     } else if (transcriptionOn && !recordingOn) {
         // Transcription-only case (recording failed or wasn't requested).
         dispatch(showNotification({
             descriptionKey: 'transcribing.on',
-            titleKey: 'dialog.recording'
-        }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
+            titleKey: 'dialog.recording',
+            ...(nudge ? {
+                description: nudge.descriptionText,
+                customActionNameKey: [nudge.actionNameKey],
+                customActionHandler: [nudge.handler]
+            } : {})
+        }, nudge ? NOTIFICATION_TIMEOUT_TYPE.LONG : NOTIFICATION_TIMEOUT_TYPE.SHORT));
     }
 }
 
@@ -249,7 +276,9 @@ export function maybeNotifyRecordingStop(dispatch: IStore['dispatch'], getState:
     dispatch(setStopRecordingIntent(null));
 
     if (offSoundID) {
-        if (onSoundID) {
+        // Always stop the combined sound in case both services were started together.
+        dispatch(stopSound(RECORDING_AND_TRANSCRIPTION_ON_SOUND_ID));
+        if (onSoundID && onSoundID !== RECORDING_AND_TRANSCRIPTION_ON_SOUND_ID) {
             dispatch(stopSound(onSoundID));
         }
         dispatch(playSound(offSoundID));
@@ -287,7 +316,7 @@ export function maybeNotifyRecordingStop(dispatch: IStore['dispatch'], getState:
  */
 StateListenerRegistry.register(
     /* selector */ state => getCurrentConference(state),
-    /* listener */ (conference, { dispatch }) => {
+    /* listener */(conference, { dispatch }) => {
         if (!conference) {
             dispatch(clearRecordingSessions());
         }
@@ -303,7 +332,7 @@ StateListenerRegistry.register(
  */
 StateListenerRegistry.register(
     /* selector */ state => state['features/base/conference'].metadata?.recording,
-    /* listener */ (recordingMetadata, { dispatch, getState }, previousValue) => {
+    /* listener */(recordingMetadata, { dispatch, getState }, previousValue) => {
         const prevRec = Boolean(previousValue?.isRecordingRequested);
         const prevTrans = Boolean(previousValue?.isTranscribingEnabled);
         const curRec = Boolean(recordingMetadata?.isRecordingRequested);
@@ -357,304 +386,309 @@ MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
     const result = next(action);
 
     switch (action.type) {
-    case APP_WILL_MOUNT:
-        registerRecordingAudioFiles(dispatch);
+        case APP_WILL_MOUNT:
+            registerRecordingAudioFiles(dispatch);
 
-        break;
+            break;
 
-    case APP_WILL_UNMOUNT:
-        unregisterRecordingAudioFiles(dispatch);
+        case APP_WILL_UNMOUNT:
+            unregisterRecordingAudioFiles(dispatch);
 
-        break;
+            break;
 
-    case CONFERENCE_JOIN_IN_PROGRESS: {
-        const { conference } = action;
+        case CONFERENCE_JOIN_IN_PROGRESS: {
+            const { conference } = action;
 
-        conference.on(
-            JitsiConferenceEvents.RECORDER_STATE_CHANGED,
-            (recorderSession: any) => {
-                if (recorderSession) {
-                    recorderSession.getID() && dispatch(updateRecordingSessionData(recorderSession));
-                    if (recorderSession.getError()) {
-                        _showRecordingErrorNotification(recorderSession, dispatch, getState);
-                    } else {
-                        _showExplicitConsentDialog(recorderSession, dispatch, getState);
+            conference.on(
+                JitsiConferenceEvents.RECORDER_STATE_CHANGED,
+                (recorderSession: any) => {
+                    if (recorderSession) {
+                        recorderSession.getID() && dispatch(updateRecordingSessionData(recorderSession));
+                        if (recorderSession.getError()) {
+                            _showRecordingErrorNotification(recorderSession, dispatch, getState);
+                        } else {
+                            _showExplicitConsentDialog(recorderSession, dispatch, getState);
+                        }
+                    }
+
+                    return;
+                });
+
+            break;
+        }
+
+        case START_LOCAL_RECORDING: {
+            const { localRecording } = getState()['features/base/config'];
+            const { onlySelf } = action;
+
+            LocalRecordingManager.startLocalRecording({
+                dispatch,
+                getState
+            }, action.onlySelf)
+                .then(() => {
+                    const props = {
+                        descriptionKey: 'recording.on',
+                        titleKey: 'dialog.recording'
+                    };
+
+                    if (localRecording?.notifyAllParticipants && !onlySelf) {
+                        dispatch(playSound(RECORDING_ON_SOUND_ID));
+                    }
+                    dispatch(showNotification(props, NOTIFICATION_TIMEOUT_TYPE.MEDIUM));
+                    dispatch(showNotification({
+                        titleKey: 'recording.localRecordingStartWarningTitle',
+                        descriptionKey: 'recording.localRecordingStartWarning'
+                    }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
+                    dispatch(setLocalRecordingRunning(true));
+                    dispatch(updateLocalRecordingStatus(true, onlySelf));
+                    sendAnalytics(createRecordingEvent('started', `local${onlySelf ? '.self' : ''}`));
+                    if (typeof APP !== 'undefined') {
+                        APP.API.notifyRecordingStatusChanged(
+                            true, 'local', undefined, isRecorderTranscriptionsRunning(getState()));
+                    }
+                })
+                .catch(err => {
+                    logger.error('Capture failed', err);
+
+                    let descriptionKey = 'recording.error';
+
+                    if (err.message === 'WrongSurfaceSelected') {
+                        descriptionKey = 'recording.surfaceError';
+
+                    } else if (err.message === 'NoLocalStreams') {
+                        descriptionKey = 'recording.noStreams';
+                    } else if (err.message === 'NoMicTrack') {
+                        descriptionKey = 'recording.noMicPermission';
+                    }
+                    const props = {
+                        descriptionKey,
+                        titleKey: 'recording.failedToStart'
+                    };
+
+                    if (typeof APP !== 'undefined') {
+                        APP.API.notifyRecordingStatusChanged(
+                            false, 'local', err.message, isRecorderTranscriptionsRunning(getState()));
+                    }
+
+                    dispatch(showErrorNotification(props));
+                });
+            break;
+        }
+
+        case STOP_LOCAL_RECORDING: {
+            const { localRecording } = getState()['features/base/config'];
+
+            if (LocalRecordingManager.isRecordingLocally()) {
+                // Capture before stopping — the recorder's stop handler resets the flag.
+                const wasSelfRecording = LocalRecordingManager.selfRecording.on;
+
+                LocalRecordingManager.stopLocalRecording();
+                dispatch(setLocalRecordingRunning(false));
+                dispatch(updateLocalRecordingStatus(false));
+                if (localRecording?.notifyAllParticipants && !wasSelfRecording) {
+                    dispatch(playSound(RECORDING_OFF_SOUND_ID));
+                }
+                if (typeof APP !== 'undefined') {
+                    APP.API.notifyRecordingStatusChanged(
+                        false, 'local', undefined, isRecorderTranscriptionsRunning(getState()));
+                }
+            }
+            break;
+        }
+
+        case RECORDING_SESSION_UPDATED: {
+            const state = getState();
+
+            // When in recorder mode no notifications are shown
+            // or extra sounds are also not desired
+            // but we want to indicate those in case of sip gateway
+            const {
+                iAmRecorder,
+                iAmSipGateway
+            } = state['features/base/config'];
+
+            if (iAmRecorder && !iAmSipGateway) {
+                break;
+            }
+
+            const updatedSessionData
+                = getSessionById(state, action.sessionData.id);
+            const { initiator, mode = '', terminator } = updatedSessionData ?? {};
+            const { PENDING, OFF, ON } = JitsiRecordingConstants.status;
+            const isRecordingStarting = updatedSessionData?.status === PENDING && oldSessionData?.status !== PENDING;
+
+            if (isRecordingStarting || updatedSessionData?.status === ON) {
+                dispatch(hideNotification(START_RECORDING_NOTIFICATION_ID));
+            }
+
+            if (isRecordingStarting) {
+                dispatch(showPendingRecordingNotification(mode));
+                break;
+            }
+
+            dispatch(hidePendingRecordingNotification(mode));
+
+            if (updatedSessionData?.status === ON) {
+                // We receive 2 updates of the session status ON. The first one is from jibri when it joins.
+                // The second one is from jicofo which will deliver the initiator value. Since the start
+                // recording notification uses the initiator value we skip the jibri update and show the
+                // notification on the update from jicofo.
+                // FIXME: simplify checks when the backend start sending only one status ON update containing
+                // the initiator.
+                if (initiator && !oldSessionData?.initiator) {
+                    // Initiator just became known — let maybeNotifyRecordingStart
+                    // decide whether to emit the notification now. It reads the
+                    // initiator directly from sessionDatas and gates on its presence.
+                    maybeNotifyRecordingStart(dispatch, getState);
+                }
+
+                if (oldSessionData?.status !== ON) {
+                    sendAnalytics(createRecordingEvent('start', mode));
+
+                    if (mode === JitsiRecordingConstants.mode.STREAM) {
+                        dispatch(playSound(LIVE_STREAMING_ON_SOUND_ID));
+                    }
+                    // FILE: no call here — handled by the initiator branch above with maybeNotifyRecordingStart.
+
+                    // Tự động bật speech to text khi recording to server bắt đầu
+                    if (mode === JitsiRecordingConstants.mode.FILE) {
+                        _autoStartSpeechToText(state, dispatch);
+                    }
+
+                    if (typeof APP !== 'undefined') {
+                        APP.API.notifyRecordingStatusChanged(
+                            true, mode, undefined, isRecorderTranscriptionsRunning(state));
                     }
                 }
+            } else if (updatedSessionData?.status === OFF && oldSessionData?.status !== OFF) {
+                let duration = 0;
 
-                return;
-            });
-
-        break;
-    }
-
-    case START_LOCAL_RECORDING: {
-        const { localRecording } = getState()['features/base/config'];
-        const { onlySelf } = action;
-
-        LocalRecordingManager.startLocalRecording({
-            dispatch,
-            getState
-        }, action.onlySelf)
-        .then(() => {
-            const props = {
-                descriptionKey: 'recording.on',
-                titleKey: 'dialog.recording'
-            };
-
-            if (localRecording?.notifyAllParticipants && !onlySelf) {
-                dispatch(playSound(RECORDING_ON_SOUND_ID));
-            }
-            dispatch(showNotification(props, NOTIFICATION_TIMEOUT_TYPE.MEDIUM));
-            dispatch(showNotification({
-                titleKey: 'recording.localRecordingStartWarningTitle',
-                descriptionKey: 'recording.localRecordingStartWarning'
-            }, NOTIFICATION_TIMEOUT_TYPE.STICKY));
-            dispatch(updateLocalRecordingStatus(true, onlySelf));
-            sendAnalytics(createRecordingEvent('started', `local${onlySelf ? '.self' : ''}`));
-            if (typeof APP !== 'undefined') {
-                APP.API.notifyRecordingStatusChanged(
-                    true, 'local', undefined, isRecorderTranscriptionsRunning(getState()));
-            }
-        })
-        .catch(err => {
-            logger.error('Capture failed', err);
-
-            let descriptionKey = 'recording.error';
-
-            if (err.message === 'WrongSurfaceSelected') {
-                descriptionKey = 'recording.surfaceError';
-
-            } else if (err.message === 'NoLocalStreams') {
-                descriptionKey = 'recording.noStreams';
-            } else if (err.message === 'NoMicTrack') {
-                descriptionKey = 'recording.noMicPermission';
-            }
-            const props = {
-                descriptionKey,
-                titleKey: 'recording.failedToStart'
-            };
-
-            if (typeof APP !== 'undefined') {
-                APP.API.notifyRecordingStatusChanged(
-                    false, 'local', err.message, isRecorderTranscriptionsRunning(getState()));
-            }
-
-            dispatch(showErrorNotification(props));
-        });
-        break;
-    }
-
-    case STOP_LOCAL_RECORDING: {
-        const { localRecording } = getState()['features/base/config'];
-
-        if (LocalRecordingManager.isRecordingLocally()) {
-            LocalRecordingManager.stopLocalRecording();
-            dispatch(updateLocalRecordingStatus(false));
-            if (localRecording?.notifyAllParticipants && !LocalRecordingManager.selfRecording) {
-                dispatch(playSound(RECORDING_OFF_SOUND_ID));
-            }
-            if (typeof APP !== 'undefined') {
-                APP.API.notifyRecordingStatusChanged(
-                    false, 'local', undefined, isRecorderTranscriptionsRunning(getState()));
-            }
-        }
-        break;
-    }
-
-    case RECORDING_SESSION_UPDATED: {
-        const state = getState();
-
-        // When in recorder mode no notifications are shown
-        // or extra sounds are also not desired
-        // but we want to indicate those in case of sip gateway
-        const {
-            iAmRecorder,
-            iAmSipGateway
-        } = state['features/base/config'];
-
-        if (iAmRecorder && !iAmSipGateway) {
-            break;
-        }
-
-        const updatedSessionData
-            = getSessionById(state, action.sessionData.id);
-        const { initiator, mode = '', terminator } = updatedSessionData ?? {};
-        const { PENDING, OFF, ON } = JitsiRecordingConstants.status;
-        const isRecordingStarting = updatedSessionData?.status === PENDING && oldSessionData?.status !== PENDING;
-
-        if (isRecordingStarting || updatedSessionData?.status === ON) {
-            dispatch(hideNotification(START_RECORDING_NOTIFICATION_ID));
-        }
-
-        if (isRecordingStarting) {
-            dispatch(showPendingRecordingNotification(mode));
-            break;
-        }
-
-        dispatch(hidePendingRecordingNotification(mode));
-
-        if (updatedSessionData?.status === ON) {
-            // We receive 2 updates of the session status ON. The first one is from jibri when it joins.
-            // The second one is from jicofo which will deliver the initiator value. Since the start
-            // recording notification uses the initiator value we skip the jibri update and show the
-            // notification on the update from jicofo.
-            // FIXME: simplify checks when the backend start sending only one status ON update containing
-            // the initiator.
-            if (initiator && !oldSessionData?.initiator) {
-                // Initiator just became known — let maybeNotifyRecordingStart
-                // decide whether to emit the notification now. It reads the
-                // initiator directly from sessionDatas and gates on its presence.
-                maybeNotifyRecordingStart(dispatch, getState);
-            }
-
-            if (oldSessionData?.status !== ON) {
-                sendAnalytics(createRecordingEvent('start', mode));
-
-                if (mode === JitsiRecordingConstants.mode.STREAM) {
-                    dispatch(playSound(LIVE_STREAMING_ON_SOUND_ID));
+                if (oldSessionData?.timestamp) {
+                    duration
+                        = (Date.now() / 1000) - oldSessionData.timestamp;
                 }
-                // FILE: no call here — handled by the initiator branch above with maybeNotifyRecordingStart.
+                sendAnalytics(createRecordingEvent('stop', mode, duration));
 
-                // Tự động bật speech to text khi recording to server bắt đầu
                 if (mode === JitsiRecordingConstants.mode.FILE) {
-                    _autoStartSpeechToText(state, dispatch);
+                    // Recording OFF is one of the resolution points — let the stop
+                    // coordinator decide which sound/notification to play based on
+                    // stopRecordingIntent (combined vs recording-only).
+                    maybeNotifyRecordingStop(dispatch, getState);
+                } else if (mode === JitsiRecordingConstants.mode.STREAM) {
+                    const participantName = terminator
+                        ? getParticipantDisplayName(state, getResourceId(terminator))
+                        : undefined;
+
+                    dispatch(showStoppedRecordingNotification(mode, participantName, false));
+                    dispatch(stopSound(LIVE_STREAMING_ON_SOUND_ID));
+                    dispatch(playSound(LIVE_STREAMING_OFF_SOUND_ID));
+                }
+
+                // Tự động tắt speech to text khi recording to server dừng
+                if (mode === JitsiRecordingConstants.mode.FILE) {
+                    _autoStopSpeechToText(state);
                 }
 
                 if (typeof APP !== 'undefined') {
                     APP.API.notifyRecordingStatusChanged(
-                        true, mode, undefined, isRecorderTranscriptionsRunning(state));
+                        false, mode, undefined, isRecorderTranscriptionsRunning(state));
                 }
             }
-        } else if (updatedSessionData?.status === OFF && oldSessionData?.status !== OFF) {
-            let duration = 0;
 
-            if (oldSessionData?.timestamp) {
-                duration
-                    = (Date.now() / 1000) - oldSessionData.timestamp;
-            }
-            sendAnalytics(createRecordingEvent('stop', mode, duration));
-
-            if (mode === JitsiRecordingConstants.mode.FILE) {
-                // Recording OFF is one of the resolution points — let the stop
-                // coordinator decide which sound/notification to play based on
-                // stopRecordingIntent (combined vs recording-only).
-                maybeNotifyRecordingStop(dispatch, getState);
-            } else if (mode === JitsiRecordingConstants.mode.STREAM) {
-                const participantName = terminator
-                    ? getParticipantDisplayName(state, getResourceId(terminator))
-                    : undefined;
-
-                dispatch(showStoppedRecordingNotification(mode, participantName, false));
-                dispatch(stopSound(LIVE_STREAMING_ON_SOUND_ID));
-                dispatch(playSound(LIVE_STREAMING_OFF_SOUND_ID));
-            }
-
-            // Tự động tắt speech to text khi recording to server dừng
-            if (mode === JitsiRecordingConstants.mode.FILE) {
-                _autoStopSpeechToText(state);
-            }
-
-            if (typeof APP !== 'undefined') {
-                APP.API.notifyRecordingStatusChanged(
-                    false, mode, undefined, isRecorderTranscriptionsRunning(state));
-            }
+            break;
         }
+        case TRACK_ADDED: {
+            const { track } = action;
 
-        break;
-    }
-    case TRACK_ADDED: {
-        const { track } = action;
-
-        if (LocalRecordingManager.isRecordingLocally()
+            if (LocalRecordingManager.isRecordingLocally()
                 && track.mediaType === MEDIA_TYPE.AUDIO && track.local) {
-            const audioTrack = track.jitsiTrack.track;
+                const audioTrack = track.jitsiTrack.track;
 
-            LocalRecordingManager.addAudioTrackToLocalRecording(audioTrack);
+                LocalRecordingManager.addAudioTrackToLocalRecording(audioTrack);
+            }
+            break;
         }
-        break;
-    }
-    case PARTICIPANT_UPDATED: {
-        const { id, role } = action.participant;
-        const state = getState();
-        const localParticipant = getLocalParticipant(state);
+        case PARTICIPANT_UPDATED: {
+            const { id, role } = action.participant;
+            const state = getState();
+            const localParticipant = getLocalParticipant(state);
 
-        if (localParticipant?.id !== id) {
+            if (localParticipant?.id !== id) {
+                return next(action);
+            }
+
+            if (role === PARTICIPANT_ROLE.MODERATOR) {
+                dispatch(showStartRecordingNotification());
+            }
+
             return next(action);
         }
 
-        if (role === PARTICIPANT_ROLE.MODERATOR) {
-            dispatch(showStartRecordingNotification());
-        }
+        case PARTICIPANT_LEFT: {
+            const { id } = action.participant;
+            const state = getState();
+            const conference = getCurrentConference(state);
 
-        return next(action);
-    }
+            if (!conference) {
+                break;
+            }
 
-    case PARTICIPANT_LEFT: {
-        const { id } = action.participant;
-        const state = getState();
-        const conference = getCurrentConference(state);
+            // Helper function để so sánh initiator với participant ID
+            // initiator có thể là JitsiParticipant object (có method getId()) hoặc là string (JID resource)
+            const isInitiator = (initiator: any, participantId: string): boolean => {
+                if (!initiator) {
+                    return false;
+                }
 
-        if (!conference) {
+                // Xử lý tương tự như trong shouldRequireRecordingConsent
+                // initiator?.getId?.() ?? initiator
+                const initiatorId = typeof initiator === 'object' && typeof initiator.getId === 'function'
+                    ? initiator.getId()
+                    : (typeof initiator === 'string' ? getResourceId(initiator) : initiator);
+
+                // So sánh với participant ID vừa rời
+                // initiator có thể là JID resource hoặc participant ID
+                return initiatorId === participantId || (typeof initiator === 'string' && initiator === participantId);
+            };
+
+            // Kiểm tra recording session đang chạy (FILE mode)
+            const activeFileSession = getActiveSession(state, JitsiRecordingConstants.mode.FILE);
+
+            if (activeFileSession && activeFileSession.initiator) {
+                if (isInitiator(activeFileSession.initiator, id)) {
+                    logger.info(`Người bật recording (${id}) đã rời phòng, tự động tắt recording`);
+
+                    // Tự động stop recording
+                    if (activeFileSession.id) {
+                        conference.stopRecording(activeFileSession.id);
+
+                        // Tự động tắt speech to text khi recording dừng
+                        // _autoStopSpeechToText(state);
+
+                        // Tắt transcription metadata
+                        dispatch(setRequestingSubtitles(false, false, null));
+                        conference.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
+                            isTranscribingEnabled: false
+                        });
+                    }
+                }
+            }
+
+            // Kiểm tra live streaming session đang chạy (STREAM mode)
+            const activeStreamSession = getActiveSession(state, JitsiRecordingConstants.mode.STREAM);
+
+            if (activeStreamSession && activeStreamSession.initiator) {
+                if (isInitiator(activeStreamSession.initiator, id)) {
+                    logger.info(`Người bật live streaming (${id}) đã rời phòng, tự động tắt live streaming`);
+
+                    if (activeStreamSession.id) {
+                        conference.stopRecording(activeStreamSession.id);
+                    }
+                }
+            }
+
             break;
         }
-
-        // Helper function để so sánh initiator với participant ID
-        // initiator có thể là JitsiParticipant object (có method getId()) hoặc là string (JID resource)
-        const isInitiator = (initiator: any, participantId: string): boolean => {
-            if (!initiator) {
-                return false;
-            }
-
-            // Xử lý tương tự như trong shouldRequireRecordingConsent
-            // initiator?.getId?.() ?? initiator
-            const initiatorId = typeof initiator === 'object' && typeof initiator.getId === 'function'
-                ? initiator.getId()
-                : (typeof initiator === 'string' ? getResourceId(initiator) : initiator);
-
-            // So sánh với participant ID vừa rời
-            // initiator có thể là JID resource hoặc participant ID
-            return initiatorId === participantId || (typeof initiator === 'string' && initiator === participantId);
-        };
-
-        // Kiểm tra recording session đang chạy (FILE mode)
-        const activeFileSession = getActiveSession(state, JitsiRecordingConstants.mode.FILE);
-
-        if (activeFileSession && activeFileSession.initiator) {
-            if (isInitiator(activeFileSession.initiator, id)) {
-                logger.info(`Người bật recording (${id}) đã rời phòng, tự động tắt recording`);
-                
-                // Tự động stop recording
-                if (activeFileSession.id) {
-                    conference.stopRecording(activeFileSession.id);
-                    
-                    // Tự động tắt speech to text khi recording dừng
-                    // _autoStopSpeechToText(state);
-                    
-                    // Tắt transcription metadata
-                    dispatch(setRequestingSubtitles(false, false, null));
-                    conference.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
-                        isTranscribingEnabled: false
-                    });
-                }
-            }
-        }
-
-        // Kiểm tra live streaming session đang chạy (STREAM mode)
-        const activeStreamSession = getActiveSession(state, JitsiRecordingConstants.mode.STREAM);
-
-        if (activeStreamSession && activeStreamSession.initiator) {
-            if (isInitiator(activeStreamSession.initiator, id)) {
-                logger.info(`Người bật live streaming (${id}) đã rời phòng, tự động tắt live streaming`);
-                
-                if (activeStreamSession.id) {
-                    conference.stopRecording(activeStreamSession.id);
-                }
-            }
-        }
-
-        break;
-    }
     }
 
     return result;
@@ -678,53 +712,53 @@ function _showRecordingErrorNotification(session: any, dispatch: IStore['dispatc
     const isStreamMode = mode === JitsiMeetJS.constants.recording.mode.STREAM;
 
     switch (error) {
-    case JitsiMeetJS.constants.recording.error.SERVICE_UNAVAILABLE:
-        dispatch(showRecordingError({
-            descriptionKey: 'recording.unavailable',
-            descriptionArguments: {
-                serviceName: isStreamMode
-                    ? '$t(liveStreaming.serviceName)'
-                    : '$t(recording.serviceName)'
-            },
-            titleKey: isStreamMode
-                ? 'liveStreaming.unavailableTitle'
-                : 'recording.unavailableTitle'
-        }));
-        break;
-    case JitsiMeetJS.constants.recording.error.RESOURCE_CONSTRAINT:
-        dispatch(showRecordingError({
-            descriptionKey: isStreamMode
-                ? 'liveStreaming.busy'
-                : 'recording.busy',
-            titleKey: isStreamMode
-                ? 'liveStreaming.busyTitle'
-                : 'recording.busyTitle'
-        }));
-        break;
-    case JitsiMeetJS.constants.recording.error.UNEXPECTED_REQUEST:
-        dispatch(showRecordingWarning({
-            descriptionKey: isStreamMode
-                ? 'liveStreaming.sessionAlreadyActive'
-                : 'recording.sessionAlreadyActive',
-            titleKey: isStreamMode ? 'liveStreaming.inProgress' : 'recording.inProgress'
-        }));
-        break;
-    case JitsiMeetJS.constants.recording.error.POLICY_VIOLATION:
-        dispatch(showRecordingWarning({
-            descriptionKey: isStreamMode ? 'liveStreaming.policyError' : 'recording.policyError',
-            titleKey: isStreamMode ? 'liveStreaming.failedToStart' : 'recording.failedToStart'
-        }));
-        break;
-    default:
-        dispatch(showRecordingError({
-            descriptionKey: isStreamMode
-                ? 'liveStreaming.error'
-                : 'recording.error',
-            titleKey: isStreamMode
-                ? 'liveStreaming.failedToStart'
-                : 'recording.failedToStart'
-        }));
-        break;
+        case JitsiMeetJS.constants.recording.error.SERVICE_UNAVAILABLE:
+            dispatch(showRecordingError({
+                descriptionKey: 'recording.unavailable',
+                descriptionArguments: {
+                    serviceName: isStreamMode
+                        ? '$t(liveStreaming.serviceName)'
+                        : '$t(recording.serviceName)'
+                },
+                titleKey: isStreamMode
+                    ? 'liveStreaming.unavailableTitle'
+                    : 'recording.unavailableTitle'
+            }));
+            break;
+        case JitsiMeetJS.constants.recording.error.RESOURCE_CONSTRAINT:
+            dispatch(showRecordingError({
+                descriptionKey: isStreamMode
+                    ? 'liveStreaming.busy'
+                    : 'recording.busy',
+                titleKey: isStreamMode
+                    ? 'liveStreaming.busyTitle'
+                    : 'recording.busyTitle'
+            }));
+            break;
+        case JitsiMeetJS.constants.recording.error.UNEXPECTED_REQUEST:
+            dispatch(showRecordingWarning({
+                descriptionKey: isStreamMode
+                    ? 'liveStreaming.sessionAlreadyActive'
+                    : 'recording.sessionAlreadyActive',
+                titleKey: isStreamMode ? 'liveStreaming.inProgress' : 'recording.inProgress'
+            }));
+            break;
+        case JitsiMeetJS.constants.recording.error.POLICY_VIOLATION:
+            dispatch(showRecordingWarning({
+                descriptionKey: isStreamMode ? 'liveStreaming.policyError' : 'recording.policyError',
+                titleKey: isStreamMode ? 'liveStreaming.failedToStart' : 'recording.failedToStart'
+            }));
+            break;
+        default:
+            dispatch(showRecordingError({
+                descriptionKey: isStreamMode
+                    ? 'liveStreaming.error'
+                    : 'recording.error',
+                titleKey: isStreamMode
+                    ? 'liveStreaming.failedToStart'
+                    : 'recording.failedToStart'
+            }));
+            break;
     }
 
     if (typeof APP !== 'undefined') {

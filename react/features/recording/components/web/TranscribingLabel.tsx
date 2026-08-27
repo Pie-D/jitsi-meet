@@ -15,7 +15,7 @@ import { isJwtFeatureEnabled } from '../../../base/jwt/functions';
 import AbstractRecordingLabel, {
     IProps as AbstractProps
 } from '../AbstractRecordingLabel';
-import StopRecordingDialog from '../Recording/web/StopRecordingDialog';
+import RecordingTranscriptionDialog from '../Recording/web/RecordingTranscriptionDialog';
 
 interface IProps extends AbstractProps {
 
@@ -76,7 +76,7 @@ class TranscribingLabel extends AbstractRecordingLabel<IProps> {
      */
     _onClick() {
         if (this.props._canControlRecording) {
-            this.props.dispatch(openDialog('StopRecordingDialog', StopRecordingDialog));
+            this.props.dispatch(openDialog('RecordingTranscriptionDialog', RecordingTranscriptionDialog));
         }
     }
 

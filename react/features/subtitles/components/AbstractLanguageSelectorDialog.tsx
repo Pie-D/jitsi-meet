@@ -6,10 +6,10 @@ import { IReduxState, IStore } from '../../app/types';
 import { DEFAULT_LANGUAGE } from '../../base/i18n/i18next';
 import { setRequestingSubtitles, setStageBilingualMode } from '../actions.any';
 import { openDialog } from '../../base/dialog/actions';
-import { StartRecordingDialog } from '../../recording/components/Recording/index';
 import { getAvailableSubtitlesLanguages, isTranslationEnabled } from '../functions.any';
 
 export interface IAbstractLanguageSelectorDialogProps {
+    asyncTranscription: boolean;
     dispatch: IStore['dispatch'];
     language: string | null;
     listItems: Array<any>;
@@ -56,6 +56,7 @@ const AbstractLanguageSelectorDialog = (Component: ComponentType<IAbstractLangua
         });
     const { conference } = useSelector((state: IReduxState) => state['features/base/conference']);
     const translationEnabled = useSelector(isTranslationEnabled);
+    const asyncTranscription = Boolean(conference?.getMetadataHandler()?.getMetadata()?.asyncTranscription);
 
     const onLanguageSelected = useCallback((value: string) => {
         if (value === BILINGUAL_LABEL) {
@@ -73,13 +74,7 @@ const AbstractLanguageSelectorDialog = (Component: ComponentType<IAbstractLangua
         const enabled = Boolean(_selectedLanguage);
         const displaySubtitles = enabled;
 
-        if (conference?.getMetadataHandler()?.getMetadata()?.asyncTranscription) {
-            dispatch(openDialog('StartRecordingDialog', StartRecordingDialog, {
-                recordAudioAndVideo: false
-            }));
-        } else {
-            dispatch(setRequestingSubtitles(enabled, displaySubtitles, _selectedLanguage));
-        }
+        dispatch(setRequestingSubtitles(enabled, displaySubtitles, _selectedLanguage));
     }, [conference, language]);
 
     if (!translationEnabled) {
@@ -88,6 +83,7 @@ const AbstractLanguageSelectorDialog = (Component: ComponentType<IAbstractLangua
 
     return (
         <Component
+            asyncTranscription={asyncTranscription}
             dispatch={dispatch}
             language={language}
             listItems={listItems}

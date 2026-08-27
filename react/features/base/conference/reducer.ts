@@ -12,6 +12,7 @@ import { assign, equals, set } from '../redux/functions';
 
 import {
     AUTH_STATUS_CHANGED,
+    CONFERENCE_CONNECTION_ESTABLISHED,
     CONFERENCE_FAILED,
     CONFERENCE_JOINED,
     CONFERENCE_LEFT,
@@ -44,6 +45,7 @@ const DEFAULT_STATE = {
     conference: undefined,
     dataChannelOpen: undefined,
     e2eeSupported: undefined,
+    iceConnected: undefined,
     joining: undefined,
     leaving: undefined,
     locked: undefined,
@@ -56,6 +58,16 @@ const DEFAULT_STATE = {
 };
 
 export interface IConferenceMetadata {
+    audioTranslation?: {
+        enabled?: boolean;
+    };
+
+    /**
+     * Server-controlled flag letting a deployment hide the audio-translation feature for a room (e.g. when
+     * the translation backend is not provisioned for it). Absent, or any value other than an explicit false,
+     * means available.
+     */
+    audioTranslationAvailable?: boolean;
     dialinEnabled?: boolean;
     files: {
         [fileId: string]: {
@@ -96,6 +108,7 @@ export interface IJitsiConference {
     connection: {
         token: string;
     };
+    clearTranslation: () => void;
     createVideoSIPGWSession: Function;
     dial: Function;
     disableAVModeration: Function;
@@ -115,6 +128,7 @@ export interface IJitsiConference {
     getParticipantCount: Function;
     getParticipants: Function;
     getPolls: Function;
+    getReceiverTranslationLanguage: () => string | null;
     getRole: Function;
     getShortTermCredentials: Function;
     getSpeakerStats: () => ISpeakerStats;
@@ -164,7 +178,9 @@ export interface IJitsiConference {
     setIsSilent: Function;
     setLocalParticipantProperty: Function;
     setMediaEncryptionKey: Function;
+    setParticipantTranslationLanguage: (participantId: string, language: string | null) => void;
     setReceiverConstraints: Function;
+    setReceiverTranslationLanguage: (language: string | null) => void;
     setSenderVideoConstraint: Function;
     setStartMutedPolicy: Function;
     setSubject: Function;
@@ -193,6 +209,7 @@ export interface IConferenceState {
     dataChannelOpen?: boolean;
     e2eeSupported?: boolean;
     error?: Error;
+    iceConnected?: boolean;
     joining?: IJitsiConference;
     leaving?: IJitsiConference;
     lobbyError?: boolean;
@@ -241,102 +258,106 @@ interface IConferenceFailedError extends Error {
 ReducerRegistry.register<IConferenceState>('features/base/conference',
     (state = DEFAULT_STATE, action): IConferenceState => {
         switch (action.type) {
-        case AUTH_STATUS_CHANGED:
-            return _authStatusChanged(state, action);
+            case AUTH_STATUS_CHANGED:
+                return _authStatusChanged(state, action);
 
-        case CONFERENCE_FAILED:
-            return _conferenceFailed(state, action);
+            case CONFERENCE_FAILED:
+                return _conferenceFailed(state, action);
 
-        case CONFERENCE_JOINED:
-            return _conferenceJoined(state, action);
+            case CONFERENCE_JOINED:
+                return _conferenceJoined(state, action);
 
-        case CONNECT_GST_STREAM:
-            return set(state, 'gstStreamConnected', true);
+            case CONNECT_GST_STREAM:
+                return set(state, 'gstStreamConnected', true);
 
-        case DISCONNECT_GST_STREAM:
-            return set(state, 'gstStreamConnected', false);
+            case DISCONNECT_GST_STREAM:
+                return set(state, 'gstStreamConnected', false);
 
-        case CONFERENCE_ROOM_OWNER_SET:
-            return set(state, 'roomOwner', action.roomOwner);
-            
-        case CONFERENCE_SUBJECT_CHANGED:
-            return set(state, 'subject', action.subject);
+            case CONFERENCE_ROOM_OWNER_SET:
+                return set(state, 'roomOwner', action.roomOwner);
 
-        case CONFERENCE_LOCAL_SUBJECT_CHANGED:
-            return set(state, 'localSubject', action.localSubject);
+            case CONFERENCE_CONNECTION_ESTABLISHED:
+                return set(state, 'iceConnected', true);
 
-        case CONFERENCE_PROPERTIES_CHANGED:
-            return _conferencePropertiesChanged(state, action);
+            case CONFERENCE_SUBJECT_CHANGED:
+                return set(state, 'subject', action.subject);
 
-        case CONFERENCE_TIMESTAMP_CHANGED:
-            return set(state, 'conferenceTimestamp', action.conferenceTimestamp);
+            case CONFERENCE_LOCAL_SUBJECT_CHANGED:
+                return set(state, 'localSubject', action.localSubject);
 
-        case CONFERENCE_LEFT:
-        case CONFERENCE_WILL_LEAVE:
-            return _conferenceLeftOrWillLeave(state, action);
+            case CONFERENCE_PROPERTIES_CHANGED:
+                return _conferencePropertiesChanged(state, action);
 
-        case CONFERENCE_WILL_JOIN:
-            return _conferenceWillJoin(state, action);
+            case CONFERENCE_TIMESTAMP_CHANGED:
+                return set(state, 'conferenceTimestamp', action.conferenceTimestamp);
 
-        case CONNECTION_WILL_CONNECT:
-            return set(state, 'authRequired', undefined);
+            case CONFERENCE_LEFT:
+            case CONFERENCE_WILL_LEAVE:
+                return _conferenceLeftOrWillLeave(state, action);
 
-        case DATA_CHANNEL_CLOSED:
-            return set(state, 'dataChannelOpen', false);
+            case CONFERENCE_WILL_JOIN:
+                return _conferenceWillJoin(state, action);
 
-        case DATA_CHANNEL_OPENED:
-            return set(state, 'dataChannelOpen', true);
+            case CONNECTION_WILL_CONNECT:
+                return set(state, 'authRequired', undefined);
 
-        case LOCK_STATE_CHANGED:
-            return _lockStateChanged(state, action);
+            case DATA_CHANNEL_CLOSED:
+                return set(state, 'dataChannelOpen', false);
 
-        case P2P_STATUS_CHANGED:
-            return _p2pStatusChanged(state, action);
+            case DATA_CHANNEL_OPENED:
+                return set(state, 'dataChannelOpen', true);
 
-        case SET_ASSUMED_BANDWIDTH_BPS: {
-            const assumedBandwidthBps = action.assumedBandwidthBps >= 0
-                ? Number(action.assumedBandwidthBps)
-                : undefined;
+            case LOCK_STATE_CHANGED:
+                return _lockStateChanged(state, action);
 
-            return set(state, 'assumedBandwidthBps', assumedBandwidthBps);
-        }
+            case P2P_STATUS_CHANGED:
+                return _p2pStatusChanged(state, action);
 
-        case SET_START_REACTIONS_MUTED:
-            return set(state, 'startReactionsMuted', action.muted);
+            case SET_ASSUMED_BANDWIDTH_BPS: {
+                const assumedBandwidthBps = action.assumedBandwidthBps >= 0
+                    ? Number(action.assumedBandwidthBps)
+                    : undefined;
 
-        case SET_LOCATION_URL:
-            return set(state, 'room', undefined);
+                return set(state, 'assumedBandwidthBps', assumedBandwidthBps);
+            }
 
-        case SET_OBFUSCATED_ROOM:
-            return { ...state,
-                obfuscatedRoom: action.obfuscatedRoom,
-                obfuscatedRoomSource: action.obfuscatedRoomSource
-            };
+            case SET_START_REACTIONS_MUTED:
+                return set(state, 'startReactionsMuted', action.muted);
 
-        case SET_PASSWORD:
-            return _setPassword(state, action);
+            case SET_LOCATION_URL:
+                return set(state, 'room', undefined);
 
-        case SET_PENDING_SUBJECT_CHANGE:
-            return set(state, 'pendingSubjectChange', action.subject);
+            case SET_OBFUSCATED_ROOM:
+                return {
+                    ...state,
+                    obfuscatedRoom: action.obfuscatedRoom,
+                    obfuscatedRoomSource: action.obfuscatedRoomSource
+                };
 
-        case SET_ROOM:
-            return _setRoom(state, action);
+            case SET_PASSWORD:
+                return _setPassword(state, action);
 
-        case SET_START_MUTED_POLICY:
-            return {
-                ...state,
-                startAudioMutedPolicy: action.startAudioMutedPolicy,
-                startVideoMutedPolicy: action.startVideoMutedPolicy
-            };
+            case SET_PENDING_SUBJECT_CHANGE:
+                return set(state, 'pendingSubjectChange', action.subject);
 
-        case UPDATE_CONFERENCE_METADATA:
-            return {
-                ...state,
-                metadata: action.metadata
-            };
+            case SET_ROOM:
+                return _setRoom(state, action);
 
-        case SET_CONFIG:
-            return _setConfig(state, action);
+            case SET_START_MUTED_POLICY:
+                return {
+                    ...state,
+                    startAudioMutedPolicy: action.startAudioMutedPolicy,
+                    startVideoMutedPolicy: action.startVideoMutedPolicy
+                };
+
+            case UPDATE_CONFERENCE_METADATA:
+                return {
+                    ...state,
+                    metadata: action.metadata
+                };
+
+            case SET_CONFIG:
+                return _setConfig(state, action);
         }
 
         return state;
@@ -372,7 +393,7 @@ function _setConfig(state: IConferenceState, { config }: { config: IConfig; }) {
  * reduction of the specified action.
  */
 function _authStatusChanged(state: IConferenceState,
-        { authEnabled, authLogin }: { authEnabled: boolean; authLogin: string; }) {
+    { authEnabled, authLogin }: { authEnabled: boolean; authLogin: string; }) {
     return assign(state, {
         authEnabled,
         authLogin
@@ -390,7 +411,8 @@ function _authStatusChanged(state: IConferenceState,
  * reduction of the specified action.
  */
 function _conferenceFailed(state: IConferenceState, { conference, error }: {
-    conference: IJitsiConference; error: IConferenceFailedError; }) {
+    conference: IJitsiConference; error: IConferenceFailedError;
+}) {
     // The current (similar to getCurrentConference in
     // base/conference/functions.any.js) conference which is joining or joined:
     const conference_ = state.conference || state.joining;
@@ -406,35 +428,35 @@ function _conferenceFailed(state: IConferenceState, { conference, error }: {
     let lobbyError;
 
     switch (error.name) {
-    case JitsiConferenceErrors.AUTHENTICATION_REQUIRED:
-        authRequired = conference;
-        break;
+        case JitsiConferenceErrors.AUTHENTICATION_REQUIRED:
+            authRequired = conference;
+            break;
 
-    /**
-     * Access denied while waiting in the lobby.
-     * A conference error when we tried to join into a room with no display name when lobby is enabled in the room.
-     */
-    case JitsiConferenceErrors.CONFERENCE_ACCESS_DENIED:
-    case JitsiConferenceErrors.DISPLAY_NAME_REQUIRED: {
-        lobbyError = true;
+        /**
+         * Access denied while waiting in the lobby.
+         * A conference error when we tried to join into a room with no display name when lobby is enabled in the room.
+         */
+        case JitsiConferenceErrors.CONFERENCE_ACCESS_DENIED:
+        case JitsiConferenceErrors.DISPLAY_NAME_REQUIRED: {
+            lobbyError = true;
 
-        break;
-    }
+            break;
+        }
 
-    case JitsiConferenceErrors.MEMBERS_ONLY_ERROR: {
-        membersOnly = conference;
+        case JitsiConferenceErrors.MEMBERS_ONLY_ERROR: {
+            membersOnly = conference;
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const [ _lobbyJid, _lobbyWaitingForHost ] = error.params;
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const [_lobbyJid, _lobbyWaitingForHost] = error.params;
 
-        lobbyWaitingForHost = _lobbyWaitingForHost;
+            lobbyWaitingForHost = _lobbyWaitingForHost;
 
-        break;
-    }
+            break;
+        }
 
-    case JitsiConferenceErrors.PASSWORD_REQUIRED:
-        passwordRequired = conference;
-        break;
+        case JitsiConferenceErrors.PASSWORD_REQUIRED:
+            passwordRequired = conference;
+            break;
     }
 
     return assign(state, {
@@ -442,6 +464,7 @@ function _conferenceFailed(state: IConferenceState, { conference, error }: {
         conference: undefined,
         e2eeSupported: undefined,
         error,
+        iceConnected: undefined,
         joining: undefined,
         leaving: undefined,
         lobbyError,
@@ -527,7 +550,7 @@ function _conferenceJoined(state: IConferenceState, { conference }: { conference
  * reduction of the specified action.
  */
 function _conferenceLeftOrWillLeave(state: IConferenceState, { conference, type }:
-{ conference: IJitsiConference; type: string; }) {
+    { conference: IJitsiConference; type: string; }) {
     const nextState = { ...state };
 
     // The redux action CONFERENCE_LEFT is the last time that we should be
@@ -543,13 +566,14 @@ function _conferenceLeftOrWillLeave(state: IConferenceState, { conference, type 
             nextState[p as keyof IConferenceState] = undefined;
 
             switch (p) {
-            case 'conference':
-            case 'passwordRequired':
-                // XXX Clear/unset locked & password for a conference which has
-                // been LOCKED_LOCALLY or LOCKED_REMOTELY.
-                delete nextState.locked;
-                delete nextState.password;
-                break;
+                case 'conference':
+                case 'passwordRequired':
+                    // XXX Clear/unset locked & password for a conference which has
+                    // been LOCKED_LOCALLY or LOCKED_REMOTELY.
+                    delete nextState.locked;
+                    delete nextState.password;
+                    nextState.iceConnected = undefined;
+                    break;
             }
         }
     }
@@ -653,39 +677,40 @@ function _p2pStatusChanged(state: IConferenceState, action: AnyAction) {
  * reduction of the specified action.
  */
 function _setPassword(state: IConferenceState, { conference, method, password }: {
-    conference: IJitsiConference; method: Object; password: string; }) {
+    conference: IJitsiConference; method: Object; password: string;
+}) {
     switch (method) {
-    case conference.join:
-        return assign(state, {
-            // 1. The JitsiConference which transitions away from
-            // passwordRequired MUST remain in the redux state
-            // features/base/conference until it transitions into
-            // conference; otherwise, there is a span of time during which
-            // the redux state does not even know that there is a
-            // JitsiConference whatsoever.
-            //
-            // 2. The redux action setPassword will attempt to join the
-            // JitsiConference so joining is an appropriate transitional
-            // redux state.
-            //
-            // 3. The redux action setPassword will perform the same check
-            // before it proceeds with the re-join.
-            joining: state.conference ? state.joining : conference,
-            locked: LOCKED_REMOTELY,
+        case conference.join:
+            return assign(state, {
+                // 1. The JitsiConference which transitions away from
+                // passwordRequired MUST remain in the redux state
+                // features/base/conference until it transitions into
+                // conference; otherwise, there is a span of time during which
+                // the redux state does not even know that there is a
+                // JitsiConference whatsoever.
+                //
+                // 2. The redux action setPassword will attempt to join the
+                // JitsiConference so joining is an appropriate transitional
+                // redux state.
+                //
+                // 3. The redux action setPassword will perform the same check
+                // before it proceeds with the re-join.
+                joining: state.conference ? state.joining : conference,
+                locked: LOCKED_REMOTELY,
 
-            /**
-             * The password with which the conference is to be joined.
-             *
-             * @type {string}
-             */
-            password
-        });
+                /**
+                 * The password with which the conference is to be joined.
+                 *
+                 * @type {string}
+                 */
+                password
+            });
 
-    case conference.lock:
-        return assign(state, {
-            locked: password ? LOCKED_LOCALLY : undefined,
-            password
-        });
+        case conference.lock:
+            return assign(state, {
+                locked: password ? LOCKED_LOCALLY : undefined,
+                password
+            });
     }
 
     return state;
