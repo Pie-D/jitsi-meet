@@ -54,27 +54,6 @@ export default class AbstractRecordButton<P extends IProps> extends AbstractButt
     override toggledLabel = 'toolbar.recordAndTranscribe';
     override toggledIcon = IconStop;
 
-    override _getLabel() {
-        return this.props._canTranscribe ? super._getLabel() : 'toolbar.record';
-    }
-
-    override _getAccessibilityLabel() {
-        return this.props._canTranscribe ? super._getAccessibilityLabel() : 'toolbar.record';
-    }
-
-    /**
-     * Returns the tooltip that should be displayed when the button is disabled.
-     *
-     * @private
-     * @returns {string}
-     */
-    override _getTooltip() {
-        if (this.props._isTranscriptionOnly) {
-            return this._isToggled() ? 'transcribing.stop' : 'transcribing.start';
-        }
-        return this.props._tooltip ?? '';
-    }
-
     /**
      * Gets the current label, taking the transcribing state into account.
      *
@@ -86,7 +65,8 @@ export default class AbstractRecordButton<P extends IProps> extends AbstractButt
         if (this.props._isTranscriptionOnly) {
             return this._isToggled() ? 'transcribing.stop' : 'transcribing.start';
         }
-        return super._getLabel();
+
+        return this.props._canTranscribe ? super._getLabel() : 'toolbar.record';
     }
 
     /**
@@ -100,7 +80,22 @@ export default class AbstractRecordButton<P extends IProps> extends AbstractButt
         if (this.props._isTranscriptionOnly) {
             return this._isToggled() ? 'transcribing.stop' : 'transcribing.start';
         }
-        return super._getAccessibilityLabel();
+
+        return this.props._canTranscribe ? super._getAccessibilityLabel() : 'toolbar.record';
+    }
+
+    /**
+     * Returns the tooltip that should be displayed when the button is disabled.
+     *
+     * @private
+     * @returns {string}
+     */
+    override _getTooltip() {
+        if (this.props._isTranscriptionOnly) {
+            return this._isToggled() ? 'transcribing.stop' : 'transcribing.start';
+        }
+
+        return this.props._tooltip ?? '';
     }
 
     /**
