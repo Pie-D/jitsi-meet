@@ -1,5 +1,5 @@
 import { Theme } from '@mui/material';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toArray } from 'react-emoji-render';
 import { connect } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
@@ -10,7 +10,15 @@ import { getParticipantById, getParticipantDisplayName, isPrivateChatEnabled } f
 import Popover from '../../../base/popover/components/Popover.web';
 import Message from '../../../base/react/components/web/Message';
 import { MESSAGE_TYPE_ERROR, MESSAGE_TYPE_LOCAL } from '../../constants';
-import { getDisplayNameSuffix, getFormattedTimestamp, getMessageText, getPrivateNoticeMessage, isFileMessage } from '../../functions';
+import {
+    getActiveChatSearchMatch,
+    getChatSearchQuery,
+    getDisplayNameSuffix,
+    getFormattedTimestamp,
+    getMessageText,
+    getPrivateNoticeMessage,
+    isFileMessage
+} from '../../functions';
 import { IChatMessageProps } from '../../types';
 
 import FileMessage from './FileMessage';
@@ -20,6 +28,11 @@ import ReactButton from './ReactButton';
 interface IProps extends IChatMessageProps {
     className?: string;
     enablePrivateChat?: boolean;
+    isActiveSearchMatch?: boolean;
+    isEditing?: boolean;
+    onCancelEdit?: () => void;
+    onEditMessage?: (message: IChatMessageProps['message']) => void;
+    searchQuery?: string;
     shouldDisplayMenuOnRight?: boolean;
     state?: IReduxState;
 }
@@ -102,6 +115,20 @@ const useStyles = makeStyles()((theme: Theme) => {
                 backgroundColor: theme.palette.chatMessagePrivate
             }
         },
+        searchMatchActive: {
+            outline: `2px solid ${theme.palette.action01}`,
+            outlineOffset: '2px',
+            animation: '$searchMatchFlash 1.4s ease-out'
+        },
+
+        '@keyframes searchMatchFlash': {
+            '0%': {
+                backgroundColor: theme.palette.warning01
+            },
+            '100%': {
+                backgroundColor: 'transparent'
+            }
+        },
         sideBySideContainer: {
             display: 'flex',
             flexDirection: 'row',
@@ -161,7 +188,18 @@ const useStyles = makeStyles()((theme: Theme) => {
             ...theme.typography.bodyShortRegular,
             color: theme.palette.chatMessageText,
             whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
+            wordBreak: 'break-word',
+
+            '& mark': {
+                backgroundColor: theme.palette.warning01,
+                color: theme.palette.text04,
+                borderRadius: '2px',
+                padding: '0 1px'
+            }
+        },
+        deletedMessage: {
+            fontStyle: 'italic',
+            opacity: 0.7
         },
         errorMessage: {
             ...theme.typography.bodyShortRegular,
@@ -181,6 +219,12 @@ const useStyles = makeStyles()((theme: Theme) => {
             marginLeft: theme.spacing(1),
             whiteSpace: 'nowrap',
             flexShrink: 0
+        },
+        editedLabel: {
+            ...theme.typography.labelRegular,
+            color: theme.palette.chatTimestamp,
+            marginLeft: theme.spacing(1),
+            whiteSpace: 'nowrap'
         },
         reactionsPopover: {
             padding: theme.spacing(2),
@@ -250,22 +294,45 @@ const useStyles = makeStyles()((theme: Theme) => {
             marginRight: theme.spacing(2),
             borderRadius: '2px',
             display: 'inline-block'
+        },
+        editingNotice: {
+            alignItems: 'center',
+            borderTop: `1px solid ${theme.palette.chatInputBorder}`,
+            color: theme.palette.chatMessageText,
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: theme.spacing(1),
+            paddingTop: theme.spacing(1),
+            width: '100%',
+            ...theme.typography.labelRegular
+        },
+        cancelEdit: {
+            cursor: 'pointer',
+            color: theme.palette.link01
         }
     };
 });
 
 const ChatMessage = ({
     className = '',
+    isEditing,
     message,
     state,
     showDisplayName,
     shouldDisplayMenuOnRight,
+    isActiveSearchMatch,
+    searchQuery,
     enablePrivateChat,
     knocking,
+    onCancelEdit,
+    onEditMessage,
     t
 }: IProps) => {
     const { classes, cx } = useStyles();
-    const [isReactionsOpen, setIsReactionsOpen] = useState(false);
+    const [ isHovered, setIsHovered ] = useState(false);
+    const [ isReactionsOpen, setIsReactionsOpen ] = useState(false);
+    const messageRef = useRef<HTMLDivElement>(null);
+
     const systemMessageTitle = t('chat.systemDisplayName');
 
     const emojiList = [
@@ -276,6 +343,44 @@ const ChatMessage = ({
         { key: ':angry:', emoji: '😠' },         // Angry
         { key: ':fire:', emoji: '🔥' }          // Fire
     ];
+
+    useEffect(() => {
+        if (!isActiveSearchMatch || !messageRef.current) {
+            return;
+        }
+
+        const messageElement = messageRef.current;
+        const container = messageElement.closest('#chatconversation') as HTMLElement | null;
+
+        if (!container) {
+            return;
+        }
+
+        const messageRect = messageElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        const offset = messageRect.top
+            - containerRect.top
+            - (containerRect.height / 2)
+            + (messageRect.height / 2);
+
+        container.scrollTo({
+            top: container.scrollTop + offset,
+            behavior: 'smooth'
+        });
+    }, [ isActiveSearchMatch ]);
+
+    const handleEditMessage = useCallback(() => {
+        onEditMessage?.(message);
+    }, [ message, onEditMessage ]);
+
+    const handleMouseEnter = useCallback(() => {
+        setIsHovered(true);
+    }, []);
+
+    const handleMouseLeave = useCallback(() => {
+        setIsHovered(false);
+    }, []);
 
 
 
@@ -328,6 +433,24 @@ const ChatMessage = ({
                 <p>
                     {getFormattedTimestamp(message)}
                 </p>
+            </div>
+        );
+    }
+
+    /**
+     * Renders the editing notice for which message is edited.
+     *
+     * @returns {React$Element<*>}
+     */
+    function _renderEditingNotice() {
+        return (
+            <div className = { classes.editingNotice }>
+                <span>{t('chat.editingMessage', 'Editing')}</span>
+                <span
+                    className = { classes.cancelEdit }
+                    onClick = { onCancelEdit }>
+                    {t('chat.cancel', 'Cancel')}
+                </span>
             </div>
         );
     }
@@ -410,10 +533,28 @@ const ChatMessage = ({
         );
     }, [message?.reactions, isReactionsOpen]);
 
+    const messageText = message.isDeleted
+        ? (
+            message.messageType === MESSAGE_TYPE_LOCAL
+                ? t<string>('chat.deletedMessageByMe')
+                : t<string>('chat.deletedMessage')
+        )
+        : message.isModerated
+            ? t('chat.moderatedMessage')
+            : getMessageText(message);
+
+    const canEdit = message.messageType === MESSAGE_TYPE_LOCAL
+        && !message.lobbyChat
+        && !message.isReaction
+        && !message.isFromVisitor
+        && !isFileMessage(message);
+
     return (
         <div
             className={cx(classes.chatMessageWrapper, className)}
             id={message.messageId}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             tabIndex={-1}>
             <div className={classes.sideBySideContainer}>
                 {message.messageType === 'system_chat_message' ? (
@@ -444,16 +585,19 @@ const ChatMessage = ({
                     <>
                         {!shouldDisplayMenuOnRight && (
                             <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
-                                <MessageMenu
-                                    displayName={message.displayName}
-                                    enablePrivateChat={Boolean(enablePrivateChat)}
-                                    isFileMessage={isFileMessage(message)}
-                                    isFromVisitor={message.isFromVisitor}
-                                    isLobbyMessage={message.lobbyChat}
-                                    message={message.message}
-                                    messageId={message.messageId}
-                                    messageType={message.messageType}
-                                    participantId={message.participantId} />
+                                {isHovered && !message.isModerated && (
+                                    <MessageMenu
+                                        canEdit={canEdit}
+                                        displayName={message.displayName}
+                                        enablePrivateChat={Boolean(enablePrivateChat)}
+                                        isFileMessage={isFileMessage(message)}
+                                        isFromVisitor={message.isFromVisitor}
+                                        isLobbyMessage={message.lobbyChat}
+                                        isModerated={message.isModerated}
+                                        message={message}
+                                        onEditMessage={handleEditMessage}
+                                        participantId={message.participantId} />
+                                )}
                             </div>
                         )}
                         <div
@@ -464,8 +608,10 @@ const ChatMessage = ({
                                 message.messageType === MESSAGE_TYPE_ERROR && 'error',
                                 (message.privateMessage && message.messageType !== MESSAGE_TYPE_LOCAL) && 'privatemessage',
                                 message.lobbyChat && !knocking && 'lobbymessage',
-                                isFileMessage(message) && 'file'
-                            )}>
+                                isFileMessage(message) && 'file',
+                                isActiveSearchMatch && classes.searchMatchActive
+                            )}
+                            ref={messageRef}>
                             <div className={classes.replyWrapper}>
                                 <div className={cx('messagecontent', classes.messageContent)}>
                                     {showDisplayName && _renderDisplayName()}
@@ -473,36 +619,49 @@ const ChatMessage = ({
                                         'usermessage',
                                         message.messageType === MESSAGE_TYPE_ERROR
                                             ? classes.errorMessage
-                                            : classes.userMessage
+                                            : classes.userMessage,
+                                        message.isDeleted && message.isModerated && classes.deletedMessage
                                     )}>
-                                        {isFileMessage(message) ? (
+                                        {!message.isModerated && isFileMessage(message) ? (
                                             <FileMessage
                                                 message={message}
                                                 screenReaderHelpText={message.messageType === MESSAGE_TYPE_LOCAL
                                                     ? t<string>('chat.fileAccessibleTitleMe')
                                                     : t<string>('chat.fileAccessibleTitle', {
                                                         user: message.displayName
-                                                    })
-                                                } />
+                                                    })} />
                                         ) : (
                                             <Message
+                                                highlightQuery={searchQuery}
                                                 screenReaderHelpText={message.messageType === MESSAGE_TYPE_LOCAL
                                                     ? t<string>('chat.messageAccessibleTitleMe')
                                                     : t<string>('chat.messageAccessibleTitle', {
                                                         user: message.displayName
                                                     })}
-                                                text={getMessageText(message)} />
+                                                text={messageText} />
+                                        )}
+                                        {message.isModerated && message.moderationReason && (
+                                            <div className={classes.privateMessageNotice}>
+                                                {t('chat.moderationReason', {
+                                                    reason: message.moderationReason
+                                                })}
+                                            </div>
                                         )}
                                         {((message.privateMessage && message.messageType !== MESSAGE_TYPE_LOCAL) || (message.lobbyChat && !knocking))
                                             && _renderPrivateNotice()}
                                         <div className={classes.chatMessageFooter}>
                                             <div className={classes.chatMessageFooterLeft}>
-                                                {message.reactions && message.reactions.size > 0 && (
+                                                {!message.isDeleted && !message.isModerated && message.reactions && message.reactions.size > 0 && (
                                                     <>
                                                         {renderReactions}
                                                     </>
                                                 )}
                                             </div>
+                                            {message.isEdited && (
+                                                <div className={classes.editedLabel}>
+                                                    {t('chat.edited', '(edited)')}
+                                                </div>
+                                            )}
                                             {_renderTimestamp()}
                                         </div>
                                     </div>
@@ -512,25 +671,30 @@ const ChatMessage = ({
                         {shouldDisplayMenuOnRight && (
                             <div className={classes.sideBySideContainer}>
                                 {!message.privateMessage && !message.lobbyChat
-                                    && !message.isReaction && <div>
+                                    && !message.isReaction && !message.isDeleted && !message.isModerated && (
+                                    <div>
                                         <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
-                                            <ReactButton
+                                            {isHovered && <ReactButton
                                                 messageId={message.messageId}
-                                                receiverId={''} />
+                                                receiverId={''} />}
                                         </div>
-                                    </div>}
+                                    </div>
+                                )}
                                 <div>
                                     <div className={cx(classes.optionsButtonContainer, 'action-buttons')}>
-                                        <MessageMenu
-                                            displayName={message.displayName}
-                                            enablePrivateChat={Boolean(enablePrivateChat)}
-                                            isFileMessage={isFileMessage(message)}
-                                            isFromVisitor={message.isFromVisitor}
-                                            isLobbyMessage={message.lobbyChat}
-                                            message={message.message}
-                                            messageId={message.messageId}
-                                            messageType={message.messageType}
-                                            participantId={message.participantId} />
+                                        {isHovered && !message.isDeleted && !message.isModerated && (
+                                            <MessageMenu
+                                                canEdit={canEdit}
+                                                displayName={message.displayName}
+                                                enablePrivateChat={Boolean(enablePrivateChat)}
+                                                isFileMessage={isFileMessage(message)}
+                                                isFromVisitor={message.isFromVisitor}
+                                                isLobbyMessage={message.lobbyChat}
+                                                isModerated={message.isModerated}
+                                                message={message}
+                                                onEditMessage={handleEditMessage}
+                                                participantId={message.participantId} />
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -538,6 +702,7 @@ const ChatMessage = ({
                     </>
                 )}
             </div>
+            {isEditing && _renderEditingNotice()}
         </div>
     );
 };
@@ -550,6 +715,9 @@ const ChatMessage = ({
  */
 function _mapStateToProps(state: IReduxState, { message }: IProps) {
     const { knocking } = state['features/lobby'];
+
+    const activeSearchMatch = getActiveChatSearchMatch(state);
+    const isActiveSearchMatch = Boolean(activeSearchMatch && activeSearchMatch.messageId === message.messageId);
 
     const participant = getParticipantById(state, message.participantId);
 
@@ -569,6 +737,8 @@ function _mapStateToProps(state: IReduxState, { message }: IProps) {
     return {
         shouldDisplayMenuOnRight,
         enablePrivateChat,
+        isActiveSearchMatch,
+        searchQuery: getChatSearchQuery(state),
         knocking,
         state
     };

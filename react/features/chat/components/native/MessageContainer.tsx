@@ -2,14 +2,28 @@ import React, { Component } from 'react';
 import { FlatList, Text, TextStyle, View, ViewStyle } from 'react-native';
 import { connect } from 'react-redux';
 
-import { translate } from '../../../base/i18n/functions';
-import { IMessageGroup, groupMessagesBySender } from '../../../base/util/messageGrouping';
+import { IReduxState } from '../../../app/types';
+import { translate } from '../../../base/i18n/functions.native';
+import { groupMessagesBySender } from '../../../base/util/messageGrouping';
+import { MESSAGE_TYPE_LOCAL, MESSAGE_TYPE_REMOTE } from '../../constants';
+import { getActiveChatSearchMatch } from '../../functions';
 import { IMessage } from '../../types';
 
-import ChatMessageGroup from './ChatMessageGroup';
+import ChatMessage from './ChatMessage';
 import styles from './styles';
 
+/**
+ * A single flat list row: one message plus its grouping flags.
+ */
+interface IMessageRow {
+    message: IMessage;
+    showAvatar: boolean;
+    showDisplayName: boolean;
+    showTimestamp: boolean;
+}
+
 interface IProps {
+    _activeMatch?: IMessage;
     loadMoreMessages?: () => Promise<void>;
     messages: IMessage[];
     t: Function;
@@ -24,6 +38,8 @@ class MessageContainer extends Component<IProps, any> {
         messages: [] as IMessage[]
     };
 
+    _flatListRef: React.RefObject<FlatList<any>>;
+
     /**
      * Flag to prevent concurrent load more calls.
      */
@@ -37,11 +53,76 @@ class MessageContainer extends Component<IProps, any> {
     constructor(props: IProps) {
         super(props);
 
+        this._flatListRef = React.createRef();
         this._keyExtractor = this._keyExtractor.bind(this);
         this._renderListEmptyComponent = this._renderListEmptyComponent.bind(this);
-        this._renderMessageGroup = this._renderMessageGroup.bind(this);
-        this._getMessagesGroupedBySender = this._getMessagesGroupedBySender.bind(this);
+        this._renderMessage = this._renderMessage.bind(this);
+        this._getMessageRows = this._getMessageRows.bind(this);
+        this._onScrollToIndexFailed = this._onScrollToIndexFailed.bind(this);
         this._onEndReached = this._onEndReached.bind(this);
+    }
+
+    /**
+     * Implements {@code Component#componentDidUpdate}.
+     *
+     * @inheritdoc
+     */
+    override componentDidUpdate(prevProps: IProps) {
+        const { _activeMatch } = this.props;
+
+        if (_activeMatch && _activeMatch.messageId !== prevProps._activeMatch?.messageId) {
+            this._scrollToActiveMatch();
+        }
+    }
+
+    /**
+     * Scrolls the list so the active search match message is visible.
+     *
+     * @returns {void}
+     */
+    _scrollToActiveMatch() {
+        const { _activeMatch } = this.props;
+
+        if (!_activeMatch) {
+            return;
+        }
+
+        const data = this._getMessageRows();
+        const index = data.findIndex(row => row.message.messageId === _activeMatch.messageId);
+
+        if (index === -1) {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            this._flatListRef.current?.scrollToIndex({
+                animated: true,
+                index,
+                viewPosition: 0.5
+            });
+        });
+    }
+
+    /**
+     * Fallback for when scrollToIndex fires before the target row is measured.
+     *
+     * @param {Object} info - Info about the failed scroll attempt.
+     * @returns {void}
+     */
+    _onScrollToIndexFailed(info: { averageItemLength: number; index: number; }) {
+        // Jump near the target so it renders, then retry.
+        this._flatListRef.current?.scrollToOffset({
+            animated: false,
+            offset: info.averageItemLength * info.index
+        });
+
+        setTimeout(() => {
+            this._flatListRef.current?.scrollToIndex({
+                animated: true,
+                index: info.index,
+                viewPosition: 0.5
+            });
+        }, 100);
     }
 
     /**
@@ -50,7 +131,7 @@ class MessageContainer extends Component<IProps, any> {
      * @inheritdoc
      */
     override render() {
-        const data = this._getMessagesGroupedBySender();
+        const data = this._getMessageRows();
         const noMessages = data.length === 0;
 
         return (
@@ -66,7 +147,11 @@ class MessageContainer extends Component<IProps, any> {
                 inverted = { Boolean(data.length) }
                 keyExtractor = { this._keyExtractor }
                 keyboardShouldPersistTaps = 'handled'
-                renderItem = { this._renderMessageGroup }
+                onEndReached = { this._onEndReached }
+                onEndReachedThreshold = { 0.2 }
+                onScrollToIndexFailed = { this._onScrollToIndexFailed }
+                ref = { this._flatListRef }
+                renderItem = { this._renderMessage }
                 style = { noMessages && styles.emptyListStyle } />
         );
     }
@@ -74,13 +159,11 @@ class MessageContainer extends Component<IProps, any> {
     /**
      * Key extractor for the flatlist.
      *
-     * @param {Object} _item - The flatlist item that we need the key to be
-     * generated for.
-     * @param {number} index - The index of the element.
+     * @param {IMessageRow} item - The row whose key we need to generate.
      * @returns {string}
      */
-    _keyExtractor(_item: Object, index: number) {
-        return `key_${index}`;
+    _keyExtractor(item: IMessageRow) {
+        return item.message.messageId;
     }
 
     /**
@@ -105,23 +188,42 @@ class MessageContainer extends Component<IProps, any> {
     /**
      * Renders a single chat message.
      *
-     * @param {Array<Object>} messages - The chat message to render.
+     * @param {Object} row - The row containing the message and its grouping flags.
      * @returns {React$Element<*>}
      */
-    _renderMessageGroup({ item: group }: { item: IMessageGroup<IMessage>; }) {
-        const { messages } = group;
-
-        return <ChatMessageGroup messages = { messages } />;
+    _renderMessage({ item }: { item: IMessageRow; }) {
+        return (
+            <ChatMessage
+                message = { item.message }
+                showAvatar = { item.showAvatar }
+                showDisplayName = { item.showDisplayName }
+                showTimestamp = { item.showTimestamp } />
+        );
     }
 
     /**
-     * Returns an array of message groups, where each group is an array of messages
-     * grouped by the sender.
+     * Builds one row per message with its grouping flags.
      *
-     * @returns {Array<Array<Object>>}
+     * @returns {IMessageRow[]}
      */
-    _getMessagesGroupedBySender() {
-        return groupMessagesBySender(this.props.messages);
+    _getMessageRows(): IMessageRow[] {
+        const rows: IMessageRow[] = [];
+
+        for (const group of groupMessagesBySender(this.props.messages)) {
+            const groupType = group.messages[0].messageType;
+            const oldestIndex = group.messages.length - 1;
+
+            group.messages.forEach((message, index) => {
+                rows.push({
+                    message,
+                    showAvatar: groupType !== MESSAGE_TYPE_LOCAL && index === oldestIndex,
+                    showDisplayName: groupType === MESSAGE_TYPE_REMOTE && index === oldestIndex,
+                    showTimestamp: index === 0
+                });
+            });
+        }
+
+        return rows;
     }
 
     /**
@@ -147,4 +249,10 @@ class MessageContainer extends Component<IProps, any> {
     }
 }
 
-export default translate(connect()(MessageContainer));
+function _mapStateToProps(state: IReduxState) {
+    return {
+        _activeMatch: getActiveChatSearchMatch(state)
+    };
+}
+
+export default translate(connect(_mapStateToProps)(MessageContainer));

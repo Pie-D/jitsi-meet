@@ -300,8 +300,6 @@
         "Submit": "Đăng ký",
         "Understand": "Tôi hiểu rồi, hãy tắt tiếng tôi ngay bây giờ",
         "UnderstandAndUnmute": "Tôi hiểu rồi, hãy bật tiếng tôi",
-        "WaitForHostMsg": "Cuộc họp chưa được bắt đầu vì chưa có người điều hành. Nếu bạn là quản trị viên vui lòng xác thực. Nếu không, vui lòng đợi quản trị viên.",
-        "WaitForHostNoAuthMsg": "Hội nghị vẫn chưa bắt đầu vì chưa có người điều hành nào đến. Vui lòng chờ.",
         "WaitingForHostButton": "Chờ người điều hành",
         "WaitingForHostTitle": "Chờ người điều hành ...",
         "Yes": "Có",
@@ -367,7 +365,7 @@
         "error": "Lỗi",
         "errorRoomCreationRestriction": "Bạn đã cố gắng tham gia quá nhanh, vui lòng quay lại sau một lát.",
         "gracefulShutdown": "Dịch vụ của chúng tôi hiện đang bảo trì. Vui lòng thử lại sau.",
-        "grantModeratorDialog": "Bạn có thực sự muốn cấp quyền quản trị cho người này?",
+        "grantModeratorDialog": "Bạn có chắc chắn muốn cấp quyền điều hành cho {{participantName}} không?",
         "grantModeratorTitle": "Cấp quyền điều hành",
         "hide": "Ẩn",
         "hideShareAudioHelper": "Không hiển thị lại hộp thoại này",
@@ -379,9 +377,7 @@
         "kickParticipantButton": "Đuổi ra",
         "kickParticipantDialog": "Bạn có chắc muốn đuổi người này ra?",
         "kickParticipantTitle": "Xóa người dùng khỏi cuộc họp?",
-        "kickSystemTitle": "Ối! Bạn bị đuổi khỏi cuộc họp rồi",
         "kickTitle": "Ôi! {{participantDisplayName}} đã đuổi bạn ra khỏi cuộc họp",
-        "learnMore": "tìm hiểu thêm",
         "linkMeeting": "Liên kết cuộc họp",
         "linkMeetingTitle": "Liên kết cuộc họp với Salesforce",
         "liveStreaming": "Phát trực tuyến",
@@ -577,7 +573,7 @@
     },
     "feedback": {
         "accessibilityLabel": {
-            "yourChoice": "Lựa chọn của bạn: {{xếp hạng}}"
+            "yourChoice": "Lựa chọn của bạn: {{rating}}"
         },
         "average": "Trung bình",
         "bad": "Kém",
@@ -824,11 +820,6 @@
     "me": "Tôi",
     "notify": {
         "OldElectronAPPTitle": "Lỗ hổng bảo mật!",
-        "allowAction": "Cho phép",
-        "allowAll": "Cho phép tất cả",
-        "allowAudio": "Cho phép âm thanh",
-        "allowDesktop": "Cho phép chia sẻ màn hình",
-        "allowVideo": "Cho phép video",
         "allowedUnmute": "Bạn có thể bật âm thanh, bật camera hoặc chia sẻ màn hình của mình.",
         "audioUnmuteBlockedDescription": "Hoạt động bật âm thanh đã bị tạm thời chặn do giới hạn hệ thống.",
         "audioUnmuteBlockedTitle": "Chặn việc bật âm thanh!",
@@ -841,10 +832,6 @@
         "dataChannelClosedDescriptionWithAudio": "Kênh cầu nối không hoạt động và do đó âm thanh và video có thể bị gián đoạn.",
         "dataChannelClosedWithAudio": "Audio and video quality may be impaired",
         "disabledIframe": "Nhúng chỉ dành cho mục đích thử nghiệm, cuộc gọi này sẽ ngắt kết nối sau {{timeout}} phút.",
-        "connectionFailed": "Kết nối không thành công. Vui lòng thử lại sau!",
-        "desktopMutedRemotelyTitle": "Việc chia sẻ màn hình của bạn đã bị {{participantDisplayName}} dừng lại",
-        "disabledIframeSecondaryNative": "Việc nhúng {{domain}} chỉ nhằm mục đích demo, vì vậy lệnh gọi này sẽ bị ngắt kết nối sau {{timeout}} phút.",
-        "disabledIframeSecondaryWeb": "Việc nhúng {{domain}} chỉ nhằm mục đích demo, vì vậy lệnh gọi này sẽ bị ngắt kết nối sau {{timeout}} phút. Vui lòng sử dụng <a href='{{jaasDomain}}' rel='noopener noreferrer' target='_blank'>C-Meet dưới dạng Dịch vụ</a> để nhúng sản xuất!",
         "disconnected": "đã ngắt kết nối",
         "displayNotifications": "Hiển thị thông báo cho",
         "dontRemindMe": "Đừng nhắc tôi",
@@ -905,7 +892,7 @@
         "passwordRemovedRemotely": "$t(lockRoomPasswordUppercase) đã bị xóa bởi một người tham gia khác",
         "passwordSetRemotely": "$t(lockRoomPasswordUppercase) đã được thiết lập bởi một người tham gia khác",
         "raiseHandAction": "Giơ tay",
-        "raisedHand": "{{name}} muốn phát biểu.",
+        "raisedHand": "Muốn phát biểu.",
         "raisedHands": "{{participantName}} và {{raisedHands}} người nữa đã giơ tay",
         "reactionSounds": "Tắt âm",
         "reactionSoundsForAll": "Tắt âm cho tất cả",
@@ -1017,9 +1004,7 @@
             "pollOption": "Tùy chọn bình chọn {{index}}",
             "pollQuestion": "Câu hỏi bình chọn",
             "questionPlaceholder": "Hỏi một câu hỏi",
-            "removeOption": "Xóa tùy chọn",
-            "save": "Lưu",
-            "send": "Gửi"
+            "removeOption": "Xóa tùy chọn"
         },
         "errors": {
             "notUniqueOption": "Tùy chọn phải là duy nhất"
@@ -1077,7 +1062,7 @@
         "errorDialOut": "Không thể gọi ra",
         "errorDialOutDisconnected": "Không thể gọi ra. Đã ngắt kết nối",
         "errorDialOutFailed": "Không thể gọi ra. Cuộc gọi thất bại",
-        "errorDialOutStatus": "Lỗi khi lấy trạng thái gọi ra: {{status}}",
+        "errorDialOutStatus": "Lỗi khi lấy trạng thái cuộc gọi đi",
         "errorMissingName": "Vui lòng nhập tên của bạn để tham gia cuộc họp",
         "errorNoPermissions": "Bạn cần phải cho phép truy cập vào micro và camera",
         "errorStatusCode": "Lỗi khi gọi ra, mã trạng thái: {{status}}",
@@ -1187,14 +1172,12 @@
         "serviceDescriptionCloudInfo": "Cuộc họp được ghi lại sẽ tự động xóa sau 24 giờ kể từ thời gian ghi âm.",
         "serviceName": "Dịch vụ ghi hình",
         "sessionAlreadyActive": "Phiên này đã được ghi âm hoặc phát trực tiếp.",
-        "showAdvancedOptions": "Tùy chọn nâng cao",
         "signIn": "Đăng nhập",
         "signOut": "Đăng xuất",
         "surfaceError": "Vui lòng chọn tab hiện tại.",
         "title": "Đang ghi hình",
         "unavailable": "Rất tiếc! Dịch vụ {{serviceName}} đang không sẵn sàng. Chúng tôi đang xử lý vấn đề này. Vui lòng thử lại sau.",
-        "unavailableTitle": "Ghi hình không hoạt động.",
-        "uploadToCloud": "Tải lên đám mây"
+        "unavailableTitle": "Ghi hình không hoạt động."
     },
     "screenshareDisplayName": "Màn hình của {{name}}",
     "sectionList": {
@@ -1397,7 +1380,7 @@
             "muteGUMPending": "Đang kết nối microphone của bạn",
             "noiseSuppression": "Chế độ chống ồn",
             "openChat": "Mở chat",
-            "participants": "Mở khung người tham gia",
+            "participants": "Mở bảng người tham gia. {{participantsCount}} người tham gia",
             "pip": "Bật/Tắt chế độ Hình-trong-Hình",
             "privateMessage": "Gửi tin nhắn riêng tư",
             "profile": "Chỉnh sửa hồ sơ cá nhân",
@@ -1540,7 +1523,7 @@
         "silence": "Im lặng",
         "speakerStats": "Thống kê về người tham dự",
         "startScreenSharing": "Bắt đầu chia sẻ màn hình",
-        "startSubtitles": "Bắt đầu phụ đề",
+        "startSubtitles": "Phụ đề • {{language}}",
         "stopAudioSharing": "Dừng chia sẻ âm thanh",
         "stopScreenSharing": "Dừng chia sẻ màn hình",
         "stopSharedVideo": "Dừng chia sẻ video",
@@ -1564,15 +1547,6 @@
     "transcribing": {
         "ccButtonTooltip": "Chạy/Dừng phụ đề",
         "expandedLabel": "Phiên âm đang bật",
-        "failedToStart": "Khởi chạy phiên âm thất bại",
-        "labelTooltip": "Cuộc họp đang được phiên âm",
-        "labelTooltipExtra": "Ngoài ra, bản ghi sẽ được cung cấp sau.",
-        "off": "Đã dừng phiên âm",
-        "on": "Đã bắt đầu phiên âm",
-        "onBy": "{{name}} đã bắt đầu phiên âm",
-        "onWithRecording": "Bản phiên âm cũng sẽ có sẵn sau cuộc họp.",
-        "openClosedCaptions": "Bật phụ đề",
-        "original": "Bản gốc",
         "sourceLanguageDesc": "Hiện tại ngôn ngữ của cuộc họp được đặt là <b>{{sourceLanguage}}</b>. <br/> Bạn có thể thay đổi nó từ",
         "sourceLanguageHere": "đây",
         "start": "Bắt đầu hiển thị phụ đề",
@@ -1690,16 +1664,9 @@
         },
         "labelTooltip": "Số lượt truy cập: {{count}}",
         "notification": {
-            "demoteDescription": "Được gửi đến đây bởi {{actor}}, hãy giơ tay để tham gia",
-            "noMainParticipantsDescription": "Một người tham gia cần bắt đầu cuộc họp. Vui lòng thử lại sau một lát.",
-            "noMainParticipantsTitle": "Cuộc họp này vẫn chưa bắt đầu.",
-            "noVisitorLobby": "Bạn không thể tham gia khi có sảnh đợi được bật cho cuộc họp.",
-            "notAllowedPromotion": "Người tham gia cần cho phép yêu cầu của bạn trước.",
-            "requestToJoin": "Giơ tay",
-            "requestToJoinDescription": "Yêu cầu của bạn đã được gửi đến người kiểm duyệt. Vui lòng chờ!",
-            "title": "Bạn là khách truy cập trong cuộc họp"
-        },
-        "waitingMessage": "Bạn sẽ tham gia cuộc họp ngay khi cuộc họp diễn ra!"
+            "demoteDescription": "Được gửi đến đây bởi {{actor}}, giơ tay để tham gia",
+            "title": "Bạn là một khách trong cuộc họp"
+        }
     },
     "volumeSlider": "Thanh điều chỉnh âm lượng",
     "welcomepage": {

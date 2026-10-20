@@ -175,7 +175,7 @@ function _mapStateToProps(state: IReduxState) {
         filmstripVisible: visible,
         filmstripWidth: getVerticalViewMaxWidth(state),
         isEnabled: isSharedVideoEnabled(state),
-        isResizing: isResizing || isChatResizing,
+        isResizing: Boolean(isResizing || isChatResizing),
         isVideoShared,
         onStage,
         videoUrl

@@ -91,7 +91,7 @@ export function _mapStateToProps(state: IReduxState, _ownProps: any) {
     return {
         _privateMessageRecipient,
         _isVisitor,
-        _isLobbyChatActive: isLobbyChatActive,
+        _isLobbyChatActive: Boolean(isLobbyChatActive),
         _lobbyMessageRecipient:
                 isLobbyChatActive && lobbyMessageRecipient ? lobbyMessageRecipient.name : undefined,
         _visible: isLobbyChatActive ? isLocalParticipantModerator(state) : true

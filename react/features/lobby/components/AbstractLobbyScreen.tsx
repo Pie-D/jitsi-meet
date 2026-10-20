@@ -461,7 +461,7 @@ export function _mapStateToProps(state: IReduxState) {
         _lobbyChatMessages: messages,
         _lobbyMessageRecipient: lobbyMessageRecipient?.name,
         _login: showModeratorLogin && !state['features/base/jwt'].jwt,
-        _isLobbyChatActive: isLobbyChatActive,
+        _isLobbyChatActive: Boolean(isLobbyChatActive),
         _meetingName: getConferenceName(state),
         _membersOnlyConference: membersOnly,
         _participantEmail: localParticipant?.email,
